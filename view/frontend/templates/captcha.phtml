@@ -1,0 +1,34 @@
+<?php
+/**
+ * Copyright (c) 2017. Volodumur Hryvinskyi.  All rights reserved.
+ * @author: <mailto:volodumur@hryvinskyi.com>
+ * @github: <https://github.com/scriptua>
+ */
+?>
+<?php
+/**
+ *
+ * @see \Amasty\InvisibleCaptcha\Block\Captcha
+ * @var \Amasty\InvisibleCaptcha\Block\Captcha $block
+ */
+?>
+<?php if ($block->isModuleOn()) : ?>
+    <script type="text/javascript">
+        window.reCapchaFormsToProtect = <?php echo $block->getCaptchaSelectorsJson() ?>;
+        window.reCapchaSiteKey = '<?php echo $block->getSiteKey(); ?>';
+
+        require([
+            'jquery',
+            'Script_InvisibleCaptcha/js/registry',
+            'https://www.google.com/recaptcha/api.js?onload=onloadCallbackGoogleRecapcha&render=explicit',
+            'reCaptcha',
+            'mage/mage'
+        ], function ($) {
+            window.onloadCallbackGoogleRecapcha = function () {
+                $.each(window.reCapchaFormsToProtect, function(k, form) {
+                    $(form).reCaptcha();
+                });
+            };
+        });
+    </script>
+<?php endif; ?>

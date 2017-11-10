@@ -7,7 +7,7 @@ bin/magento module:enable Script_InvisibleCaptcha
 bin/magento setup:upgrade
 ````
 
-#Develop usage
+# Develop usage
 ````
 require([
     'jquery',
