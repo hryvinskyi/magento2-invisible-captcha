@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (c) 2017. Volodumur Hryvinskyi.  All rights reserved.
+  ~ @author: <mailto:volodumur@hryvinskyi.com>
+  ~ @github: <https://github.com/scriptua>
+  -->
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Config/etc/system_file.xsd">
+    <system>
+        <section id="scriptinvisiblecaptcha" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Google Invisible Captcha</label>
+            <tab>script</tab>
+            <resource>Script_InvisibleCaptcha::aminvisiblecaptcha</resource>
+            <group id="general" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General Settings</label>
+                <field id="enabledCaptcha" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable invisible captcha</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="captchaKey" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Site key</label>
+                    <comment><![CDATA[You can generate site key <a href="https://www.google.com/recaptcha/admin" target="_blank">here</a>]]></comment>
+                    <depends>
+                        <field id="*/*/enabledCaptcha">1</field>
+                    </depends>
+                </field>
+                <field id="captchaSecret" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Secret key</label>
+                    <comment><![CDATA[You can generate secret key <a href="https://www.google.com/recaptcha/admin" target="_blank">here</a>]]></comment>
+                    <depends>
+                        <field id="*/*/enabledCaptcha">1</field>
+                    </depends>
+                </field>
+                <field id="captchaUrls" translate="label comment" type="textarea" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Urls to enable</label>
+                    <comment><![CDATA[For example: <strong>customer/account/createpost</strong> </br>Each url must be on new line]]></comment>
+                    <depends>
+                        <field id="*/*/enabledCaptcha">1</field>
+                    </depends>
+                </field>
+                <field id="captchaSelectors" translate="label comment" type="textarea" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Selectors for forms</label>
+                    <comment><![CDATA[For example: <strong>.customer-account-create .account-create form</strong> </br>Each selector must be on new line]]></comment>
+                    <depends>
+                        <field id="*/*/enabledCaptcha">1</field>
+                    </depends>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>
