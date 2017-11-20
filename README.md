@@ -1,4 +1,4 @@
-Magento 2 Product QuickView Module
+Google Invisible Captcha for magento 2
 
 # Installation Guide
 ````
