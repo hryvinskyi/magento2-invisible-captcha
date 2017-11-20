@@ -49,7 +49,7 @@ class Predispatch
     /**
      * Action constructor.
      * @param \Magento\Backend\Model\View\Result\RedirectFactory $resultRedirectFactory
-     * @param \Amasty\InvisibleCaptcha\Helper\Data $helper
+     * @param \Script\InvisibleCaptcha\Helper\Data $helper
      * @param \Magento\Framework\HTTP\Client\Curl $curl
      * @param \Magento\Framework\UrlInterface $urlBuilder
      * @param \Magento\Framework\Message\ManagerInterface $messageManager
@@ -57,7 +57,7 @@ class Predispatch
      */
     public function __construct(
         \Magento\Backend\Model\View\Result\RedirectFactory $resultRedirectFactory,
-        \Amasty\InvisibleCaptcha\Helper\Data $helper,
+        \Script\InvisibleCaptcha\Helper\Data $helper,
         \Magento\Framework\HTTP\Client\Curl $curl,
         \Magento\Framework\UrlInterface $urlBuilder,
         \Magento\Framework\Message\ManagerInterface $messageManager,
