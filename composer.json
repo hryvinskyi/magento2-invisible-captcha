@@ -2,7 +2,7 @@
     "name": "scriptua/magento2-invisible-captcha",
     "description": "",
     "require": {
-        "magento/framework": "~100.0",
+        "magento/framework": "~100.0 || ~101.0",
         "scriptua/magento2-base": "*"
     },
     "type": "magento2-module",
