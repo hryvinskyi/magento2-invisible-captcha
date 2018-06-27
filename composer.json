@@ -3,7 +3,7 @@
     "description": "",
     "require": {
         "magento/framework": "~100.0 || ~101.0",
-        "scriptua/magento2-base": "*"
+        "scriptua/magento2-base": "1.1.*"
     },
     "type": "magento2-module",
     "version": "1.0.0",
