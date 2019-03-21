@@ -21,21 +21,3 @@ Stores -> Configuration -> Hryvinskyi Extensions -> Google Invisible Captcha and
 ***Secret Key:*** Enter the secret key you have got while registering for reCAPTCHA v3.  
 ***URLs to Enable:*** Enter the URLs to enable Google Invisible reCAPTCHA on.  
 ***Selectors for Forms:*** Add form selectors to enable Google Invisible reCAPTCHA on.
-
-
-# Develop usage
-````
-require([
-    'jquery',
-    'reCaptcha'
-], function ($) {
-    $(form).reCaptcha({
-        'callback': function (t, token) {
-            if(t.$parentForm.validation() && t.$parentForm.validation('isValid')) {
-                t.tokenField.val(token);
-                t.$parentForm.submit();
-            }
-        }
-    });
-});
-````
