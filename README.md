@@ -8,7 +8,7 @@ Google Invisible Captcha v3 for magento 2
 # Installation Guide
 ````
 composer require scriptua/magento2-invisible-captcha
-bin/magento module:enable Script_InvisibleCaptcha
+bin/magento module:enable Hryvinskyi_InvisibleCaptcha
 bin/magento setup:upgrade
 ````
 
