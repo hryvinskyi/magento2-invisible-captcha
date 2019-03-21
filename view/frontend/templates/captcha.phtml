@@ -1,15 +1,12 @@
 <?php
 /**
- * Copyright (c) 2017. Volodumur Hryvinskyi.  All rights reserved.
+ * Copyright (c) 2019. Volodumur Hryvinskyi.  All rights reserved.
  * @author: <mailto:volodumur@hryvinskyi.com>
  * @github: <https://github.com/scriptua>
  */
-?>
-<?php
+
 /**
- *
- * @see \Script\InvisibleCaptcha\Block\Captcha
- * @var \Script\InvisibleCaptcha\Block\Captcha $block
+ * @var \Hryvinskyi\InvisibleCaptcha\Block\Captcha $block
  */
 ?>
 <?php if ($block->isModuleOn()) : ?>
@@ -19,10 +16,8 @@
 
         require([
             'jquery',
-            'Script_InvisibleCaptcha/js/registry',
-            'https://www.google.com/recaptcha/api.js?onload=onloadCallbackGoogleRecapcha&render=explicit',
-            'reCaptcha',
-            'mage/mage'
+            'https://www.google.com/recaptcha/api.js?onload=onloadCallbackGoogleRecapcha&render=<?php echo $block->getSiteKey(); ?>',
+            'reCaptcha'
         ], function ($) {
             window.onloadCallbackGoogleRecapcha = function () {
                 $.each(window.reCapchaFormsToProtect, function(k, form) {

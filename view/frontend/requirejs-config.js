@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017. Volodumur Hryvinskyi.  All rights reserved.
+ * Copyright (c) 2019. Volodumur Hryvinskyi.  All rights reserved.
  * @author: <mailto:volodumur@hryvinskyi.com>
  * @github: <https://github.com/scriptua>
  */
@@ -9,7 +9,7 @@
 var config = {
     map: {
         '*': {
-            reCaptcha: 'Script_InvisibleCaptcha/js/reCaptcha'
+            reCaptcha: 'Hryvinskyi_InvisibleCaptcha/js/reCaptcha'
         }
     }
 };

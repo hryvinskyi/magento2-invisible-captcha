@@ -1,14 +1,15 @@
 <?xml version="1.0"?>
 <!--
-  ~ Copyright (c) 2017. Volodumur Hryvinskyi.  All rights reserved.
+  ~ Copyright (c) 2019. Volodumur Hryvinskyi.  All rights reserved.
   ~ @author: <mailto:volodumur@hryvinskyi.com>
   ~ @github: <https://github.com/scriptua>
   -->
 
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
-    <module name="Script_InvisibleCaptcha" setup_version="1.0.1">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="Hryvinskyi_InvisibleCaptcha" setup_version="2.0.0">
         <sequence>
-            <module name="Script_Base"/>
+            <module name="Hryvinskyi_Base"/>
         </sequence>
     </module>
 </config>

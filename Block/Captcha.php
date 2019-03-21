@@ -1,35 +1,39 @@
 <?php
 /**
- * Copyright (c) 2017. Volodumur Hryvinskyi.  All rights reserved.
+ * Copyright (c) 2019. Volodumur Hryvinskyi.  All rights reserved.
  * @author: <mailto:volodumur@hryvinskyi.com>
  * @github: <https://github.com/scriptua>
  */
 
+declare(strict_types=1);
 
-namespace Script\InvisibleCaptcha\Block;
+namespace Hryvinskyi\InvisibleCaptcha\Block;
 
-use \Script\InvisibleCaptcha\Helper\Data;
+use Hryvinskyi\InvisibleCaptcha\Helper\Config;
+use Magento\Framework\View\Element\Template\Context;
 
 class Captcha extends \Magento\Framework\View\Element\Template
 {
     /**
-     * @var Data
+     * @var Config
      */
-    private $helper;
+    private $config;
 
     /**
      * Captcha constructor.
-     * @param \Magento\Framework\View\Element\Template\Context $context
-     * @param Data $helper
+     *
+     * @param Context $context
+     * @param Config $config
      * @param array $data
      */
     public function __construct(
-        \Magento\Framework\View\Element\Template\Context $context,
-        Data $helper,
+        Context $context,
+        Config $config,
         array $data = []
     ) {
-        $this->helper = $helper;
         parent::__construct($context, $data);
+
+        $this->config = $config;
     }
 
     /**
@@ -44,40 +48,31 @@ class Captcha extends \Magento\Framework\View\Element\Template
         if (!$this->isModuleOn()) {
             return '';
         }
+
         return parent::toHtml();
     }
 
     /**
      * @return bool
      */
-    public function isModuleOn()
+    public function isModuleOn(): bool
     {
-        return $this->helper->isModuleOn();
+        return $this->config->hasEnable();
     }
 
     /**
      * @return string
      */
-    public function getCaptchaSelectorsJson()
+    public function getCaptchaSelectorsJson(): string
     {
-        $selectors = trim($this->helper->getConfigValueByPath(
-            Data::CONFIG_PATH_DISPLAY_ALLOWED_SELECTORS,
-            null,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
-        ));
-
-        return \Zend_Json::encode($selectors ? $this->helper->stringValidationAndCovertInArray($selectors) : []);
+        return \Zend_Json::encode($this->config->getCaptchaSelectors());
     }
 
     /**
      * @return mixed
      */
-    public function getSiteKey()
+    public function getSiteKey(): string
     {
-        return $this->helper->getConfigValueByPath(
-            Data::CONFIG_PATH_GENERAL_SITE_KEY,
-            null,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
-        );
+        return $this->config->getSiteKey();
     }
 }

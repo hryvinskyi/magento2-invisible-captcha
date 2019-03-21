@@ -1,14 +1,16 @@
 <?xml version="1.0"?>
 <!--
-  ~ Copyright (c) 2017. Volodumur Hryvinskyi.  All rights reserved.
+  ~ Copyright (c) 2019. Volodumur Hryvinskyi.  All rights reserved.
   ~ @author: <mailto:volodumur@hryvinskyi.com>
   ~ @github: <https://github.com/scriptua>
   -->
 
-<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceContainer name="before.body.end">
-            <block class="Script\InvisibleCaptcha\Block\Captcha" template="captcha.phtml" name="ScriptCaptcha"/>
+            <block class="Hryvinskyi\InvisibleCaptcha\Block\Captcha" template="captcha.phtml"
+                   name="hv.invisible.captcha"/>
         </referenceContainer>
     </body>
 </page>

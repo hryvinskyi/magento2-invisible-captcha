@@ -1,13 +1,20 @@
 <?php
 /**
- * Copyright (c) 2017. Volodumur Hryvinskyi.  All rights reserved.
+ * Copyright (c) 2019. Volodumur Hryvinskyi.  All rights reserved.
  * @author: <mailto:volodumur@hryvinskyi.com>
  * @github: <https://github.com/scriptua>
  */
 
-namespace Script\InvisibleCaptcha\Plugin;
+namespace Hryvinskyi\InvisibleCaptcha\Plugin;
 
-use \Script\InvisibleCaptcha\Helper\Data;
+use \Hryvinskyi\InvisibleCaptcha\Helper\Config;
+use Magento\Backend\Model\View\Result\RedirectFactory;
+use Magento\Framework\App\FrontControllerInterface;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\App\Response\RedirectInterface;
+use Magento\Framework\HTTP\Client\Curl;
+use Magento\Framework\Message\ManagerInterface;
+use Magento\Framework\UrlInterface;
 
 class Predispatch
 {
@@ -17,54 +24,55 @@ class Predispatch
     const GOOGLE_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify';
 
     /**
-     * @var \Magento\Backend\Model\View\Result\RedirectFactory
+     * @var RedirectFactory
      */
-    protected $resultRedirectFactory;
+    private $resultRedirectFactory;
 
     /**
-     * @var Data
+     * @var Config
      */
-    protected $helper;
+    private $config;
 
     /**
-     * @var \Magento\Framework\HTTP\Client\Curl
+     * @var Curl
      */
-    protected $curl;
+    private $curl;
 
     /**
-     * @var \Magento\Framework\UrlInterface
+     * @var UrlInterface
      */
-    protected $urlBuilder;
+    private $urlBuilder;
 
     /**
-     * @var \Magento\Framework\Message\ManagerInterface
+     * @var ManagerInterface
      */
-    protected $messageManager;
+    private $messageManager;
 
     /**
-     * @var \Magento\Framework\App\Response\RedirectInterface
+     * @var RedirectInterface
      */
-    protected $redirector;
+    private $redirector;
 
     /**
      * Action constructor.
-     * @param \Magento\Backend\Model\View\Result\RedirectFactory $resultRedirectFactory
-     * @param \Script\InvisibleCaptcha\Helper\Data $helper
-     * @param \Magento\Framework\HTTP\Client\Curl $curl
-     * @param \Magento\Framework\UrlInterface $urlBuilder
-     * @param \Magento\Framework\Message\ManagerInterface $messageManager
-     * @param \Magento\Framework\App\Response\RedirectInterface $redirector
+     *
+     * @param RedirectFactory $resultRedirectFactory
+     * @param Config $config
+     * @param Curl $curl
+     * @param UrlInterface $urlBuilder
+     * @param ManagerInterface $messageManager
+     * @param RedirectInterface $redirector
      */
     public function __construct(
-        \Magento\Backend\Model\View\Result\RedirectFactory $resultRedirectFactory,
-        \Script\InvisibleCaptcha\Helper\Data $helper,
-        \Magento\Framework\HTTP\Client\Curl $curl,
-        \Magento\Framework\UrlInterface $urlBuilder,
-        \Magento\Framework\Message\ManagerInterface $messageManager,
-        \Magento\Framework\App\Response\RedirectInterface $redirector
+        RedirectFactory $resultRedirectFactory,
+        Config $config,
+        Curl $curl,
+        UrlInterface $urlBuilder,
+        ManagerInterface $messageManager,
+        RedirectInterface $redirector
     ) {
         $this->resultRedirectFactory = $resultRedirectFactory;
-        $this->helper = $helper;
+        $this->config = $config;
         $this->curl = $curl;
         $this->urlBuilder = $urlBuilder;
         $this->messageManager = $messageManager;
@@ -72,28 +80,33 @@ class Predispatch
     }
 
     /**
-     * @param \Magento\Framework\App\FrontControllerInterface $subject
-     * @param \Magento\Framework\App\RequestInterface $request
+     * @param FrontControllerInterface $subject
+     * @param RequestInterface $request
      *
-     * @return \Magento\Framework\App\ResponseInterface|\Magento\Framework\Controller\ResultInterface
+     * @return void
      */
     public function beforeDispatch(
-        \Magento\Framework\App\FrontControllerInterface $subject,
-        \Magento\Framework\App\RequestInterface $request
+        FrontControllerInterface $subject,
+        RequestInterface $request
     ) {
-        if ($this->helper->isModuleOn()) {
-            foreach ($this->helper->getCaptchaUrls() as $captchaUrl) {
+        if ($this->config->hasEnable()) {
+
+            foreach ($this->config->getCaptchaUrls() as $captchaUrl) {
+
                 if (strpos($this->urlBuilder->getCurrentUrl(), $captchaUrl) !== false) {
+
                     if ($request->isPost()) {
-                        $token = $request->getPost('script_invisible_token');
+                        $token = $request->getPost('hryvinskyi_invisible_token');
                         $validation = $this->verifyCaptcha($token);
+
                         if (!$validation) {
-                            $this->messageManager->addErrorMessage(__('Something is wrong'));
+                            $this->messageManager->addErrorMessage(__('Invalid Recaptcha'));
                             $refererUrl = $this->redirector->getRefererUrl();
+
                             if(isset($refererUrl) && $refererUrl != '') {
                                 header('Location: ' . $refererUrl);
                             }
-                            exit;
+                            die;
                         }
                     }
                     break;
@@ -102,11 +115,16 @@ class Predispatch
         }
     }
 
-    protected function verifyCaptcha($token)
+    /**
+     * @param $token
+     *
+     * @return bool
+     */
+    private function verifyCaptcha($token)
     {
         if ($token) {
             $curlParams = [
-                'secret' => $this->helper->getConfigValueByPath(Data::CONFIG_PATH_GENERAL_SECRET_KEY),
+                'secret'   => $this->config->getSecretKey(),
                 'response' => $token
             ];
             $this->curl->post(self::GOOGLE_VERIFY_URL, $curlParams);

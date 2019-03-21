@@ -1,16 +1,31 @@
 <?xml version="1.0"?>
 <!--
-  ~ Copyright (c) 2017. Volodumur Hryvinskyi.  All rights reserved.
+  ~ Copyright (c) 2019. Volodumur Hryvinskyi.  All rights reserved.
   ~ @author: <mailto:volodumur@hryvinskyi.com>
   ~ @github: <https://github.com/scriptua>
   -->
 
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
     <default>
-        <scriptinvisiblecaptcha>
+        <hryvinskyi_invisible_captcha>
             <general>
                 <enabledCaptcha>1</enabledCaptcha>
+                <captchaUrls>
+                    <![CDATA[customer/account/createpost
+customer/account/loginPost
+newsletter/subscriber/new
+review/product/post
+contact/index/post]]>
+                </captchaUrls>
+                <captchaSelectors>
+                    <![CDATA[form[action*="customer/account/createpost"]
+form[action*="customer/account/loginPost"]
+form[action*="newsletter/subscriber/new"]
+form[action*="review/product/post"]
+form[action*="contact/index/post"]]]>
+                </captchaSelectors>
             </general>
-        </scriptinvisiblecaptcha>
+        </hryvinskyi_invisible_captcha>
     </default>
 </config>
