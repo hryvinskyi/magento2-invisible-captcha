@@ -1,9 +1,11 @@
 Google Invisible Captcha v3 for magento 2
 
-[![Latest Stable Version](https://poser.pugx.org/scriptua/magento2-invisible-captcha/v/stable)](https://packagist.org/packages/scriptua/magento2-invisible-captcha)
-[![Total Downloads](https://poser.pugx.org/scriptua/magento2-invisible-captcha/downloads)](https://packagist.org/packages/scriptua/magento2-invisible-captcha)
-[![Latest Unstable Version](https://poser.pugx.org/scriptua/magento2-invisible-captcha/v/unstable)](https://packagist.org/packages/scriptua/magento2-invisible-captcha)
-[![License](https://poser.pugx.org/scriptua/magento2-invisible-captcha/license)](https://packagist.org/packages/scriptua/magento2-invisible-captcha)
+![Packagist](https://img.shields.io/packagist/v/scriptua/magento2-invisible-captcha.svg)
+![Packagist](https://img.shields.io/packagist/dt/scriptua/magento2-invisible-captcha.svg)
+[![Code Coverage](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/?branch=master)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/?branch=master)
+![Packagist](https://img.shields.io/packagist/vpre/scriptua/magento2-invisible-captcha.svg)
+![Packagist](https://img.shields.io/packagist/l/scriptua/magento2-invisible-captcha.svg)
 
 # Installation Guide
 ````
