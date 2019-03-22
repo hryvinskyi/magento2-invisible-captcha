@@ -16,7 +16,6 @@
 
         require([
             'jquery',
-            'https://www.google.com/recaptcha/api.js?onload=onloadCallbackGoogleRecapcha&render=<?php echo $block->getSiteKey(); ?>',
             'reCaptcha'
         ], function ($) {
             window.onloadCallbackGoogleRecapcha = function () {
@@ -24,6 +23,16 @@
                     $(form).reCaptcha();
                 });
             };
+
+            // Initialize Recaptcha
+            $.each(window.reCapchaFormsToProtect, function (k, form) {
+                if ($(form).length > 0) {
+                    require([
+                        '//www.google.com/recaptcha/api.js?onload=onloadCallbackGoogleRecapcha&render='
+                        + window.reCapchaSiteKey
+                    ]);
+                }
+            });
         });
     </script>
 <?php endif; ?>

@@ -20,7 +20,6 @@ define([
          * Recaptcha create
          */
         _create: function () {
-            console.log('onloadCallbackGoogleRecapcha');
             this._initCaptcha();
         },
 
@@ -34,10 +33,14 @@ define([
                 tokenField;
 
             if (typeof action === 'string') {
-                action.replace(/\W+(?!$)/g, '');
+                action = action.replace(/\W+(?!$)/g, '_')
+                    .replace(/(^\w+:|^)\/\//, '_')
+                    .replace('/', '');
             } else {
                 action = this._getReCaptchaId() + '_action';
             }
+
+            console.log(action);
 
             if (this.captchaInitialized) {
                 return;

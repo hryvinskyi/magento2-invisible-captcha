@@ -6,7 +6,7 @@
         "scriptua/magento2-base": "2.0.*"
     },
     "type": "magento2-module",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "license": "GNU-3.0",
     "autoload": {
         "files": [ "registration.php" ],
