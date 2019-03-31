@@ -1,11 +1,12 @@
 Google Invisible Captcha v3 for magento 2
 
-![Packagist](https://img.shields.io/packagist/v/scriptua/magento2-invisible-captcha.svg)
-![Packagist](https://img.shields.io/packagist/dt/scriptua/magento2-invisible-captcha.svg)
-[![Code Coverage](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/?branch=master)
+[![Latest Stable Version](https://poser.pugx.org/scriptua/magento2-invisible-captcha/v/stable)](https://packagist.org/packages/scriptua/magento2-invisible-captcha)
+[![Total Downloads](https://poser.pugx.org/scriptua/magento2-invisible-captcha/downloads)](https://packagist.org/packages/scriptua/magento2-invisible-captcha)
+[![PayPal donate button](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=legionerblack%40yandex%2eru&lc=UA&item_name=Magento%202%20Invisible%20Captcha&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted "Donate once-off to this project using Paypal")
+[![Latest Unstable Version](https://poser.pugx.org/scriptua/magento2-invisible-captcha/v/unstable)](https://packagist.org/packages/scriptua/magento2-invisible-captcha)
+[![License](https://poser.pugx.org/scriptua/magento2-invisible-captcha/license)](https://packagist.org/packages/scriptua/magento2-invisible-captcha)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/?branch=master)
-![Packagist](https://img.shields.io/packagist/vpre/scriptua/magento2-invisible-captcha.svg)
-![Packagist](https://img.shields.io/packagist/l/scriptua/magento2-invisible-captcha.svg)
+[![Build Status](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/badges/build.png?b=master)](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/build-status/master)
 
 # Installation Guide
 ### Install by composer
