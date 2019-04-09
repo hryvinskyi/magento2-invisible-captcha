@@ -8,6 +8,9 @@ Google Invisible Captcha v3 for magento 2
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/?branch=master)
 [![Build Status](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/badges/build.png?b=master)](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/build-status/master)
 
+Module version 2.0.* support Magento 2.3.*  
+Module version 1.0.* support Magento 2.1.\*||2.2.\*
+
 # Installation Guide
 ### Install by composer
 ````
@@ -38,3 +41,13 @@ Stores -> Configuration -> Hryvinskyi Extensions -> Google Invisible Captcha and
 ***Secret Key:*** Enter the secret key you have got while registering for reCAPTCHA v3.  
 ***URLs to Enable:*** Enter the URLs to enable Google Invisible reCAPTCHA on.  
 ***Selectors for Forms:*** Add form selectors to enable Google Invisible reCAPTCHA on.
+
+#Develop usage
+````
+require([
+    'jquery',
+    'reCaptcha'
+], function ($) {
+    $('form').reCaptcha();
+});
+````

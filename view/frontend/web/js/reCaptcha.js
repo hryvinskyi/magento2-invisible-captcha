@@ -33,14 +33,20 @@ define([
                 tokenField;
 
             if (typeof action === 'string') {
-                action = action.replace(/\W+(?!$)/g, '_')
-                    .replace(/(^\w+:|^)\/\//, '_')
-                    .replace('/', '');
+                var actions;
+
+                action = action.replace(/^.*\/\/[^\/]+/, '');
+                action = action.replace(/[^A-Za-z\\/]/g,'');
+                actions = action.split("/");
+                actions = actions.filter(function (value) {
+                    return value !== null && value !== '';
+                });
+                actions = actions.slice(0, 3);
+                action = actions.join('_');
+
             } else {
                 action = this._getReCaptchaId() + '_action';
             }
-
-            console.log(action);
 
             if (this.captchaInitialized) {
                 return;
