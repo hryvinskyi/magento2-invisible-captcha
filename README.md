@@ -42,7 +42,7 @@ Stores -> Configuration -> Hryvinskyi Extensions -> Google Invisible Captcha and
 ***URLs to Enable:*** Enter the URLs to enable Google Invisible reCAPTCHA on.  
 ***Selectors for Forms:*** Add form selectors to enable Google Invisible reCAPTCHA on.
 
-#Develop usage
+# Develop usage
 ````
 require([
     'jquery',
