@@ -18,6 +18,15 @@
             'jquery',
             'reCaptcha'
         ], function ($) {
+            var hasFormOnPage = false;
+
+            $.each(window.reCapchaFormsToProtect, function (k, form) {
+                if($(form).length > 0) {
+                    hasFormOnPage = true;
+                    return false; // breaks
+                }
+            });
+
             window.onloadCallbackGoogleRecapcha = function () {
                 $.each(window.reCapchaFormsToProtect, function(k, form) {
                     $(form).reCaptcha();
@@ -25,7 +34,7 @@
             };
 
             // Initialize Recaptcha
-            if (window.reCapchaFormsToProtect.length > 0) {
+            if (hasFormOnPage === true) {
                 require([
                     '//www.google.com/recaptcha/api.js?onload=onloadCallbackGoogleRecapcha&render='
                     + window.reCapchaSiteKey
