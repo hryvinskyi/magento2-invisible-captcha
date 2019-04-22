@@ -10,7 +10,9 @@
     <default>
         <hryvinskyi_invisible_captcha>
             <general>
-                <enabledCaptcha>1</enabledCaptcha>
+                <enabledCaptcha>0</enabledCaptcha>
+                <captchaSiteKey><![CDATA[]]></captchaSiteKey>
+                <captchaSecretKey><![CDATA[]]></captchaSecretKey>
                 <captchaUrls>
                     <![CDATA[customer/account/createpost
 customer/account/loginPost

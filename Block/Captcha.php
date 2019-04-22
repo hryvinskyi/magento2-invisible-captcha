@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Block;
 
+use Hryvinskyi\Base\Helper\Json;
 use Hryvinskyi\InvisibleCaptcha\Helper\Config;
 use Magento\Framework\View\Element\Template\Context;
 
@@ -65,7 +66,7 @@ class Captcha extends \Magento\Framework\View\Element\Template
      */
     public function getCaptchaSelectorsJson(): string
     {
-        return \Zend_Json::encode($this->config->getCaptchaSelectors());
+        return Json::encode($this->config->getCaptchaSelectors());
     }
 
     /**

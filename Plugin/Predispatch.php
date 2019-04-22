@@ -7,7 +7,7 @@
 
 namespace Hryvinskyi\InvisibleCaptcha\Plugin;
 
-use \Hryvinskyi\InvisibleCaptcha\Helper\Config;
+use Hryvinskyi\InvisibleCaptcha\Helper\Config;
 use Magento\Backend\Model\View\Result\RedirectFactory;
 use Magento\Framework\App\FrontControllerInterface;
 use Magento\Framework\App\RequestInterface;
@@ -90,11 +90,8 @@ class Predispatch
         RequestInterface $request
     ) {
         if ($this->config->hasEnable()) {
-
             foreach ($this->config->getCaptchaUrls() as $captchaUrl) {
-
                 if (strpos($this->urlBuilder->getCurrentUrl(), $captchaUrl) !== false) {
-
                     if ($request->isPost()) {
                         $token = $request->getPost('hryvinskyi_invisible_token');
                         $validation = $this->verifyCaptcha($token);
@@ -103,7 +100,7 @@ class Predispatch
                             $this->messageManager->addErrorMessage(__('Invalid Recaptcha'));
                             $refererUrl = $this->redirector->getRefererUrl();
 
-                            if(isset($refererUrl) && $refererUrl != '') {
+                            if (isset($refererUrl) && $refererUrl != '') {
                                 header('Location: ' . $refererUrl);
                             }
                             die;

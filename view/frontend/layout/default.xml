@@ -12,5 +12,24 @@
             <block class="Hryvinskyi\InvisibleCaptcha\Block\Captcha" template="captcha.phtml"
                    name="hv.invisible.captcha"/>
         </referenceContainer>
+
+        <referenceBlock name="authentication-popup">
+            <arguments>
+                <argument name="jsLayout" xsi:type="array">
+                    <item name="components" xsi:type="array">
+                        <item name="authenticationPopup" xsi:type="array">
+                            <item name="children" xsi:type="array">
+                                <item name="hryvinskyi_recaptcha" xsi:type="array">
+                                    <item name="component" xsi:type="string">Hryvinskyi_InvisibleCaptcha/js/reCaptcha</item>
+                                    <item name="displayArea" xsi:type="string">additional-login-form-fields</item>
+                                    <item name="configSource" xsi:type="string">checkoutConfig</item>
+                                    <item name="reCaptchaId" xsi:type="string">hryvinskyi-recaptcha-popup-login</item>
+                                </item>
+                            </item>
+                        </item>
+                    </item>
+                </argument>
+            </arguments>
+        </referenceBlock>
     </body>
 </page>

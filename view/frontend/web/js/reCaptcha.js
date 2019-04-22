@@ -15,6 +15,7 @@ define([
     $.widget('hryvinskyi.reCaptcha', {
         captchaInitialized: false,
         reCaptchaId: null,
+        tokenField: null,
 
         /**
          * Recaptcha create
@@ -29,8 +30,7 @@ define([
         _initCaptcha: function () {
             var self = this,
                 element = $(self.element),
-                action = element.attr('action'),
-                tokenField;
+                action = element.attr('action');
 
             if (typeof action === 'string') {
                 var actions;
@@ -45,25 +45,34 @@ define([
                 action = actions.join('_');
 
             } else {
-                action = this._getReCaptchaId() + '_action';
+                action = self._getReCaptchaId() + '_action';
             }
 
-            if (this.captchaInitialized) {
+            if (self.captchaInitialized) {
                 return;
             }
 
-            this.captchaInitialized = true;
+            self.captchaInitialized = true;
 
-            tokenField = $('<input type="hidden" id="' + this._getReCaptchaId() + '_token" ' +
+            self.tokenField = $('<input type="hidden" id="' + self._getReCaptchaId() + '_token" ' +
                 'name="hryvinskyi_invisible_token" />');
 
             grecaptcha.ready(function () {
                 grecaptcha.execute(window.reCapchaSiteKey, {action: action}).then(function (token) {
-                    tokenField.val(token);
+                    self.reCaptchaCallback(token);
                 });
             });
 
-            element.append(tokenField);
+            element.append(self.tokenField);
+        },
+
+        /**
+         * Recaptcha callback
+         *
+         * @param {String} token
+         */
+        reCaptchaCallback: function (token) {
+            this.tokenField.val(token);
         },
 
         /**
