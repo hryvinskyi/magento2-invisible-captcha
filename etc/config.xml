@@ -10,7 +10,7 @@
     <default>
         <hryvinskyi_invisible_captcha>
             <general>
-                <enabledCaptcha>0</enabledCaptcha>
+                <enabledCaptcha>1</enabledCaptcha>
                 <captchaSiteKey><![CDATA[]]></captchaSiteKey>
                 <captchaSecretKey><![CDATA[]]></captchaSecretKey>
                 <captchaUrls>
@@ -28,6 +28,9 @@ form[action*="review/product/post"]
 form[action*="contact/index/post"]]]>
                 </captchaSelectors>
             </general>
+            <frontend>
+                <enabled>1</enabled>
+            </frontend>
         </hryvinskyi_invisible_captcha>
     </default>
 </config>

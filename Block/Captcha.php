@@ -10,38 +10,110 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Block;
 
 use Hryvinskyi\Base\Helper\Json;
-use Hryvinskyi\InvisibleCaptcha\Helper\Config;
+use Hryvinskyi\InvisibleCaptcha\Helper\Config\Frontend;
+use Hryvinskyi\InvisibleCaptcha\Helper\Config\General;
+use Hryvinskyi\InvisibleCaptcha\Model\LayoutSettings;
+use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 
-class Captcha extends \Magento\Framework\View\Element\Template
+class Captcha extends Template
 {
     /**
-     * @var Config
+     * @var int
      */
-    private $config;
+    private static $widgetId = 0;
+
+    /**
+     * @var string
+     */
+    private $widgetIdClass = '';
+
+    /**
+     * @var General
+     */
+    private $generalConfig;
+
+    /**
+     * @var Frontend
+     */
+    private $frontendConfig;
+
+    /**
+     * @var LayoutSettings
+     */
+    private $layoutSettings;
 
     /**
      * Captcha constructor.
      *
      * @param Context $context
-     * @param Config $config
+     * @param General $generalConfig
+     * @param Frontend $frontendConfig
+     * @param LayoutSettings $layoutSettings
      * @param array $data
      */
     public function __construct(
         Context $context,
-        Config $config,
+        General $generalConfig,
+        Frontend $frontendConfig,
+        LayoutSettings $layoutSettings,
         array $data = []
     ) {
         parent::__construct($context, $data);
 
-        $this->config = $config;
+        $this->generalConfig = $generalConfig;
+        $this->frontendConfig = $frontendConfig;
+        $this->layoutSettings = $layoutSettings;
     }
 
     /**
-     * Produce and return block's html output
-     *
-     * This method should not be overridden. You can override _toHtml() method in descendants if needed.
-     *
+     * Constructor
+     */
+    public function _construct()
+    {
+        parent::_construct();
+
+        $this->widgetIdClass = 'invisible-captcha-container-' . ++self::$widgetId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getWidgetId(): string
+    {
+        return $this->widgetIdClass;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getJsLayout()
+    {
+        $layout = Json::decode(parent::getJsLayout());
+
+        if ($this->frontendConfig->hasEnable() && $this->isModuleOn()) {
+            $layout['components']['invisible-captcha']['config'] = $this->layoutSettings->getCaptchaSettings();
+        }
+
+        if (
+            (!$this->frontendConfig->hasEnable() || !$this->isModuleOn())
+            && isset($layout['components']['invisible-captcha'])
+        ) {
+            unset($layout['components']['invisible-captcha']);
+        }
+
+        return Json::encode($layout);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isModuleOn(): bool
+    {
+        return $this->generalConfig->hasEnable();
+    }
+
+    /**
      * @return string
      */
     public function toHtml()
@@ -51,29 +123,5 @@ class Captcha extends \Magento\Framework\View\Element\Template
         }
 
         return parent::toHtml();
-    }
-
-    /**
-     * @return bool
-     */
-    public function isModuleOn(): bool
-    {
-        return $this->config->hasEnable();
-    }
-
-    /**
-     * @return string
-     */
-    public function getCaptchaSelectorsJson(): string
-    {
-        return Json::encode($this->config->getCaptchaSelectors());
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getSiteKey(): string
-    {
-        return $this->config->getSiteKey();
     }
 }

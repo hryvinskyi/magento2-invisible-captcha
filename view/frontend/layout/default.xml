@@ -8,22 +8,17 @@
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
-        <referenceContainer name="before.body.end">
-            <block class="Hryvinskyi\InvisibleCaptcha\Block\Captcha" template="captcha.phtml"
-                   name="hv.invisible.captcha"/>
-        </referenceContainer>
-
         <referenceBlock name="authentication-popup">
             <arguments>
                 <argument name="jsLayout" xsi:type="array">
                     <item name="components" xsi:type="array">
                         <item name="authenticationPopup" xsi:type="array">
                             <item name="children" xsi:type="array">
-                                <item name="hryvinskyi_recaptcha" xsi:type="array">
-                                    <item name="component" xsi:type="string">Hryvinskyi_InvisibleCaptcha/js/reCaptcha</item>
+                                <item name="invisible-captcha" xsi:type="array">
+                                    <item name="component" xsi:type="string">Hryvinskyi_InvisibleCaptcha/js/invisible-captcha</item>
                                     <item name="displayArea" xsi:type="string">additional-login-form-fields</item>
                                     <item name="configSource" xsi:type="string">checkoutConfig</item>
-                                    <item name="reCaptchaId" xsi:type="string">hryvinskyi-recaptcha-popup-login</item>
+                                    <item name="action" xsi:type="string">customer_login_popup</item>
                                 </item>
                             </item>
                         </item>

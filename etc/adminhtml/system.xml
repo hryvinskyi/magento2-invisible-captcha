@@ -13,7 +13,7 @@
             <label>Google Invisible Captcha</label>
             <tab>hryvinskyi</tab>
             <resource>Hryvinskyi_InvisibleCaptcha::invisible_captcha</resource>
-            <group id="general" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1">
+            <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1">
                 <label>General Settings</label>
                 <field id="enabledCaptcha" translate="label comment" type="select" sortOrder="20" showInDefault="1"
                        showInWebsite="1">
@@ -30,7 +30,7 @@
                         ]]>
                     </comment>
                     <depends>
-                        <field id="*/*/enabledCaptcha">1</field>
+                        <field id="enabledCaptcha">1</field>
                     </depends>
                 </field>
                 <field id="captchaSecretKey" translate="label comment" type="text" sortOrder="40" showInDefault="1"
@@ -43,34 +43,83 @@
                         ]]>
                     </comment>
                     <depends>
-                        <field id="*/*/enabledCaptcha">1</field>
+                        <field id="enabledCaptcha">1</field>
                     </depends>
                 </field>
-                <field id="captchaUrls" translate="label comment" type="textarea" sortOrder="50" showInDefault="1"
+                <field id="validationMessage" translate="label comment" type="textarea" sortOrder="50" showInDefault="1"
                        showInWebsite="1">
-                    <label>Urls to enable</label>
-                    <comment>
-                        <![CDATA[
-                            For example: <strong>customer/account/createpost</strong></br>
-                            Each url must be on new line
-                        ]]>
-                    </comment>
+                    <label>Error validation message</label>
                     <depends>
-                        <field id="*/*/enabledCaptcha">1</field>
+                        <field id="enabledCaptcha">1</field>
                     </depends>
                 </field>
-                <field id="captchaSelectors" translate="label comment" type="textarea" sortOrder="50" showInDefault="1"
-                       showInWebsite="1">
-                    <label>Selectors for forms</label>
-                    <comment>
-                        <![CDATA[
-                            For example: <strong>.customer-account-create .account-create form</strong></br>
-                            Each selector must be on new line
-                        ]]>
-                    </comment>
+            </group>
+            <group id="frontend" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1"
+                   showInStore="1">
+                <label>Frontend</label>
+                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1"
+                       showInStore="0">
+                    <label>Enable invisible captcha in frontend</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="enabledCustomerLogin" translate="label" type="select" sortOrder="20" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Use in login</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <depends>
-                        <field id="*/*/enabledCaptcha">1</field>
+                        <field id="enabled">1</field>
                     </depends>
+                </field>
+                <field id="enabledCustomerCreate" translate="label" type="select" sortOrder="30" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Use in Create user</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="enabledCustomerForgot" translate="label" type="select" sortOrder="40" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Use in Forgot password</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="enabledContact" translate="label" type="select" sortOrder="50" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Use in Contact</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="enabledNewsletter" translate="label" type="select" sortOrder="60" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Use in Newsletter</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+            <group id="backend" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0"
+                   showInStore="0">
+                <label>Backend</label>
+                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0"
+                       showInStore="0">
+                    <label>Enable invisible captcha in backend</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="enabledLogin" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1"
+                       showInStore="0">
+                    <label>Enable in login page</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="enabledForgot" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1"
+                       showInStore="0">
+                    <label>Enable in forgot password page</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
             </group>
         </section>

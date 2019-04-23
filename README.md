@@ -20,8 +20,8 @@ bin/magento module:enable Hryvinskyi_InvisibleCaptcha
 bin/magento setup:upgrade
 ````
 ### Install download package
-1. Download module https://github.com/hryvinskyi/magento2-base "Clone or download -> Download Zip" 
-2. Download this module "Clone or download -> Download Zip"
+1. Download module https://github.com/hryvinskyi/magento2-base [Link](https://github.com/hryvinskyi/magento2-base/archive/v1.1.2.zip)
+2. Download this module [Link](https://github.com/hryvinskyi/magento2-invisible-captcha/archive/2.0.4.zip)
 3. Unzip two modules in the folder app\code\Hryvinskyi\Base and app\code\Hryvinskyi\InvisibleCaptcha
 4. Run commands:
 

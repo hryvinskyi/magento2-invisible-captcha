@@ -9,37 +9,14 @@
  * @var \Hryvinskyi\InvisibleCaptcha\Block\Captcha $block
  */
 ?>
-<?php if ($block->isModuleOn()) : ?>
-    <script type="text/javascript">
-        window.reCapchaFormsToProtect = <?php echo $block->getCaptchaSelectorsJson() ?>;
-        window.reCapchaSiteKey = '<?php echo $block->getSiteKey(); ?>';
+<div class="field-recaptcha" id="<?php echo $block->getWidgetId() ?>" data-bind="scope:'invisible-captcha'">
+    <!-- ko template: getTemplate() --><!-- /ko -->
+</div>
 
-        require([
-            'jquery',
-            'reCaptcha'
-        ], function ($) {
-            var hasFormOnPage = false;
-
-            $.each(window.reCapchaFormsToProtect, function (k, form) {
-                if($(form).length > 0) {
-                    hasFormOnPage = true;
-                    return false; // breaks
-                }
-            });
-
-            window.onloadCallbackGoogleRecapcha = function () {
-                $.each(window.reCapchaFormsToProtect, function(k, form) {
-                    $(form).reCaptcha();
-                });
-            };
-
-            // Initialize Recaptcha
-            if (hasFormOnPage === true) {
-                require([
-                    '//www.google.com/recaptcha/api.js?onload=onloadCallbackGoogleRecapcha&render='
-                    + window.reCapchaSiteKey
-                ]);
-            }
-        });
-    </script>
-<?php endif; ?>
+<script type="text/x-magento-init">
+{
+    "#<?php echo $block->getWidgetId() ?>": {
+        "Magento_Ui/js/core/app": <?php /* @escapeNotVerified */ echo $block->getJsLayout();?>
+    }
+}
+</script>

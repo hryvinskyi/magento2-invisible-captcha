@@ -7,12 +7,15 @@
 
 declare(strict_types=1);
 
-namespace Hryvinskyi\InvisibleCaptcha\Helper;
+namespace Hryvinskyi\InvisibleCaptcha\Helper\Config;
 
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Store\Model\ScopeInterface;
 
-class Config extends AbstractHelper
+/**
+ * Class General
+ */
+class General extends AbstractHelper
 {
     /**
      * Configuration path
@@ -20,26 +23,10 @@ class Config extends AbstractHelper
     const CONFIG_PATH_GENERAL_ENABLE_MODULE = 'hryvinskyi_invisible_captcha/general/enabledCaptcha';
     const CONFIG_PATH_GENERAL_SITE_KEY = 'hryvinskyi_invisible_captcha/general/captchaSiteKey';
     const CONFIG_PATH_GENERAL_SECRET_KEY = 'hryvinskyi_invisible_captcha/general/captchaSecretKey';
-    const CONFIG_PATH_GENERAL_ALLOWED_URLS = 'hryvinskyi_invisible_captcha/general/captchaUrls';
-    const CONFIG_PATH_DISPLAY_ALLOWED_SELECTORS = 'hryvinskyi_invisible_captcha/general/captchaSelectors';
-
+    const CONFIG_PATH_GENERAL_VALIDATION_MESSAGE = 'hryvinskyi_invisible_captcha/general/validationMessage';
 
     /**
-     * @param $string
-     *
-     * @return mixed
-     */
-    public function stringValidationAndCovertInArray($string)
-    {
-        $validate = function ($urls) {
-            return preg_split('|\s*[\r\n]+\s*|', $urls, -1, PREG_SPLIT_NO_EMPTY);
-        };
-
-        return $validate($string);
-    }
-
-    /**
-     * Is google recaptcha enable
+     * Is google recaptcha enable global
      *
      * @param string $scopeType
      * @param mixed $scopeCode
@@ -96,6 +83,27 @@ class Config extends AbstractHelper
     }
 
     /**
+     * Return Validation Message
+     *
+     * @param string $scopeType
+     * @param mixed $scopeCode
+     *
+     * @return string
+     */
+    public function getValidationMessage(
+        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        $scopeCode = null
+    ): string {
+        return $this->scopeConfig->getValue(
+            self::CONFIG_PATH_GENERAL_VALIDATION_MESSAGE,
+            $scopeType,
+            $scopeCode
+        );
+    }
+
+    /**
+     * Get config by path
+     *
      * @param $path
      * @param null $storeId
      * @param string $scope
@@ -108,45 +116,5 @@ class Config extends AbstractHelper
         $scope = ScopeInterface::SCOPE_WEBSITE
     ) {
         return $this->scopeConfig->getValue($path, $scope, $storeId);
-    }
-
-    /**
-     * @param string $scopeType
-     * @param null $scopeCode
-     *
-     * @return array
-     */
-    public function getCaptchaUrls(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
-        $scopeCode = null
-    ): array {
-        $urls = $this->scopeConfig->getValue(
-            self::CONFIG_PATH_GENERAL_ALLOWED_URLS,
-            $scopeType,
-            $scopeCode
-        ) ?: '';
-        $urls = trim($urls);
-
-        return $urls ? $this->stringValidationAndCovertInArray($urls) : [];
-    }
-
-    /**
-     * @param string $scopeType
-     * @param null $scopeCode
-     *
-     * @return array
-     */
-    public function getCaptchaSelectors(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
-        $scopeCode = null
-    ): array {
-        $urls = $this->scopeConfig->getValue(
-            self::CONFIG_PATH_DISPLAY_ALLOWED_SELECTORS,
-            $scopeType,
-            $scopeCode
-        ) ?: '';
-        $urls = trim($urls);
-
-        return $urls ? $this->stringValidationAndCovertInArray($urls) : [];
     }
 }

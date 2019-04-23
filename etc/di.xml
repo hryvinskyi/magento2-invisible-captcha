@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
+  ~ @author: <mailto:volodymyr@hryvinskyi.com>
+  ~ @github: <https://github.com/hryvinskyi>
+  -->
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Framework\App\FrontControllerInterface">
+        <plugin name="Hryvinskyi_InvisibleCaptcha::predispatch" type="Hryvinskyi\InvisibleCaptcha\Plugin\Predispatch"/>
+    </type>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Model\CaptchaInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Captcha"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Model\CheckEnabledVerifyInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\CheckEnabledVerify"/>
+
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Verify\CustomerLogin">
+        <arguments>
+            <argument name="area" xsi:type="string">frontend</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\LoginCaptcha"
+                 type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
+        <arguments>
+            <argument name="url" xsi:type="string">customer/account/loginPost</argument>
+            <argument name="checkEnabledVerify"
+                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\CustomerLogin</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\LoginPopupCaptcha"
+                 type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
+        <arguments>
+            <argument name="url" xsi:type="string">customer/ajax/login</argument>
+            <argument name="checkEnabledVerify"
+                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\CustomerLogin</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\ListCaptcha">
+        <arguments>
+            <argument name="entityTypes" xsi:type="array">
+                <item name="customer_login"
+                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\LoginCaptcha</item>
+                <item name="customer_login_popup"
+                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\LoginPopupCaptcha</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

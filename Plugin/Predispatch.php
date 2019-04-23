@@ -7,7 +7,10 @@
 
 namespace Hryvinskyi\InvisibleCaptcha\Plugin;
 
-use Hryvinskyi\InvisibleCaptcha\Helper\Config;
+use Exception;
+use Hryvinskyi\Base\Helper\Json;
+use Hryvinskyi\InvisibleCaptcha\Helper\Config\General;
+use Hryvinskyi\InvisibleCaptcha\Model\ListCaptcha;
 use Magento\Backend\Model\View\Result\RedirectFactory;
 use Magento\Framework\App\FrontControllerInterface;
 use Magento\Framework\App\RequestInterface;
@@ -29,7 +32,7 @@ class Predispatch
     private $resultRedirectFactory;
 
     /**
-     * @var Config
+     * @var General
      */
     private $config;
 
@@ -54,22 +57,29 @@ class Predispatch
     private $redirector;
 
     /**
+     * @var ListCaptcha
+     */
+    private $listCaptcha;
+
+    /**
      * Action constructor.
      *
      * @param RedirectFactory $resultRedirectFactory
-     * @param Config $config
+     * @param General $config
      * @param Curl $curl
      * @param UrlInterface $urlBuilder
      * @param ManagerInterface $messageManager
      * @param RedirectInterface $redirector
+     * @param ListCaptcha $listCaptcha
      */
     public function __construct(
         RedirectFactory $resultRedirectFactory,
-        Config $config,
+        General $config,
         Curl $curl,
         UrlInterface $urlBuilder,
         ManagerInterface $messageManager,
-        RedirectInterface $redirector
+        RedirectInterface $redirector,
+        ListCaptcha $listCaptcha
     ) {
         $this->resultRedirectFactory = $resultRedirectFactory;
         $this->config = $config;
@@ -77,6 +87,7 @@ class Predispatch
         $this->urlBuilder = $urlBuilder;
         $this->messageManager = $messageManager;
         $this->redirector = $redirector;
+        $this->listCaptcha = $listCaptcha;
     }
 
     /**
@@ -89,25 +100,30 @@ class Predispatch
         FrontControllerInterface $subject,
         RequestInterface $request
     ) {
-        if ($this->config->hasEnable()) {
-            foreach ($this->config->getCaptchaUrls() as $captchaUrl) {
-                if (strpos($this->urlBuilder->getCurrentUrl(), $captchaUrl) !== false) {
-                    if ($request->isPost()) {
-                        $token = $request->getPost('hryvinskyi_invisible_token');
-                        $validation = $this->verifyCaptcha($token);
+        $token = Json::encode($_POST);
+        $this->messageManager->addErrorMessage($token);exit;
+        foreach ($this->listCaptcha->getList() as $captcha) {
+            if ($captcha->isEnabled($this->urlBuilder->getCurrentUrl())) {
+                if ($request->isPost()) {
+                    $token = $request->getPost('hryvinskyi_invisible_token');
+                    $validation = $this->verifyCaptcha($token);
 
-                        if (!$validation) {
-                            $this->messageManager->addErrorMessage(__('Invalid Recaptcha'));
-                            $refererUrl = $this->redirector->getRefererUrl();
-
-                            if (isset($refererUrl) && $refererUrl != '') {
-                                header('Location: ' . $refererUrl);
-                            }
-                            die;
+                    if (!$validation) {
+                        $this->messageManager->addErrorMessage(__('Invalid Recaptcha'));
+//                        var_dump($request->isXmlHttpRequest());exit;
+                        if ($request->isXmlHttpRequest()) {
+                            break;
                         }
+                        $refererUrl = $this->redirector->getRefererUrl();
+                        if (isset($refererUrl) && $refererUrl != '') {
+                            header('Location: ' . $refererUrl);
+                        }
+
+                        die;
                     }
-                    break;
                 }
+
+                break;
             }
         }
     }
@@ -122,16 +138,15 @@ class Predispatch
         if ($token) {
             $curlParams = [
                 'secret'   => $this->config->getSecretKey(),
-                'response' => $token
+                'response' => $token,
             ];
             $this->curl->post(self::GOOGLE_VERIFY_URL, $curlParams);
             try {
-                if (($this->curl->getStatus() == 200)
-                    && array_key_exists('success', $answer = \Zend_Json::decode($this->curl->getBody()))
-                ) {
+                $answer = Json::decode($this->curl->getBody());
+                if (($this->curl->getStatus() == 200) && array_key_exists('success', $answer)) {
                     return $answer['success'];
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return false;
             }
         }
