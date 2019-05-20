@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
+  ~ @author: <mailto:volodymyr@hryvinskyi.com>
+  ~ @github: <https://github.com/hryvinskyi>
+  -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+
+    <event name="controller_action_predispatch_customer_account_loginPost">
+        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
+                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\Login"/>
+    </event>
+    <event name="controller_action_predispatch_customer_ajax_login">
+        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
+                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\LoginPopup"/>
+    </event>
+    <event name="controller_action_predispatch_customer_account_createpost">
+        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
+                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\CustomerCreate"/>
+    </event>
+    <event name="controller_action_predispatch_customer_account_forgotpasswordpost">
+        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
+                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\CustomerForgot"/>
+    </event>
+    <event name="controller_action_predispatch_contact_index_post">
+        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
+                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\ContactForm"/>
+    </event>
+    <event name="controller_action_predispatch_newsletter_subscriber_new">
+        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
+                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\Newsletter"/>
+    </event>
+</config>

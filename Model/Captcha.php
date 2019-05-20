@@ -9,15 +9,28 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Model;
 
+use Hryvinskyi\InvisibleCaptcha\Model\Provider\FailureInterface;
+use Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponseInterface;
+
 /**
  * Class Captcha
  */
 class Captcha implements CaptchaInterface
 {
     /**
-     * @var null
+     * @var string|null
      */
-    private $url;
+    private $action;
+
+    /**
+     * @var TokenResponseInterface
+     */
+    private $tokenResponse;
+
+    /**
+     * @var FailureInterface
+     */
+    private $failureProvider;
 
     /**
      * @var CheckEnabledVerifyInterface|null
@@ -25,43 +38,70 @@ class Captcha implements CaptchaInterface
     private $checkEnabledVerify;
 
     /**
+     * @var ScoreThresholdInterface|null
+     */
+    private $scoreThreshold;
+
+    /**
      * Captcha constructor.
      *
-     * @param string|null $url
+     * @param string $action
+     * @param TokenResponseInterface $tokenResponse
+     * @param FailureInterface $failureProvider
+     * @param ScoreThresholdInterface|null $scoreThreshold
      * @param CheckEnabledVerifyInterface|null $checkEnabledVerify
      */
     public function __construct(
-        ?string $url,
+        string $action,
+        TokenResponseInterface $tokenResponse,
+        FailureInterface $failureProvider,
+        ?ScoreThresholdInterface $scoreThreshold,
         ?CheckEnabledVerifyInterface $checkEnabledVerify
     ) {
-        $this->url = $url;
+        $this->action = $action;
+        $this->tokenResponse = $tokenResponse;
+        $this->failureProvider = $failureProvider;
+        $this->scoreThreshold = $scoreThreshold;
         $this->checkEnabledVerify = $checkEnabledVerify;
     }
 
     /**
-     * @inheritdoc
+     * @return string
      */
-    public function getUrl(): string
+    public function getAction(): string
     {
-        return $this->url;
+        return $this->action;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getToken(): ?string
+    {
+        return $this->tokenResponse->getToken();
+    }
+
+    /**
+     * @return float
+     */
+    public function getScoreThreshold(): float
+    {
+        return $this->scoreThreshold ? $this->scoreThreshold->getValue() : 0.5;
+    }
+
+    /**
+     * @return FailureInterface
+     */
+    public function getFailure(): FailureInterface
+    {
+        return $this->failureProvider;
     }
 
     /**
      * @inheritdoc
      */
-    public function setUrl(string $url): CaptchaInterface
+    public function isEnabled(): bool
     {
-        $this->url = $url;
-
-        return $this;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function isEnabled(string $url): bool
-    {
-        return strpos($url, $this->getUrl()) !== false
-            && (!$this->checkEnabledVerify || $this->checkEnabledVerify->verify());
+        return !$this->checkEnabledVerify || $this->checkEnabledVerify->verify();
     }
 }

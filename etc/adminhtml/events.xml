@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
+  ~ @author: <mailto:volodymyr@hryvinskyi.com>
+  ~ @github: <https://github.com/hryvinskyi>
+  -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="controller_action_predispatch_adminhtml_auth_forgotpassword">
+        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
+                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Backend\ForgotPassword"/>
+    </event>
+    <event name="admin_user_authenticate_before">
+        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
+                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Backend\Login" />
+    </event>
+</config>

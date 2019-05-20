@@ -10,27 +10,30 @@
     <default>
         <hryvinskyi_invisible_captcha>
             <general>
-                <enabledCaptcha>1</enabledCaptcha>
+                <enabledCaptcha>0</enabledCaptcha>
                 <captchaSiteKey><![CDATA[]]></captchaSiteKey>
                 <captchaSecretKey><![CDATA[]]></captchaSecretKey>
-                <captchaUrls>
-                    <![CDATA[customer/account/createpost
-customer/account/loginPost
-newsletter/subscriber/new
-review/product/post
-contact/index/post]]>
-                </captchaUrls>
-                <captchaSelectors>
-                    <![CDATA[form[action*="customer/account/createpost"]
-form[action*="customer/account/loginPost"]
-form[action*="newsletter/subscriber/new"]
-form[action*="review/product/post"]
-form[action*="contact/index/post"]]]>
-                </captchaSelectors>
+                <validationMessage><![CDATA[Incorrect captcha]]></validationMessage>
             </general>
             <frontend>
-                <enabled>1</enabled>
+                <enabled>0</enabled>
+                <enabledCustomerLogin>0</enabledCustomerLogin>
+                <scoreThresholdCustomerLogin>0.5</scoreThresholdCustomerLogin>
+                <enabledCustomerCreate>0</enabledCustomerCreate>
+                <scoreThresholdCustomerCreate>0.5</scoreThresholdCustomerCreate>
+                <enabledCustomerForgot>0</enabledCustomerForgot>
+                <scoreThresholdCustomerForgot>0.5</scoreThresholdCustomerForgot>
+                <enabledContact>0</enabledContact>
+                <scoreThresholdContact>0.5</scoreThresholdContact>
+                <enabledNewsletter>0</enabledNewsletter>
+                <scoreThresholdNewsletter>0.5</scoreThresholdNewsletter>
             </frontend>
+            <backend>
+                <enabledLogin>0</enabledLogin>
+                <scoreThresholdLogin>0.5</scoreThresholdLogin>
+                <enabledForgot>0</enabledForgot>
+                <scoreThresholdForgot>0.5</scoreThresholdForgot>
+            </backend>
         </hryvinskyi_invisible_captcha>
     </default>
 </config>

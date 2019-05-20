@@ -63,9 +63,9 @@ class AuthenticationPopupPlugin
 
         if (
             (
-                !$this->generalConfig->hasEnable()
-                || !$this->frontendConfig->hasEnable()
-                || !$this->frontendConfig->hasEnableCustomerLogin()
+                !$this->generalConfig->hasEnabled()
+                || !$this->frontendConfig->hasEnabled()
+                || !$this->frontendConfig->hasEnabledCustomerLogin()
             )
             && isset($layout['components']['authenticationPopup']['children']['invisible-captcha'])
         ) {

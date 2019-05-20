@@ -92,17 +92,17 @@ abstract class AbstractCheckEnabledVerify implements CheckEnabledVerifyInterface
     {
         $return = false;
 
-        if ($this->getGeneralConfig()->hasEnable() === false) {
+        if ($this->getGeneralConfig()->hasEnabled() === false) {
             return $return;
         }
 
         switch ($this->area) {
             case Area::AREA_FRONTEND:
-                $return = $this->getFrontendConfig()->hasEnable();
+                $return = $this->getFrontendConfig()->hasEnabled();
                 break;
 
             case Area::AREA_ADMINHTML:
-                $return = $this->getBackendConfig()->hasEnable();
+                $return = $this->getBackendConfig()->hasEnabled();
                 break;
         }
 

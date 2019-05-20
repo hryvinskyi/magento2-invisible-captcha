@@ -8,4 +8,31 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
 
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Verify\Adminhtml\Login">
+        <arguments>
+            <argument name="area" xsi:type="string">adminhtml</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Backend\Login"
+                 type="Hryvinskyi\InvisibleCaptcha\Observer\Captcha">
+        <arguments>
+            <argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Adminhtml\LoginCaptcha</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Adminhtml\LoginCaptcha"
+                 type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
+        <arguments>
+            <argument name="action" xsi:type="string">admin_login</argument>
+            <argument name="scoreThreshold"
+                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Backend\Login</argument>
+            <argument name="checkEnabledVerify"
+                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\Adminhtml\Login</argument>
+            <argument name="failureProvider"
+                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\AuthenticationExceptionFailure</argument>
+            <argument name="tokenResponse"
+                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse\General</argument>
+        </arguments>
+    </virtualType>
 </config>

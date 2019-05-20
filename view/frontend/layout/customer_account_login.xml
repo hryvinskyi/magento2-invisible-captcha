@@ -10,14 +10,15 @@
     <body>
         <referenceContainer name="form.additional.info">
             <block class="Hryvinskyi\InvisibleCaptcha\Block\Captcha" name="invisible.recaptcha" after="-"
-                   template="Hryvinskyi_InvisibleCaptcha::captcha.phtml">
+                   template="Hryvinskyi_InvisibleCaptcha::captcha.phtml"
+                   ifconfig="hryvinskyi_invisible_captcha/frontend/enabledCustomerLogin">
                 <arguments>
                     <argument name="jsLayout" xsi:type="array">
                         <item name="components" xsi:type="array">
                             <item name="invisible-captcha" xsi:type="array">
                                 <item name="component"
                                       xsi:type="string">Hryvinskyi_InvisibleCaptcha/js/invisible-captcha</item>
-                                <item name="action" xsi:type="string">login</item>
+                                <item name="action" xsi:type="string">customer_login</item>
                             </item>
                         </item>
                     </argument>

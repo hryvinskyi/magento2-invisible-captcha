@@ -33,7 +33,7 @@ class General extends AbstractHelper
      *
      * @return bool
      */
-    public function hasEnable(
+    public function hasEnabled(
         string $scopeType = ScopeInterface::SCOPE_WEBSITE,
         $scopeCode = null
     ): bool {

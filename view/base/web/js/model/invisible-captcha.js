@@ -8,7 +8,9 @@ define(['ko'], function (ko) {
     'use strict';
 
     return {
+        isApiLoad: ko.observable(false),
         isApiLoaded: ko.observable(false),
+        initializeForms: ko.observableArray([]),
         initializedForms: ko.observableArray([])
     };
 });

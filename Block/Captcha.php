@@ -91,12 +91,12 @@ class Captcha extends Template
     {
         $layout = Json::decode(parent::getJsLayout());
 
-        if ($this->frontendConfig->hasEnable() && $this->isModuleOn()) {
+        if ($this->frontendConfig->hasEnabled() && $this->isModuleOn()) {
             $layout['components']['invisible-captcha']['config'] = $this->layoutSettings->getCaptchaSettings();
         }
 
         if (
-            (!$this->frontendConfig->hasEnable() || !$this->isModuleOn())
+            (!$this->frontendConfig->hasEnabled() || !$this->isModuleOn())
             && isset($layout['components']['invisible-captcha'])
         ) {
             unset($layout['components']['invisible-captcha']);
@@ -110,7 +110,7 @@ class Captcha extends Template
      */
     public function isModuleOn(): bool
     {
-        return $this->generalConfig->hasEnable();
+        return $this->generalConfig->hasEnabled();
     }
 
     /**

@@ -21,6 +21,6 @@ class CustomerLogin extends AbstractCheckEnabledVerify
      */
     public function verify(): bool
     {
-        return parent::verify() && $this->getFrontendConfig()->hasEnableCustomerLogin();
+        return parent::verify() && $this->getFrontendConfig()->hasEnabledCustomerLogin();
     }
 }

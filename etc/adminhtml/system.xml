@@ -70,7 +70,15 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="enabledCustomerCreate" translate="label" type="select" sortOrder="30" showInDefault="1"
+                <field id="scoreThresholdCustomerLogin" translate="label" type="select" sortOrder="30" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Login Score Threshold</label>
+                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                    <depends>
+                        <field id="enabledCustomerLogin">1</field>
+                    </depends>
+                </field>
+                <field id="enabledCustomerCreate" translate="label" type="select" sortOrder="40" showInDefault="1"
                        showInWebsite="1" showInStore="0" canRestore="1">
                     <label>Use in Create user</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -78,7 +86,15 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="enabledCustomerForgot" translate="label" type="select" sortOrder="40" showInDefault="1"
+                <field id="scoreThresholdCustomerCreate" translate="label" type="select" sortOrder="50" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Create User Score Threshold</label>
+                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                    <depends>
+                        <field id="enabledCustomerCreate">1</field>
+                    </depends>
+                </field>
+                <field id="enabledCustomerForgot" translate="label" type="select" sortOrder="60" showInDefault="1"
                        showInWebsite="1" showInStore="0" canRestore="1">
                     <label>Use in Forgot password</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -86,7 +102,15 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="enabledContact" translate="label" type="select" sortOrder="50" showInDefault="1"
+                <field id="scoreThresholdCustomerForgot" translate="label" type="select" sortOrder="70" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Forgot Password Score Threshold</label>
+                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                    <depends>
+                        <field id="enabledCustomerForgot">1</field>
+                    </depends>
+                </field>
+                <field id="enabledContact" translate="label" type="select" sortOrder="80" showInDefault="1"
                        showInWebsite="1" showInStore="0" canRestore="1">
                     <label>Use in Contact</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -94,12 +118,28 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
-                <field id="enabledNewsletter" translate="label" type="select" sortOrder="60" showInDefault="1"
+                <field id="scoreThresholdContact" translate="label" type="select" sortOrder="90" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Contact Score Threshold</label>
+                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                    <depends>
+                        <field id="enabledContact">1</field>
+                    </depends>
+                </field>
+                <field id="enabledNewsletter" translate="label" type="select" sortOrder="100" showInDefault="1"
                        showInWebsite="1" showInStore="0" canRestore="1">
                     <label>Use in Newsletter</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <depends>
                         <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="scoreThresholdNewsletter" translate="label" type="select" sortOrder="110" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Newsletter Score Threshold</label>
+                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                    <depends>
+                        <field id="enabledNewsletter">1</field>
                     </depends>
                 </field>
             </group>
@@ -111,15 +151,31 @@
                     <label>Enable invisible captcha in backend</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="enabledLogin" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1"
-                       showInStore="0">
+                <field id="enabledLogin" translate="label" type="select" sortOrder="20" showInDefault="1"
+                       showInWebsite="1" showInStore="0">
                     <label>Enable in login page</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="enabledForgot" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1"
-                       showInStore="0">
+                <field id="scoreThresholdLogin" translate="label" type="select" sortOrder="30" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Login Score Threshold</label>
+                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                    <depends>
+                        <field id="enabledLogin">1</field>
+                    </depends>
+                </field>
+                <field id="enabledForgot" translate="label" type="select" sortOrder="40" showInDefault="1"
+                       showInWebsite="1" showInStore="0">
                     <label>Enable in forgot password page</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="scoreThresholdForgot" translate="label" type="select" sortOrder="50" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Forgot Password Score Threshold</label>
+                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                    <depends>
+                        <field id="enabledForgot">1</field>
+                    </depends>
                 </field>
             </group>
         </section>

@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Model;
 
+use Hryvinskyi\InvisibleCaptcha\Model\Provider\FailureInterface;
+
 /**
  * Class AbstractCaptcha
  */
@@ -17,19 +19,25 @@ interface CaptchaInterface
     /**
      * @return string
      */
-    public function getUrl(): string;
+    public function getAction(): string;
 
     /**
-     * @param string $url
-     *
-     * @return CaptchaInterface
+     * @return string
      */
-    public function setUrl(string $url): CaptchaInterface;
+    public function getToken(): ?string;
 
     /**
-     * @param string $url
-     *
+     * @return FailureInterface
+     */
+    public function getFailure(): FailureInterface;
+
+    /**
+     * @return float
+     */
+    public function getScoreThreshold(): float;
+
+    /**
      * @return bool
      */
-    public function isEnabled(string $url): bool;
+    public function isEnabled(): bool;
 }

@@ -5,10 +5,193 @@
   ~ @github: <https://github.com/hryvinskyi>
   -->
 
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <type name="Magento\Customer\Block\Account\AuthenticationPopup">
-        <plugin sortOrder="1" name="Hryvinskyi_InvisibleCaptcha:authentication_popup"
-                type="Hryvinskyi\InvisibleCaptcha\Plugin\Block\Account\AuthenticationPopupPlugin"/>
+        <plugin sortOrder="1" name="Hryvinskyi_InvisibleCaptcha:authentication_popup" type="Hryvinskyi\InvisibleCaptcha\Plugin\Block\Account\AuthenticationPopupPlugin"/>
     </type>
+
+    <!-- Verify enabled captcha on customer login or not -->
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Verify\CustomerLogin">
+        <arguments>
+            <argument name="area" xsi:type="string">frontend</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\Login" type="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\ObserverRedirectFailure">
+        <arguments>
+            <argument name="redirectUrlProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\BeforeAuthUrlProvider</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\LoginCaptcha" type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
+        <arguments>
+            <argument name="action" xsi:type="string">customer_login</argument>
+            <argument name="scoreThreshold" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Frontend\CustomerLogin</argument>
+            <argument name="checkEnabledVerify" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\CustomerLogin</argument>
+            <argument name="failureProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\Login</argument>
+            <argument name="tokenResponse" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse\General</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\Login" type="Hryvinskyi\InvisibleCaptcha\Observer\Captcha">
+        <arguments>
+            <argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\LoginCaptcha</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\LoginPopupCaptcha" type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
+        <arguments>
+            <argument name="action" xsi:type="string">customer_login_popup</argument>
+            <argument name="scoreThreshold" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\CustomerLogin</argument>
+            <argument name="checkEnabledVerify" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\CustomerLogin</argument>
+            <argument name="failureProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\AjaxResponseFailure</argument>
+            <argument name="tokenResponse" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse\Ajax</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\LoginPopup" type="Hryvinskyi\InvisibleCaptcha\Observer\Captcha">
+        <arguments>
+            <argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\LoginPopupCaptcha</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Customer Forgot Password -->
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Verify\CustomerForgotPassword">
+        <arguments>
+            <argument name="area" xsi:type="string">frontend</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\CustomerForgot" type="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\ObserverRedirectFailure">
+        <arguments>
+            <argument name="redirectUrlProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\CustomerForgot</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\CustomerForgot" type="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\SimpleUrlProvider">
+        <arguments>
+            <argument name="urlPath" xsi:type="string">*/*/forgotpassword</argument>
+            <argument name="urlParams" xsi:type="array">
+                <item name="_secure" xsi:type="boolean">true</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\CustomerForgot" type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
+        <arguments>
+            <argument name="action" xsi:type="string">customer_forgot_password</argument>
+            <argument name="scoreThreshold" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Frontend\CustomerForgotPassword</argument>
+            <argument name="checkEnabledVerify" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\CustomerForgotPassword</argument>
+            <argument name="failureProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\CustomerForgot</argument>
+            <argument name="tokenResponse" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse\General</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\CustomerForgot" type="Hryvinskyi\InvisibleCaptcha\Observer\Captcha">
+        <arguments>
+            <argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\CustomerForgot</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Create Account Password -->
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Verify\CustomerCreate">
+        <arguments>
+            <argument name="area" xsi:type="string">frontend</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\CustomerCreate" type="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\ObserverRedirectFailure">
+        <arguments>
+            <argument name="redirectUrlProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\CustomerCreate</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\CustomerCreate" type="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\SimpleUrlProvider">
+        <arguments>
+            <argument name="urlPath" xsi:type="string">*/*/create</argument>
+            <argument name="urlParams" xsi:type="array">
+                <item name="_secure" xsi:type="boolean">true</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\CustomerCreate" type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
+        <arguments>
+            <argument name="action" xsi:type="string">customer_create</argument>
+            <argument name="scoreThreshold" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Frontend\CustomerCreate</argument>
+            <argument name="checkEnabledVerify" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\CustomerCreate</argument>
+            <argument name="failureProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\CustomerCreate</argument>
+            <argument name="tokenResponse" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse\General</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\CustomerCreate" type="Hryvinskyi\InvisibleCaptcha\Observer\Captcha">
+        <arguments>
+            <argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\CustomerCreate</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Contact page -->
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Verify\Contact">
+        <arguments>
+            <argument name="area" xsi:type="string">frontend</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\Contact" type="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\ObserverRedirectFailure">
+        <arguments>
+            <argument name="redirectUrlProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\Contact</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\Contact" type="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\SimpleUrlProvider">
+        <arguments>
+            <argument name="urlPath" xsi:type="string">contact/index/index</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Contact" type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
+        <arguments>
+            <argument name="action" xsi:type="string">contact</argument>
+            <argument name="scoreThreshold" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Frontend\Contact</argument>
+            <argument name="checkEnabledVerify" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\Contact</argument>
+            <argument name="failureProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\Contact</argument>
+            <argument name="tokenResponse" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse\General</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\Contact" type="Hryvinskyi\InvisibleCaptcha\Observer\Captcha">
+        <arguments>
+            <argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Contact</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Contact page -->
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Verify\Newsletter">
+        <arguments>
+            <argument name="area" xsi:type="string">frontend</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\Newsletter" type="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\ObserverRedirectFailure">
+        <arguments>
+            <argument name="redirectUrlProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\RefererProvider</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Newsletter" type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
+        <arguments>
+            <argument name="action" xsi:type="string">newsletter</argument>
+            <argument name="scoreThreshold" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Frontend\Newsletter</argument>
+            <argument name="checkEnabledVerify" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\Newsletter</argument>
+            <argument name="failureProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\Newsletter</argument>
+            <argument name="tokenResponse" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse\General</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\Newsletter" type="Hryvinskyi\InvisibleCaptcha\Observer\Captcha">
+        <arguments>
+            <argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Newsletter</argument>
+        </arguments>
+    </virtualType>
 </config>
