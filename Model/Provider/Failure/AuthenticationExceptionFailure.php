@@ -10,11 +10,13 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure;
 
 use Hryvinskyi\InvisibleCaptcha\Helper\Config\General;
+use Hryvinskyi\InvisibleCaptcha\Model\Provider\AbstractFailure;
 use Hryvinskyi\InvisibleCaptcha\Model\Provider\FailureInterface;
+use Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Response;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Exception\Plugin\AuthenticationException;
 
-class AuthenticationExceptionFailure implements FailureInterface
+class AuthenticationExceptionFailure extends AbstractFailure
 {
     /**
      * @var General
@@ -35,14 +37,15 @@ class AuthenticationExceptionFailure implements FailureInterface
     /**
      * Handle captcha failure
      *
+     * @param Response $verifyReCaptcha
      * @param ResponseInterface $response
      *
      * @return void
      * @throws AuthenticationException
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function execute(ResponseInterface $response = null)
+    public function execute(Response $verifyReCaptcha, ResponseInterface $response = null)
     {
-        throw new AuthenticationException(__($this->config->getValidationMessage()));
+        throw new AuthenticationException(__($this->getMessagesString($verifyReCaptcha)));
     }
 }

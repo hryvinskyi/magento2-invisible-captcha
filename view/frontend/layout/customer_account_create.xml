@@ -19,6 +19,7 @@
                                 <item name="component"
                                       xsi:type="string">Hryvinskyi_InvisibleCaptcha/js/invisible-captcha</item>
                                 <item name="action" xsi:type="string">customer_create</item>
+                                <item name="captchaId" xsi:type="string">customer_create</item>
                             </item>
                         </item>
                     </argument>

@@ -25,7 +25,7 @@
     </event>
     <event name="controller_action_predispatch_contact_index_post">
         <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
-                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\ContactForm"/>
+                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\Contact"/>
     </event>
     <event name="controller_action_predispatch_newsletter_subscriber_new">
         <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"

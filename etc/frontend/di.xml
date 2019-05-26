@@ -5,9 +5,15 @@
   ~ @github: <https://github.com/hryvinskyi>
   -->
 
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <type name="Magento\Customer\Block\Account\AuthenticationPopup">
-        <plugin sortOrder="1" name="Hryvinskyi_InvisibleCaptcha:authentication_popup" type="Hryvinskyi\InvisibleCaptcha\Plugin\Block\Account\AuthenticationPopupPlugin"/>
+        <plugin sortOrder="1" name="Hryvinskyi_InvisibleCaptcha:authentication_popup"
+                type="Hryvinskyi\InvisibleCaptcha\Plugin\Block\Account\AuthenticationPopupPlugin"/>
+    </type>
+    <type name="Magento\Checkout\Block\Onepage">
+        <plugin sortOrder="1" name="Hryvinskyi_InvisibleCaptcha:authentication_onepage_checkout"
+                type="Hryvinskyi\InvisibleCaptcha\Plugin\Block\Checkout\OnepagePlugin"/>
     </type>
 
     <!-- Verify enabled captcha on customer login or not -->
@@ -41,8 +47,8 @@
 
     <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\LoginPopupCaptcha" type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
         <arguments>
-            <argument name="action" xsi:type="string">customer_login_popup</argument>
-            <argument name="scoreThreshold" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\CustomerLogin</argument>
+            <argument name="action" xsi:type="string">customer_login_ajax</argument>
+            <argument name="scoreThreshold" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Frontend\CustomerLogin</argument>
             <argument name="checkEnabledVerify" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\CustomerLogin</argument>
             <argument name="failureProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\AjaxResponseFailure</argument>
             <argument name="tokenResponse" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse\Ajax</argument>
@@ -166,7 +172,7 @@
         </arguments>
     </virtualType>
 
-    <!-- Contact page -->
+    <!-- Newsletter -->
     <type name="Hryvinskyi\InvisibleCaptcha\Model\Verify\Newsletter">
         <arguments>
             <argument name="area" xsi:type="string">frontend</argument>

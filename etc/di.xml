@@ -21,4 +21,32 @@
             </argument>
         </arguments>
     </type>
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Provider\FailureMessages">
+        <arguments>
+            <argument name="errorMessages" xsi:type="array">
+                <item name="invalid-json" xsi:type="string"
+                      translatable="true">Recaptcha Error: Invalid Json</item>
+                <item name="connection-failed" xsi:type="string"
+                      translatable="true">Recaptcha Error: Connection failed</item>
+                <item name="bad-response" xsi:type="string"
+                      translatable="true">Recaptcha Error: Bad response</item>
+                <item name="unknown-error" xsi:type="string"
+                      translatable="true">Recaptcha Error: Unknown error</item>
+                <item name="missing-input-response" xsi:type="string"
+                      translatable="true">Recaptcha Error: Missing input response</item>
+                <item name="hostname-mismatch" xsi:type="string"
+                      translatable="true">Recaptcha Error: Hostname mismatch</item>
+                <item name="action-mismatch" xsi:type="string"
+                      translatable="true">Recaptcha Error: Action mismatch</item>
+                <item name="score-threshold-not-met" xsi:type="string"
+                      translatable="true">Recaptcha Error: Score Threshold not met</item>
+                <item name="challenge-timeout" xsi:type="string"
+                      translatable="true">Recaptcha Error: Challenge timeout</item>
+                <item name="timeout-or-duplicate" xsi:type="string"
+                      translatable="true">Recaptcha Error: Timeout or duplicate</item>
+                <item name="invalid-input-response" xsi:type="string"
+                      translatable="true">Recaptcha Error: Invalid input response</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Model\Provider;
 
-use Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\VerifyReCaptcha;
+use Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Response;
 
 /**
  * Class AbstractFailure
@@ -17,75 +17,50 @@ use Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\VerifyReCaptcha;
 abstract class AbstractFailure implements FailureInterface
 {
     /**
-     * Invalid JSON received
-     *
-     * @const string
+     * @var FailureMessages
      */
-    const E_INVALID_JSON = 'invalid-json';
+    private $failureMessages;
 
     /**
-     * Could not connect to service
+     * AbstractFailure constructor.
      *
-     * @const string
+     * @param FailureMessages $failureMessages
      */
-    const E_CONNECTION_FAILED = 'connection-failed';
+    public function __construct(
+        FailureMessages $failureMessages
+    ) {
+        $this->failureMessages = $failureMessages;
+    }
 
     /**
-     * Did not receive a 200 from the service
-     *
-     * @const string
-     */
-    const E_BAD_RESPONSE = 'bad-response';
-
-    /**
-     * Not a success, but no error codes received!
-     *
-     * @const string
-     */
-    const E_UNKNOWN_ERROR = 'unknown-error';
-
-    /**
-     * ReCAPTCHA response not provided
-     *
-     * @const string
-     */
-    const E_MISSING_INPUT_RESPONSE = 'missing-input-response';
-
-    /**
-     * Expected hostname did not match
-     *
-     * @const string
-     */
-    const E_HOSTNAME_MISMATCH = 'hostname-mismatch';
-
-    /**
-     * Expected action did not match
-     *
-     * @const string
-     */
-    const E_ACTION_MISMATCH = 'action-mismatch';
-
-    /**
-     * Score threshold not met
-     *
-     * @const string
-     */
-    const E_SCORE_THRESHOLD_NOT_MET = 'score-threshold-not-met';
-
-    /**
-     * Challenge timeout
-     *
-     * @const string
-     */
-    const E_CHALLENGE_TIMEOUT = 'challenge-timeout';
-    
-    /**
-     * @param VerifyReCaptcha $verifyReCaptcha
+     * @param Response $verifyReCaptcha
      *
      * @return array
      */
-    public function checkMessages(VerifyReCaptcha $verifyReCaptcha): array
+    public function getMessages(Response $verifyReCaptcha): array
     {
+        $return = [];
 
+        $errorMessages = $this->failureMessages->getErrorMessages();
+        $errorsCodes = array_keys($errorMessages);
+        $errors = array_intersect($verifyReCaptcha->getErrorCodes(), $errorsCodes);
+
+        foreach ($errors as $error) {
+            if ($this->failureMessages->hasErrorMessage($error)) {
+                $return[] = $this->failureMessages->getErrorMessage($error);
+            }
+        }
+
+        return $return;
+    }
+
+    /**
+     * @param Response $verifyReCaptcha
+     *
+     * @return string
+     */
+    public function getMessagesString(Response $verifyReCaptcha): string
+    {
+        return implode('<br>', $this->getMessages($verifyReCaptcha));
     }
 }

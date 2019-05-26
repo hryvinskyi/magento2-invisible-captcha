@@ -54,22 +54,17 @@ class Captcha implements ObserverInterface
     public function execute(Observer $observer)
     {
         if ($this->provider->isEnabled()) {
-            $validation = false;
 
-            if ($this->provider->getToken()) {
-                $verifyReCaptcha = $this->verifyReCaptcha
-                    ->setSecret($this->config->getSecretKey())
-                    ->setExpectedAction($this->provider->getAction())
-                    ->setScoreThreshold($this->provider->getScoreThreshold())
-                    ->verify($this->provider->getToken());
+            $verifyReCaptcha = $this->verifyReCaptcha
+                ->setSecret($this->config->getSecretKey())
+                ->setExpectedAction($this->provider->getAction())
+                ->setScoreThreshold($this->provider->getScoreThreshold())
+                ->verify($this->provider->getToken());
 
-                $validation = $verifyReCaptcha->isSuccess();
-            }
-
-            if (!$validation) {
+            if ($verifyReCaptcha->isSuccess() === false) {
                 /** @var Action $controller */
                 $controller = $observer->getData('controller_action');
-                $this->provider->getFailure()->execute($controller ? $controller->getResponse() : null);
+                $this->provider->getFailure()->execute($verifyReCaptcha, $controller ? $controller->getResponse() : null);
             }
         }
     }

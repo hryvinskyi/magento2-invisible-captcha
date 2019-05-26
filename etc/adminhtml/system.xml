@@ -46,13 +46,6 @@
                         <field id="enabledCaptcha">1</field>
                     </depends>
                 </field>
-                <field id="validationMessage" translate="label comment" type="textarea" sortOrder="50" showInDefault="1"
-                       showInWebsite="1">
-                    <label>Error validation message</label>
-                    <depends>
-                        <field id="enabledCaptcha">1</field>
-                    </depends>
-                </field>
             </group>
             <group id="frontend" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1"
                    showInStore="1">

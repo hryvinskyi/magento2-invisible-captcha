@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Model\Provider;
 
+use Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Response;
 use Magento\Framework\App\ResponseInterface;
 
 interface FailureInterface
@@ -16,9 +17,10 @@ interface FailureInterface
     /**
      * Handle captcha failure
      *
+     * @param Response $verifyReCaptcha
      * @param ResponseInterface $response
      *
      * @return void
      */
-    public function execute(ResponseInterface $response = null);
+    public function execute(Response $verifyReCaptcha, ResponseInterface $response = null);
 }

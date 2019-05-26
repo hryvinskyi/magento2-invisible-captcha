@@ -13,7 +13,6 @@
                 <enabledCaptcha>0</enabledCaptcha>
                 <captchaSiteKey><![CDATA[]]></captchaSiteKey>
                 <captchaSecretKey><![CDATA[]]></captchaSecretKey>
-                <validationMessage><![CDATA[Incorrect captcha]]></validationMessage>
             </general>
             <frontend>
                 <enabled>0</enabled>

@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
+  ~ @author: <mailto:volodymyr@hryvinskyi.com>
+  ~ @github: <https://github.com/hryvinskyi>
+  -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="checkout.root">
+            <arguments>
+                <argument name="jsLayout" xsi:type="array">
+                    <item name="components" xsi:type="array">
+                        <item name="checkout" xsi:type="array">
+                            <item name="children" xsi:type="array">
+                                <item name="steps" xsi:type="array">
+                                    <item name="children" xsi:type="array">
+                                        <item name="shipping-step" xsi:type="array">
+                                            <item name="children" xsi:type="array">
+                                                <item name="shippingAddress" xsi:type="array">
+                                                    <item name="children" xsi:type="array">
+                                                        <item name="customer-email" xsi:type="array">
+                                                            <item name="children" xsi:type="array">
+                                                                <item name="invisible-captcha" xsi:type="array">
+                                                                    <item name="component" xsi:type="string">Hryvinskyi_InvisibleCaptcha/js/invisible-captcha</item>
+                                                                    <item name="displayArea" xsi:type="string">additional-login-form-fields</item>
+                                                                    <item name="configSource" xsi:type="string">checkoutConfig</item>
+                                                                    <item name="action" xsi:type="string">customer_login_ajax</item>
+                                                                    <item name="captchaId" xsi:type="string">login_checkout_shipping</item>
+                                                                </item>
+                                                            </item>
+                                                        </item>
+                                                    </item>
+                                                </item>
+                                            </item>
+                                        </item>
+                                    </item>
+                                </item>
+
+                                <item name="authentication" xsi:type="array">
+                                    <item name="children" xsi:type="array">
+                                        <item name="invisible-captcha" xsi:type="array">
+                                            <item name="component" xsi:type="string">Hryvinskyi_InvisibleCaptcha/js/invisible-captcha</item>
+                                            <item name="displayArea" xsi:type="string">additional-login-form-fields</item>
+                                            <item name="configSource" xsi:type="string">checkoutConfig</item>
+                                            <item name="action" xsi:type="string">customer_login_ajax</item>
+                                            <item name="captchaId" xsi:type="string">login_checkout</item>
+                                        </item>
+                                    </item>
+                                </item>
+                            </item>
+                        </item>
+                    </item>
+                </argument>
+            </arguments>
+        </referenceBlock>
+    </body>
+</page>

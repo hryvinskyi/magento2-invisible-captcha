@@ -23,7 +23,6 @@ class General extends AbstractHelper
     const CONFIG_PATH_GENERAL_ENABLE_MODULE = 'hryvinskyi_invisible_captcha/general/enabledCaptcha';
     const CONFIG_PATH_GENERAL_SITE_KEY = 'hryvinskyi_invisible_captcha/general/captchaSiteKey';
     const CONFIG_PATH_GENERAL_SECRET_KEY = 'hryvinskyi_invisible_captcha/general/captchaSecretKey';
-    const CONFIG_PATH_GENERAL_VALIDATION_MESSAGE = 'hryvinskyi_invisible_captcha/general/validationMessage';
 
     /**
      * Is google recaptcha enable global
@@ -77,25 +76,6 @@ class General extends AbstractHelper
     ): string {
         return $this->scopeConfig->getValue(
             self::CONFIG_PATH_GENERAL_SECRET_KEY,
-            $scopeType,
-            $scopeCode
-        );
-    }
-
-    /**
-     * Return Validation Message
-     *
-     * @param string $scopeType
-     * @param mixed $scopeCode
-     *
-     * @return string
-     */
-    public function getValidationMessage(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
-        $scopeCode = null
-    ): string {
-        return $this->scopeConfig->getValue(
-            self::CONFIG_PATH_GENERAL_VALIDATION_MESSAGE,
             $scopeType,
             $scopeCode
         );

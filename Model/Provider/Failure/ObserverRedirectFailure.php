@@ -8,14 +8,16 @@
 namespace Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure;
 
 use Hryvinskyi\InvisibleCaptcha\Helper\Config\General;
-use Hryvinskyi\InvisibleCaptcha\Model\Provider\FailureInterface;
+use Hryvinskyi\InvisibleCaptcha\Model\Provider\AbstractFailure;
+use Hryvinskyi\InvisibleCaptcha\Model\Provider\FailureMessages;
+use Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Response;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\ActionFlag;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Message\ManagerInterface as MessageManagerInterface;
 use Magento\Framework\UrlInterface;
 
-class ObserverRedirectFailure implements FailureInterface
+class ObserverRedirectFailure extends AbstractFailure
 {
     /**
      * @var MessageManagerInterface
@@ -49,6 +51,7 @@ class ObserverRedirectFailure implements FailureInterface
      * @param ActionFlag $actionFlag
      * @param General $config
      * @param UrlInterface $url
+     * @param FailureMessages $failureMessages
      * @param RedirectUrlInterface|null $redirectUrlProvider
      */
     public function __construct(
@@ -56,6 +59,7 @@ class ObserverRedirectFailure implements FailureInterface
         ActionFlag $actionFlag,
         General $config,
         UrlInterface $url,
+        FailureMessages $failureMessages,
         RedirectUrlInterface $redirectUrlProvider = null
     ) {
         $this->messageManager = $messageManager;
@@ -63,6 +67,8 @@ class ObserverRedirectFailure implements FailureInterface
         $this->config = $config;
         $this->redirectUrlProvider = $redirectUrlProvider;
         $this->url = $url;
+
+        parent::__construct($failureMessages);
     }
 
     /**
@@ -78,13 +84,14 @@ class ObserverRedirectFailure implements FailureInterface
     /**
      * Handle captcha failure
      *
+     * @param Response $verifyReCaptcha
      * @param ResponseInterface $response
      *
      * @return void
      */
-    public function execute(ResponseInterface $response = null)
+    public function execute(Response $verifyReCaptcha, ResponseInterface $response = null)
     {
-        $this->messageManager->addErrorMessage($this->config->getValidationMessage());
+        $this->messageManager->addErrorMessage($this->getMessagesString($verifyReCaptcha));
         $this->actionFlag->set('', Action::FLAG_NO_DISPATCH, true);
 
         $response->setRedirect($this->getUrl());

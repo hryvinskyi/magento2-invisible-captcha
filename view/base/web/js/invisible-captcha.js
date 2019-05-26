@@ -15,7 +15,8 @@ define([
     return Component.extend({
         defaults: {
             template: 'Hryvinskyi_InvisibleCaptcha/invisible-captcha',
-            action: ''
+            action: '',
+            captchaId: ''
         },
         _initializedForms: [],
 
@@ -28,27 +29,24 @@ define([
         },
 
         /**
-         * Initializ Google ReCaptca Script
+         * Initialize Google ReCaptca Script
          *
          * @private
          */
         _loadGoogleApi: function () {
             var self = this;
 
-            console.log(invisibleCaptcha.isApiLoad());
             if (invisibleCaptcha.isApiLoad() === true) {
-                $(window).trigger('recaptcha_api_ready_' + self.action);
-                console.log('trigger 1');
+                $(window).trigger('recaptcha_api_ready_' + self.captchaId);
                 return;
             }
 
             window.onloadCallbackGoogleRecapcha = function () {
                 invisibleCaptcha.isApiLoaded(true);
                 invisibleCaptcha.initializeForms.each(function (item) {
-                    console.log(item.element, item.self);
                     self._initializeTokenField(item.element, item.self);
                 });
-                $(window).trigger('recaptcha_api_ready_' + self.action);
+                $(window).trigger('recaptcha_api_ready_' + self.captchaId);
             };
 
 
@@ -69,8 +67,8 @@ define([
          * @private
          */
         _initializeTokenField: function (element, self) {
-            if (invisibleCaptcha.initializedForms.indexOf(self.action) === -1) {
-                invisibleCaptcha.initializedForms.push(self.action);
+            if (invisibleCaptcha.initializedForms.indexOf(self.captchaId) === -1) {
+                invisibleCaptcha.initializedForms.push(self.captchaId);
 
                 var tokenField = $('<input type="hidden" name="hryvinskyi_invisible_token" />'),
                     siteKey = self.siteKey,
@@ -83,7 +81,7 @@ define([
                             tokenField.val(token);
                         });
                 });
-
+                tokenField.attr('data-action', action);
                 $(element).append(tokenField);
             }
         },
@@ -100,7 +98,7 @@ define([
             } else if(invisibleCaptcha.isApiLoaded() === true) {
                 self._initializeTokenField(element, self);
             } else {
-                $(window).on('recaptcha_api_ready_' + self.action, function () {
+                $(window).on('recaptcha_api_ready_' + self.captchaId, function () {
                     self._initializeTokenField(element, self);
                 });
             }

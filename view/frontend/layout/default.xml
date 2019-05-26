@@ -18,6 +18,7 @@
                             <item name="invisible-captcha-newsletter" xsi:type="array">
                                 <item name="component" xsi:type="string">Hryvinskyi_InvisibleCaptcha/js/invisible-captcha</item>
                                 <item name="action" xsi:type="string">newsletter</item>
+                                <item name="captchaId" xsi:type="string">newsletter</item>
                             </item>
                         </item>
                     </argument>
@@ -34,7 +35,8 @@
                                     <item name="component" xsi:type="string">Hryvinskyi_InvisibleCaptcha/js/invisible-captcha</item>
                                     <item name="displayArea" xsi:type="string">additional-login-form-fields</item>
                                     <item name="configSource" xsi:type="string">checkoutConfig</item>
-                                    <item name="action" xsi:type="string">customer_login_popup</item>
+                                    <item name="action" xsi:type="string">customer_login_ajax</item>
+                                    <item name="captchaId" xsi:type="string">customer_login_popup</item>
                                 </item>
                             </item>
                         </item>

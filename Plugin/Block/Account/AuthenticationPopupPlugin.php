@@ -15,7 +15,6 @@ use Magento\Customer\Block\Account\AuthenticationPopup;
 
 class AuthenticationPopupPlugin
 {
-
     /**
      * @var LayoutSettings
      */
