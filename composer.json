@@ -14,5 +14,14 @@
         "psr-4": {
             "Hryvinskyi\\InvisibleCaptcha\\": ""
         }
-    }
+    },
+    "config": {
+        "secure-http":false
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "http://repo.magento.com/"
+        }
+    ]
 }
