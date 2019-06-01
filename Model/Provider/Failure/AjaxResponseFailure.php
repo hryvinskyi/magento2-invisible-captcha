@@ -11,7 +11,6 @@ namespace Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure;
 
 use Hryvinskyi\InvisibleCaptcha\Helper\Config\General;
 use Hryvinskyi\InvisibleCaptcha\Model\Provider\AbstractFailure;
-use Hryvinskyi\InvisibleCaptcha\Model\Provider\FailureInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\Provider\FailureMessages;
 use Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Response;
 use Magento\Framework\App\Action\Action;
@@ -71,7 +70,7 @@ class AjaxResponseFailure extends AbstractFailure
 
         $jsonPayload = $this->encoder->encode([
             'errors'  => true,
-            'messages' => $this->getMessagesString($verifyReCaptcha),
+            'message' => $this->getMessagesString($verifyReCaptcha),
         ]);
 
         $response->representJson($jsonPayload);

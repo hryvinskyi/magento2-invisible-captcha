@@ -43,7 +43,7 @@
                 <item name="challenge-timeout" xsi:type="string"
                       translatable="true">Recaptcha Error: Challenge timeout</item>
                 <item name="timeout-or-duplicate" xsi:type="string"
-                      translatable="true">Recaptcha Error: Timeout or duplicate</item>
+                      translatable="true">Recaptcha Error: Timeout or duplicate, please reload page</item>
                 <item name="invalid-input-response" xsi:type="string"
                       translatable="true">Recaptcha Error: Invalid input response</item>
             </argument>
