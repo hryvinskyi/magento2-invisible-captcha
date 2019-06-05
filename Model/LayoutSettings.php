@@ -38,6 +38,10 @@ class LayoutSettings
      */
     public function getCaptchaSettings()
     {
-        return ['siteKey' => $this->config->getSiteKey()];
+        if ($this->config->hasEnabled()) {
+            return ['siteKey' => $this->config->getSiteKey()];
+        }
+
+        return [];
     }
 }
