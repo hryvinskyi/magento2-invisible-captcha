@@ -152,7 +152,7 @@ class VerifyReCaptcha
     {
         $params = $this->requestParameters
             ->setSecret($this->getSecret())
-            ->setResponse($response)
+            ->setResponse((string)$response)
             ->setRemoteIp($remoteIp);
 
         $answer = $this->requestMethod->submit(self::SITE_VERIFY_URL, $params);
