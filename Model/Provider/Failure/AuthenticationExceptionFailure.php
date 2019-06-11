@@ -11,7 +11,7 @@ namespace Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure;
 
 use Hryvinskyi\InvisibleCaptcha\Helper\Config\General;
 use Hryvinskyi\InvisibleCaptcha\Model\Provider\AbstractFailure;
-use Hryvinskyi\InvisibleCaptcha\Model\Provider\FailureInterface;
+use Hryvinskyi\InvisibleCaptcha\Model\Provider\FailureMessages;
 use Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Response;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Exception\Plugin\AuthenticationException;
@@ -26,11 +26,15 @@ class AuthenticationExceptionFailure extends AbstractFailure
     /**
      * AuthenticationExceptionFailure constructor.
      *
+     * @param FailureMessages $failureMessages
      * @param General $config
      */
     public function __construct(
+        FailureMessages $failureMessages,
         General $config
     ) {
+        parent::__construct($failureMessages);
+
         $this->config = $config;
     }
 
