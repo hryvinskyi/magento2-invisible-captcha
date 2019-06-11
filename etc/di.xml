@@ -25,27 +25,33 @@
         <arguments>
             <argument name="errorMessages" xsi:type="array">
                 <item name="invalid-json" xsi:type="string"
-                      translatable="true">Recaptcha Error: Invalid Json</item>
+                      translatable="true">Captcha Error: Invalid Json.</item>
                 <item name="connection-failed" xsi:type="string"
-                      translatable="true">Recaptcha Error: Connection failed</item>
+                      translatable="true">Captcha Error: Connection failed.</item>
                 <item name="bad-response" xsi:type="string"
-                      translatable="true">Recaptcha Error: Bad response</item>
+                      translatable="true">Captcha Error: Bad response.</item>
                 <item name="unknown-error" xsi:type="string"
-                      translatable="true">Recaptcha Error: Unknown error</item>
+                      translatable="true">Captcha Error: Unknown error.</item>
                 <item name="missing-input-response" xsi:type="string"
-                      translatable="true">Recaptcha Error: Missing input response</item>
+                      translatable="true">Captcha Error: The response parameter is missing.</item>
                 <item name="hostname-mismatch" xsi:type="string"
-                      translatable="true">Recaptcha Error: Hostname mismatch</item>
+                      translatable="true">Captcha Error: Hostname mismatch.</item>
                 <item name="action-mismatch" xsi:type="string"
-                      translatable="true">Recaptcha Error: Action mismatch</item>
+                      translatable="true">Captcha Error: Action mismatch.</item>
                 <item name="score-threshold-not-met" xsi:type="string"
-                      translatable="true">Recaptcha Error: Score Threshold not met</item>
+                      translatable="true">Captcha Error: Score Threshold not met.</item>
                 <item name="challenge-timeout" xsi:type="string"
-                      translatable="true">Recaptcha Error: Challenge timeout</item>
+                      translatable="true">Captcha Error: Challenge timeout.</item>
                 <item name="timeout-or-duplicate" xsi:type="string"
-                      translatable="true">Recaptcha Error: Timeout or duplicate, please reload page</item>
+                      translatable="true">Captcha Error: The response is no longer valid: either is too old or has been used previously.</item>
                 <item name="invalid-input-response" xsi:type="string"
-                      translatable="true">Recaptcha Error: Invalid input response</item>
+                      translatable="true">Captcha Error: The response parameter is invalid or malformed.</item>
+                <item name="bad-request" xsi:type="string"
+                      translatable="true">Captcha Error: The request is invalid or malformed.</item>
+                <item name="invalid-input-secret" xsi:type="string"
+                      translatable="true">Captcha Error: The secret parameter is invalid or malformed.</item>
+                <item name="missing-input-secret" xsi:type="string"
+                      translatable="true">Captcha Error: The secret parameter is missing.</item>
             </argument>
         </arguments>
     </type>
