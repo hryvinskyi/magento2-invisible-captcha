@@ -10,6 +10,7 @@ namespace Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse;
 use Exception;
 use Hryvinskyi\Base\Helper\Json;
 use Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponseInterface;
+use Magento\Framework\App\Request\Http;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Message\ManagerInterface;
 
@@ -47,17 +48,20 @@ class Ajax implements TokenResponseInterface
     public function getToken(): ?string
     {
         $token = null;
-        $content = $this->request->getContent();
 
-        if ($content) {
-            try {
-                $params = Json::decode($content);
+        if ($this->request instanceof Http) {
+            $content = $this->request->getContent();
 
-                if (isset($params['hryvinskyi_invisible_token'])) {
-                    $token = $params['hryvinskyi_invisible_token'];
+            if ($content) {
+                try {
+                    $params = Json::decode($content);
+
+                    if (isset($params['hryvinskyi_invisible_token'])) {
+                        $token = $params['hryvinskyi_invisible_token'];
+                    }
+                } catch (Exception $e) {
+                    $this->messageManager->addErrorMessage(__('Not found invisible captcha token'));
                 }
-            } catch (Exception $e) {
-                $this->messageManager->addErrorMessage(__('Not found invisible captcha token'));
             }
         }
 

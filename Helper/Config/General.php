@@ -84,8 +84,8 @@ class General extends AbstractHelper
     /**
      * Get config by path
      *
-     * @param $path
-     * @param null $storeId
+     * @param string $path
+     * @param mixed $storeId
      * @param string $scope
      *
      * @return mixed

@@ -91,6 +91,10 @@ class ObserverRedirectFailure extends AbstractFailure
      */
     public function execute(Response $verifyReCaptcha, ResponseInterface $response = null)
     {
+        if ($response === null) {
+            return;
+        }
+
         $this->messageManager->addErrorMessage($this->getMessagesString($verifyReCaptcha));
         $this->actionFlag->set('', Action::FLAG_NO_DISPATCH, true);
 

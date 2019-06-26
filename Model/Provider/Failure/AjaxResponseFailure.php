@@ -66,6 +66,10 @@ class AjaxResponseFailure extends AbstractFailure
      */
     public function execute(Response $verifyReCaptcha, ResponseInterface $response = null)
     {
+        if ($response === null) {
+            return;
+        }
+
         $this->actionFlag->set('', Action::FLAG_NO_DISPATCH, true);
 
         $jsonPayload = $this->encoder->encode([

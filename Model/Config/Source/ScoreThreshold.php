@@ -9,12 +9,12 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Model\Config\Source;
 
-use Magento\Framework\Option\ArrayInterface;
+use Magento\Framework\Data\OptionSourceInterface;
 
 /**
  * Class ScoreThreshold
  */
-class ScoreThreshold implements ArrayInterface
+class ScoreThreshold implements OptionSourceInterface
 {
     /**
      * Options getter

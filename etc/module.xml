@@ -10,6 +10,9 @@
     <module name="Hryvinskyi_InvisibleCaptcha" setup_version="2.1.0">
         <sequence>
             <module name="Hryvinskyi_Base"/>
+            <module name="Magento_Store"/>
+            <module name="Magento_Customer"/>
+            <module name="Magento_Checkout"/>
         </sequence>
     </module>
 </config>
