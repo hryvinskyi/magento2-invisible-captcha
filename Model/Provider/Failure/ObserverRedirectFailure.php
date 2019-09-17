@@ -13,6 +13,7 @@ use Hryvinskyi\InvisibleCaptcha\Model\Provider\FailureMessages;
 use Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Response;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\ActionFlag;
+use Magento\Framework\App\Response\Http;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Message\ManagerInterface as MessageManagerInterface;
 use Magento\Framework\UrlInterface;
@@ -91,7 +92,7 @@ class ObserverRedirectFailure extends AbstractFailure
      */
     public function execute(Response $verifyReCaptcha, ResponseInterface $response = null)
     {
-        if ($response === null) {
+        if ($response === null || !$response instanceof Http) {
             return;
         }
 

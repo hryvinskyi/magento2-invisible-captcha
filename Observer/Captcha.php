@@ -7,6 +7,7 @@
 
 namespace Hryvinskyi\InvisibleCaptcha\Observer;
 
+use Hryvinskyi\Base\Helper\VarDumper;
 use Hryvinskyi\InvisibleCaptcha\Helper\Config\General;
 use Hryvinskyi\InvisibleCaptcha\Model\CaptchaInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\VerifyReCaptcha;

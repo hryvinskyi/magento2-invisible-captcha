@@ -39,7 +39,7 @@ class LayoutSettings
     public function getCaptchaSettings()
     {
         if ($this->config->hasEnabled()) {
-            return ['siteKey' => $this->config->getSiteKey()];
+            return ['siteKey' => $this->config->getSiteKey(), 'lazyLoad' => $this->config->isLazyLoad()];
         }
 
         return [];

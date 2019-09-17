@@ -15,6 +15,7 @@ use Hryvinskyi\InvisibleCaptcha\Model\Provider\FailureMessages;
 use Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Response;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\ActionFlag;
+use Magento\Framework\App\Request\Http;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Json\EncoderInterface;
 
@@ -66,7 +67,7 @@ class AjaxResponseFailure extends AbstractFailure
      */
     public function execute(Response $verifyReCaptcha, ResponseInterface $response = null)
     {
-        if ($response === null) {
+        if ($response === null || !$response instanceof Http) {
             return;
         }
 

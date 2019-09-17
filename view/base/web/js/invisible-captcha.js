@@ -16,7 +16,8 @@ define([
         defaults: {
             template: 'Hryvinskyi_InvisibleCaptcha/invisible-captcha',
             action: '',
-            captchaId: ''
+            captchaId: '',
+            lazyLoad: false
         },
         _initializedForms: [],
 
@@ -38,6 +39,7 @@ define([
 
             if (invisibleCaptcha.isApiLoad() === true) {
                 $(window).trigger('recaptcha_api_ready_' + self.captchaId);
+
                 return;
             }
 
@@ -46,19 +48,23 @@ define([
                 invisibleCaptcha.initializeForms.each(function (item) {
                     self._initializeTokenField(item.element, item.self);
                 });
+
                 $(window).trigger('recaptcha_api_ready_' + self.captchaId);
             };
 
-
-            if(invisibleCaptcha.isApiLoaded() === true) {
-                return;
+            if (self.lazyLoad === false) {
+                self._loadRecaptchaScript();
             }
+        },
 
-            require([
-                '//www.google.com/recaptcha/api.js?onload=onloadCallbackGoogleRecapcha&render=' + self.siteKey
-            ]);
+        _loadRecaptchaScript: function () {
+            if (invisibleCaptcha.isApiLoaded() === false) {
+                require([
+                    'https://www.google.com/recaptcha/api.js?onload=onloadCallbackGoogleRecapcha&render=' + this.siteKey
+                ]);
 
-            invisibleCaptcha.isApiLoad(true);
+                invisibleCaptcha.isApiLoad(true);
+            }
         },
 
         /**
@@ -93,9 +99,31 @@ define([
          * @param {Object} self
          */
         initializeCaptcha: function (element, self) {
+            if (self.lazyLoad === true) {
+                let form = $(element).closest('form'),
+                    needSubmit = false;
+
+                form.find(':input').on('focus blur change', $.proxy(self._loadRecaptchaScript, self));
+
+                // Disable submit form
+                form.on('submit', function (e) {
+                    if (invisibleCaptcha.isApiLoaded() === false) {
+                        needSubmit = true;
+                        e.preventDefault();
+                    }
+                });
+
+                // Submit form after recaptcha loaded
+                invisibleCaptcha.isApiLoaded.subscribe(function (newValue) {
+                    if (needSubmit === true && newValue === true) {
+                        form.submit();
+                    }
+                });
+            }
+
             if (invisibleCaptcha.isApiLoad() === true && invisibleCaptcha.isApiLoaded() !== true) {
                 invisibleCaptcha.initializeForms.push({'element': element, self: self});
-            } else if(invisibleCaptcha.isApiLoaded() === true) {
+            } else if (invisibleCaptcha.isApiLoaded() === true) {
                 self._initializeTokenField(element, self);
             } else {
                 $(window).on('recaptcha_api_ready_' + self.captchaId, function () {

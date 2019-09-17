@@ -23,6 +23,7 @@ class General extends AbstractHelper
     const CONFIG_PATH_GENERAL_ENABLE_MODULE = 'hryvinskyi_invisible_captcha/general/enabledCaptcha';
     const CONFIG_PATH_GENERAL_SITE_KEY = 'hryvinskyi_invisible_captcha/general/captchaSiteKey';
     const CONFIG_PATH_GENERAL_SECRET_KEY = 'hryvinskyi_invisible_captcha/general/captchaSecretKey';
+    const CONFIG_PATH_GENERAL_USE_LAZY_LOAD = 'hryvinskyi_invisible_captcha/general/useLazyLoad';
 
     /**
      * Is google recaptcha enable global
@@ -80,6 +81,26 @@ class General extends AbstractHelper
             $scopeCode
         );
     }
+
+    /**
+     * Is google recaptcha load lazy
+     *
+     * @param string $scopeType
+     * @param mixed $scopeCode
+     *
+     * @return bool
+     */
+    public function isLazyLoad(
+        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        $scopeCode = null
+    ): bool {
+        return $this->scopeConfig->isSetFlag(
+            self::CONFIG_PATH_GENERAL_USE_LAZY_LOAD,
+            $scopeType,
+            $scopeCode
+        );
+    }
+
 
     /**
      * Get config by path

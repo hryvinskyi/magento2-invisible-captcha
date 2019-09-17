@@ -46,6 +46,16 @@
                         <field id="enabledCaptcha">1</field>
                     </depends>
                 </field>
+                <field id="useLazyLoad" translate="label comment" type="select" sortOrder="50" showInDefault="1"
+                       showInWebsite="1">
+                    <label>Lazy load recaptcha</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>
+                        <![CDATA[
+                            If enable google recptcha load after form elements on focus, blur or change
+                        ]]>
+                    </comment>
+                </field>
             </group>
             <group id="frontend" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1"
                    showInStore="1">
