@@ -19,6 +19,11 @@ bin/magento module:enable Hryvinskyi_Base
 bin/magento module:enable Hryvinskyi_InvisibleCaptcha
 bin/magento setup:upgrade
 ````
+
+### Features
+1. Lazy Load, google page speed improvements
+2. Easy to add captcha to your custom form
+
 ### Install download package
 1. Download module https://github.com/hryvinskyi/magento2-base [Link](https://github.com/hryvinskyi/magento2-base/archive/v1.1.2.zip)
 2. Download this module [Link](https://github.com/hryvinskyi/magento2-invisible-captcha/archive/2.0.4.zip)

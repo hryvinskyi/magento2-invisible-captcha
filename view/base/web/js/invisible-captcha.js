@@ -11,7 +11,9 @@ define([
     './model/invisible-captcha'
 ], function ($, ko, Component, invisibleCaptcha) {
     'use strict';
-
+    const sleep = (milliseconds) => {
+        return new Promise(resolve => setTimeout(resolve, milliseconds))
+    };
     return Component.extend({
         defaults: {
             template: 'Hryvinskyi_InvisibleCaptcha/invisible-captcha',
@@ -74,21 +76,21 @@ define([
          */
         _initializeTokenField: function (element, self) {
             if (invisibleCaptcha.initializedForms.indexOf(self.captchaId) === -1) {
-                invisibleCaptcha.initializedForms.push(self.captchaId);
-
                 var tokenField = $('<input type="hidden" name="hryvinskyi_invisible_token" />'),
                     siteKey = self.siteKey,
                     action = self.action;
+
+                tokenField.attr('data-action', action);
+                $(element).append(tokenField);
 
                 grecaptcha.ready(function () {
                     grecaptcha
                         .execute(siteKey, {action: action})
                         .then(function (token) {
                             tokenField.val(token);
+                            invisibleCaptcha.initializedForms.push(self.captchaId);
                         });
                 });
-                tokenField.attr('data-action', action);
-                $(element).append(tokenField);
             }
         },
 
@@ -103,7 +105,7 @@ define([
                 let form = $(element).closest('form'),
                     needSubmit = false;
 
-                form.find(':input').on('focus blur change', $.proxy(self._loadRecaptchaScript, self));
+                form.on('focus blur change', ':input', $.proxy(self._loadRecaptchaScript, self));
 
                 // Disable submit form
                 form.on('submit', function (e) {
@@ -114,8 +116,8 @@ define([
                 });
 
                 // Submit form after recaptcha loaded
-                invisibleCaptcha.isApiLoaded.subscribe(function (newValue) {
-                    if (needSubmit === true && newValue === true) {
+                invisibleCaptcha.initializedForms.subscribe(function (newValue) {
+                    if (needSubmit === true && newValue.indexOf(self.captchaId) !== -1) {
                         form.submit();
                     }
                 });
