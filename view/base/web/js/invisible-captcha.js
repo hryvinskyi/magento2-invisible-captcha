@@ -11,9 +11,7 @@ define([
     './model/invisible-captcha'
 ], function ($, ko, Component, invisibleCaptcha) {
     'use strict';
-    const sleep = (milliseconds) => {
-        return new Promise(resolve => setTimeout(resolve, milliseconds))
-    };
+
     return Component.extend({
         defaults: {
             template: 'Hryvinskyi_InvisibleCaptcha/invisible-captcha',
@@ -108,7 +106,14 @@ define([
                 form.on('focus blur change', ':input', $.proxy(self._loadRecaptchaScript, self));
 
                 // Disable submit form
-                form.on('submit', function (e) {
+                form.on('click', ':submit', function (e) {
+                    if (invisibleCaptcha.isApiLoaded() === false) {
+                        needSubmit = true;
+                        e.preventDefault();
+                    }
+                });
+
+                form.submit(function (e) {
                     if (invisibleCaptcha.isApiLoaded() === false) {
                         needSubmit = true;
                         e.preventDefault();
