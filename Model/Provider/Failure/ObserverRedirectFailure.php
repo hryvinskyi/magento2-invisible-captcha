@@ -97,7 +97,7 @@ class ObserverRedirectFailure extends AbstractFailure
         }
 
         $this->messageManager->addErrorMessage($this->getMessagesString($verifyReCaptcha));
-        $this->actionFlag->set('', Action::FLAG_NO_DISPATCH, true);
+        $this->actionFlag->set('', Action::FLAG_NO_DISPATCH, /** @scrutinizer ignore-type */ true);
 
         $response->setRedirect($this->getUrl());
     }

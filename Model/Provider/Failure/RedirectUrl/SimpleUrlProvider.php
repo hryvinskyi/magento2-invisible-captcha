@@ -31,13 +31,14 @@ class SimpleUrlProvider implements RedirectUrlInterface
 
     /**
      * SimpleUrlProvider constructor.
+     *
      * @param UrlInterface $url
-     * @param $urlPath
-     * @param null $urlParams
+     * @param string $urlPath
+     * @param null|array $urlParams
      */
     public function __construct(
         UrlInterface $url,
-        $urlPath,
+        string $urlPath,
         $urlParams = null
     ) {
         $this->urlPath = $urlPath;

@@ -15,7 +15,7 @@ use Hryvinskyi\InvisibleCaptcha\Model\Provider\FailureMessages;
 use Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Response;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\ActionFlag;
-use Magento\Framework\App\Request\Http;
+use Magento\Framework\App\Response\Http;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Json\EncoderInterface;
 
@@ -71,7 +71,7 @@ class AjaxResponseFailure extends AbstractFailure
             return;
         }
 
-        $this->actionFlag->set('', Action::FLAG_NO_DISPATCH, true);
+        $this->actionFlag->set('', Action::FLAG_NO_DISPATCH, /** @scrutinizer ignore-type */ true);
 
         $jsonPayload = $this->encoder->encode([
             'errors'  => true,

@@ -7,6 +7,7 @@
 
 namespace Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha;
 
+use Hryvinskyi\Base\Helper\ArrayHelper;
 use Hryvinskyi\Base\Helper\Json;
 
 /**
@@ -70,16 +71,18 @@ class Response
             return new Response(false, [VerifyReCaptcha::E_INVALID_JSON]);
         }
 
-        $hostname = isset($responseData['hostname']) ? $responseData['hostname'] : null;
-        $challengeTs = isset($responseData['challenge_ts']) ? $responseData['challenge_ts'] : null;
-        $score = isset($responseData['score']) ? floatval($responseData['score']) : null;
-        $action = isset($responseData['action']) ? $responseData['action'] : null;
+        $hostname = ArrayHelper::getValue($responseData, 'hostname');
+        $challengeTs = ArrayHelper::getValue($responseData, 'challenge_ts');
+        $score = floatval(ArrayHelper::getValue($responseData, 'score'));
+        $action = ArrayHelper::getValue($responseData, 'action');
+        $success = ArrayHelper::getValue($responseData, 'success');
+        $errorCodes = ArrayHelper::getValue($responseData, 'error-codes');
 
-        if (isset($responseData['success']) && $responseData['success'] == true) {
+        if ($success == true) {
             return new Response(true, [], $hostname, $challengeTs, $score, $action);
         }
 
-        if (isset($responseData['error-codes']) && is_array($responseData['error-codes'])) {
+        if ($errorCodes && is_array($errorCodes)) {
             return new Response(
                 false,
                 $responseData['error-codes'],
@@ -192,12 +195,12 @@ class Response
     public function toArray(): array
     {
         return [
-            'success'          => $this->isSuccess(),
-            'hostname'         => $this->getHostname(),
-            'challenge_ts'     => $this->getChallengeTs(),
-            'score'            => $this->getScore(),
-            'action'           => $this->getAction(),
-            'error-codes'      => $this->getErrorCodes(),
+            'success'      => $this->isSuccess(),
+            'hostname'     => $this->getHostname(),
+            'challenge_ts' => $this->getChallengeTs(),
+            'score'        => $this->getScore(),
+            'action'       => $this->getAction(),
+            'error-codes'  => $this->getErrorCodes(),
         ];
     }
 }

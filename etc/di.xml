@@ -21,6 +21,7 @@
             </argument>
         </arguments>
     </type>
+
     <type name="Hryvinskyi\InvisibleCaptcha\Model\Provider\FailureMessages">
         <arguments>
             <argument name="errorMessages" xsi:type="array">
@@ -52,7 +53,32 @@
                       translatable="true">Captcha Error: The secret parameter is invalid or malformed.</item>
                 <item name="missing-input-secret" xsi:type="string"
                       translatable="true">Captcha Error: The secret parameter is missing.</item>
+                <item name="bad-validator" xsi:type="string"
+                      translatable="true">Captcha Error: Validator must implements
+                    \Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\ValidatorInterface.
+                </item>
             </argument>
+        </arguments>
+    </type>
+    <virtualType name="verifyValidatorList" type="Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\ValidatorList">
+        <arguments>
+            <argument name="entityTypes" xsi:type="array">
+                <item name="host" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\Host</item>
+                <item name="action" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\Action
+                </item>
+                <item name="threshold" xsi:type="object">
+                    Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\Threshold
+                </item>
+                <item name="timeoutSeconds" xsi:type="object">
+                    Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\TimeoutSeconds
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\VerifyReCaptcha">
+        <arguments>
+            <argument name="verifyValidatorList" xsi:type="object">verifyValidatorList</argument>
         </arguments>
     </type>
 </config>

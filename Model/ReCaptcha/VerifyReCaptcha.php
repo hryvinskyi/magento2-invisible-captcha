@@ -9,8 +9,8 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha;
 
-use Exception;
-use Hryvinskyi\Base\Helper\Json;
+use Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\ValidatorInterface;
+use Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\ValidatorList;
 
 /**
  * Class VerifyVerifyReCaptcha
@@ -18,7 +18,7 @@ use Hryvinskyi\Base\Helper\Json;
 class VerifyReCaptcha
 {
     /**
-     * URL for reCAPTCHA sitevrerify API
+     * URL for reCAPTCHA site verify API
      *
      * @const string
      */
@@ -32,20 +32,6 @@ class VerifyReCaptcha
     const E_INVALID_JSON = 'invalid-json';
 
     /**
-     * Could not connect to service
-     *
-     * @const string
-     */
-    const E_CONNECTION_FAILED = 'connection-failed';
-
-    /**
-     * Did not receive a 200 from the service
-     *
-     * @const string
-     */
-    const E_BAD_RESPONSE = 'bad-response';
-
-    /**
      * Not a success, but no error codes received!
      *
      * @const string
@@ -53,39 +39,11 @@ class VerifyReCaptcha
     const E_UNKNOWN_ERROR = 'unknown-error';
 
     /**
-     * ReCAPTCHA response not provided
+     * Bad validator
      *
      * @const string
      */
-    const E_MISSING_INPUT_RESPONSE = 'missing-input-response';
-
-    /**
-     * Expected hostname did not match
-     *
-     * @const string
-     */
-    const E_HOSTNAME_MISMATCH = 'hostname-mismatch';
-
-    /**
-     * Expected action did not match
-     *
-     * @const string
-     */
-    const E_ACTION_MISMATCH = 'action-mismatch';
-
-    /**
-     * Score threshold not met
-     *
-     * @const string
-     */
-    const E_SCORE_THRESHOLD_NOT_MET = 'score-threshold-not-met';
-
-    /**
-     * Challenge timeout
-     *
-     * @const string
-     */
-    const E_CHALLENGE_TIMEOUT = 'challenge-timeout';
+    const BAD_VALIDATOR = 'bad-validator';
 
     /**
      * @var string
@@ -126,17 +84,25 @@ class VerifyReCaptcha
     private $requestParameters;
 
     /**
+     * @var ValidatorList
+     */
+    private $verifyValidatorList = [];
+
+    /**
      * VerifyReCaptcha constructor.
      *
      * @param RequestMethodInterface $requestMethod
      * @param RequestParameters $requestParameters
+     * @param ValidatorList $verifyValidatorList
      */
     public function __construct(
         RequestMethodInterface $requestMethod,
-        RequestParameters $requestParameters
+        RequestParameters $requestParameters,
+        ValidatorList $verifyValidatorList
     ) {
         $this->requestMethod = $requestMethod;
         $this->requestParameters = $requestParameters;
+        $this->verifyValidatorList = $verifyValidatorList;
     }
 
     /**
@@ -159,35 +125,14 @@ class VerifyReCaptcha
         $initialResponse = Response::fromJson($answer);
         $validationErrors = [];
 
-        if (
-            isset($this->hostname)
-            && $initialResponse->getHostname()
-            && strcasecmp($this->hostname, $initialResponse->getHostname()) !== 0
-        ) {
-            $validationErrors[] = self::E_HOSTNAME_MISMATCH;
-        }
+        foreach ($this->verifyValidatorList as $item) {
+            if (!$item instanceof ValidatorInterface) {
+                $validationErrors[] = self::BAD_VALIDATOR;
+                continue;
+            }
 
-        if (
-            isset($this->action)
-            && $initialResponse->getAction()
-            && strcasecmp($this->action, $initialResponse->getAction()) !== 0
-        ) {
-            $validationErrors[] = self::E_ACTION_MISMATCH;
-        }
-
-        if (
-            isset($this->threshold)
-            && $initialResponse->getScore()
-            && $this->threshold > $initialResponse->getScore()
-        ) {
-            $validationErrors[] = self::E_SCORE_THRESHOLD_NOT_MET;
-        }
-
-        if (isset($this->timeoutSeconds) && $initialResponse->getChallengeTs()) {
-            $challengeTs = strtotime($initialResponse->getChallengeTs());
-
-            if ($challengeTs > 0 && time() - $challengeTs > $this->timeoutSeconds) {
-                $validationErrors[] = self::E_CHALLENGE_TIMEOUT;
+            if ($error = $item->validate($this, $initialResponse)) {
+                $validationErrors[] = $error;
             }
         }
 
@@ -241,6 +186,14 @@ class VerifyReCaptcha
     }
 
     /**
+     * @return string
+     */
+    public function getExpectedHostname(): ?string
+    {
+        return $this->hostname;
+    }
+
+    /**
      * Provide an action to match against in verify()
      * This should be set per page.
      *
@@ -253,6 +206,14 @@ class VerifyReCaptcha
         $this->action = $action;
 
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getExpectedAction(): ?string
+    {
+        return $this->action;
     }
 
     /**
@@ -271,6 +232,14 @@ class VerifyReCaptcha
     }
 
     /**
+     * @return float|null
+     */
+    public function getScoreThreshold(): ?float
+    {
+        return $this->threshold;
+    }
+
+    /**
      * Provide a timeout in seconds to test against the challenge timestamp in verify()
      *
      * @param int $timeoutSeconds Expected hostname
@@ -282,5 +251,13 @@ class VerifyReCaptcha
         $this->timeoutSeconds = $timeoutSeconds;
 
         return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getChallengeTimeout(): ?int
+    {
+        return $this->timeoutSeconds;
     }
 }

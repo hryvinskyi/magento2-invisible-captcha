@@ -33,7 +33,7 @@
                         <field id="enabledCaptcha">1</field>
                     </depends>
                 </field>
-                <field id="captchaSecretKey" translate="label comment" type="text" sortOrder="40" showInDefault="1"
+                <field id="captchaSecretKey" translate="label comment" type="password" sortOrder="40" showInDefault="1"
                        showInWebsite="1">
                     <label>Secret key</label>
                     <comment>

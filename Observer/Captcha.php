@@ -63,7 +63,7 @@ class Captcha implements ObserverInterface
                 ->verify($this->provider->getToken());
 
             if ($verifyReCaptcha->isSuccess() === false) {
-                /** @var Action $controller */
+                /** @var Action|null $controller */
                 $controller = $observer->getData('controller_action');
                 $this->provider->getFailure()->execute($verifyReCaptcha, $controller ? $controller->getResponse() : null);
             }
