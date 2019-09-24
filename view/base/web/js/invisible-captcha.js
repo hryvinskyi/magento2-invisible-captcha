@@ -81,9 +81,8 @@ define([
                 tokenField.attr('data-action', action);
                 $(element).append(tokenField);
 
-                /** global: grecaptcha */
-                grecaptcha.ready(function () {
-                    grecaptcha
+                window.grecaptcha.ready(function () {
+                    window.grecaptcha
                         .execute(siteKey, {action: action})
                         .then(function (token) {
                             tokenField.val(token);

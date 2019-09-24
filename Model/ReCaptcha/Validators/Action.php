@@ -37,7 +37,7 @@ class Action implements ValidatorInterface
             && $response->getAction()
             && strcasecmp($verify->getExpectedAction(), $response->getAction()) !== 0
         ) {
-            $validationErrors[] = self::E_ACTION_MISMATCH;
+            return self::E_ACTION_MISMATCH;
         }
 
         return null;
