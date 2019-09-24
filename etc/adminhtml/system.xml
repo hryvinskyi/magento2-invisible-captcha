@@ -145,6 +145,22 @@
                         <field id="enabledNewsletter">1</field>
                     </depends>
                 </field>
+                <field id="enabledSendFriend" translate="label" type="select" sortOrder="120" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Use in Send To Friend</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="scoreThresholdSendFriend" translate="label" type="select" sortOrder="130" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Send To Friend Score Threshold</label>
+                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                    <depends>
+                        <field id="enabledNewsletter">1</field>
+                    </depends>
+                </field>
             </group>
             <group id="backend" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0"
                    showInStore="0">

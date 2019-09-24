@@ -31,6 +31,8 @@ class Frontend extends AbstractHelper
     const CONFIG_PATH_FRONTEND_SCORE_THRESHOLD_CONTACT = 'hryvinskyi_invisible_captcha/frontend/scoreThresholdContact';
     const CONFIG_PATH_FRONTEND_ENABLED_NEWSLETTER = 'hryvinskyi_invisible_captcha/frontend/enabledNewsletter';
     const CONFIG_PATH_FRONTEND_SCORE_THRESHOLD_NEWSLETTER = 'hryvinskyi_invisible_captcha/frontend/scoreThresholdNewsletter';
+    const CONFIG_PATH_FRONTEND_ENABLED_SENDFRIEND = 'hryvinskyi_invisible_captcha/frontend/enabledSendFriend';
+    const CONFIG_PATH_FRONTEND_SCORE_THRESHOLD_SENDFRIEND = 'hryvinskyi_invisible_captcha/frontend/scoreThresholdSendFriend';
 
     /**
      * Is google recaptcha enable global
@@ -236,6 +238,44 @@ class Frontend extends AbstractHelper
     ): float {
         return (float)$this->scopeConfig->getValue(
             self::CONFIG_PATH_FRONTEND_SCORE_THRESHOLD_NEWSLETTER,
+            $scopeType,
+            $scopeCode
+        );
+    }
+
+    /**
+     * Is google recaptcha enable send to friend
+     *
+     * @param string $scopeType
+     * @param mixed $scopeCode
+     *
+     * @return bool
+     */
+    public function hasEnabledSendFriend(
+        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        $scopeCode = null
+    ): bool {
+        return $this->scopeConfig->isSetFlag(
+            self::CONFIG_PATH_FRONTEND_ENABLED_SENDFRIEND,
+            $scopeType,
+            $scopeCode
+        );
+    }
+
+    /**
+     * Get google recaptcha score threshold send to friend
+     *
+     * @param string $scopeType
+     * @param mixed $scopeCode
+     *
+     * @return float
+     */
+    public function getScoreThresholdSendFriend(
+        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        $scopeCode = null
+    ): float {
+        return (float)$this->scopeConfig->getValue(
+            self::CONFIG_PATH_FRONTEND_SCORE_THRESHOLD_SENDFRIEND,
             $scopeType,
             $scopeCode
         );

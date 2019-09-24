@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
+  ~ @author: <mailto:volodymyr@hryvinskyi.com>
+  ~ @github: <https://github.com/hryvinskyi>
+  -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+
+    <body>
+        <referenceContainer name="form.additional.info">
+            <block class="Hryvinskyi\InvisibleCaptcha\Block\Captcha" name="invisible.recaptcha" after="-"
+                   template="Hryvinskyi_InvisibleCaptcha::captcha.phtml"
+                   ifconfig="hryvinskyi_invisible_captcha/frontend/enabledSendFriend">
+
+                <arguments>
+                    <argument name="jsLayout" xsi:type="array">
+                        <item name="components" xsi:type="array">
+                            <item name="invisible-captcha" xsi:type="array">
+                                <item name="component"
+                                      xsi:type="string">Hryvinskyi_InvisibleCaptcha/js/invisible-captcha
+                                </item>
+                                <item name="action" xsi:type="string">send_friend</item>
+                                <item name="captchaId" xsi:type="string">send_friend</item>
+                            </item>
+                        </item>
+                    </argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

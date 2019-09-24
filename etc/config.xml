@@ -26,6 +26,8 @@
                 <scoreThresholdContact>0.5</scoreThresholdContact>
                 <enabledNewsletter>0</enabledNewsletter>
                 <scoreThresholdNewsletter>0.5</scoreThresholdNewsletter>
+                <enabledSendFriend>0</enabledSendFriend>
+                <scoreThresholdNewsletter>0.5</scoreThresholdNewsletter>
             </frontend>
             <backend>
                 <enabledLogin>0</enabledLogin>
