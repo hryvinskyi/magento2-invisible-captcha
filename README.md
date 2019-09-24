@@ -1,4 +1,4 @@
-Google Invisible Captcha v3 for magento 2
+# Google Invisible Captcha v3 for magento 2
 
 [![Latest Stable Version](https://poser.pugx.org/scriptua/magento2-invisible-captcha/v/stable)](https://packagist.org/packages/scriptua/magento2-invisible-captcha)
 [![Total Downloads](https://poser.pugx.org/scriptua/magento2-invisible-captcha/downloads)](https://packagist.org/packages/scriptua/magento2-invisible-captcha)
@@ -11,18 +11,33 @@ Google Invisible Captcha v3 for magento 2
 Module version 2.0.\*||2.1.\* support Magento 2.3.*  
 Module version 1.0.* support Magento 2.1.\*||2.2.\*
 
-# Installation Guide
+## Features
+1. Lazy Load, google page speed improvements
+2. Easy to add captcha to your custom form
+3. AJAX forms supported
+4. Knockout forms supported
+
+## Frontend Forms
+ * Login
+ * Register
+ * Forgot password
+ * Contact
+ * Newsletter
+ * Send to Friend
+ 
+
+## Backend Forms
+ * Login
+ * Forgot password
+
+## Installation Guide
 ### Install by composer
-````
+```
 composer require scriptua/magento2-invisible-captcha
 bin/magento module:enable Hryvinskyi_Base
 bin/magento module:enable Hryvinskyi_InvisibleCaptcha
 bin/magento setup:upgrade
-````
-
-### Features
-1. Lazy Load, google page speed improvements
-2. Easy to add captcha to your custom form
+```
 
 ### Install download package
 1. Download module https://github.com/hryvinskyi/magento2-base [Link](https://github.com/hryvinskyi/magento2-base/archive/v1.1.2.zip)
