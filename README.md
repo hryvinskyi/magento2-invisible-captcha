@@ -54,4 +54,4 @@ bin/magento setup:upgrade
 
 # General Settings
 
-[![Configuration](https://github.com/hryvinskyi/magento2-invisible-captcha/blob/2.1.0/screenshots/admin_configuration.png)](https://github.com/hryvinskyi/magento2-invisible-captcha/blob/2.1.0/screenshots/admin_configuration.png)
+[![Configuration](https://github.com/hryvinskyi/magento2-invisible-captcha/blob/2.1.4/screenshots/admin_configuration.png)](https://github.com/hryvinskyi/magento2-invisible-captcha/blob/2.1.0/screenshots/admin_configuration.png)
