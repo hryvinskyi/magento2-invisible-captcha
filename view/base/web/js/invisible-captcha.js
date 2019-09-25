@@ -128,7 +128,7 @@ define([
                 });
             }
 
-            if (invisibleCaptcha.isApiLoad() === true && invisibleCaptcha.isApiLoaded() !== true) {
+            if ((invisibleCaptcha.isApiLoad() === true || self.lazyLoad === true) && invisibleCaptcha.isApiLoaded() !== true) {
                 invisibleCaptcha.initializeForms.push({'element': element, self: self});
             } else if (invisibleCaptcha.isApiLoaded() === true) {
                 self._initializeTokenField(element, self);
