@@ -9,13 +9,13 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Helper\Config;
 
-use Magento\Framework\App\Helper\AbstractHelper;
+use Hryvinskyi\InvisibleCaptcha\Helper\AbstractConfig;
 use Magento\Store\Model\ScopeInterface;
 
 /**
  * Class Frontend
  */
-class Frontend extends AbstractHelper
+class Frontend extends AbstractConfig
 {
     /**
      * Configuration path
@@ -43,7 +43,7 @@ class Frontend extends AbstractHelper
      * @return bool
      */
     public function hasEnabled(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): bool {
         return $this->scopeConfig->isSetFlag(
@@ -62,7 +62,7 @@ class Frontend extends AbstractHelper
      * @return bool
      */
     public function hasEnabledCustomerLogin(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): bool {
         return $this->scopeConfig->isSetFlag(
@@ -81,7 +81,7 @@ class Frontend extends AbstractHelper
      * @return float
      */
     public function getScoreThresholdCustomerLogin(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): float {
         return (float)$this->scopeConfig->getValue(
@@ -100,7 +100,7 @@ class Frontend extends AbstractHelper
      * @return bool
      */
     public function hasEnabledCustomerCreate(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): bool {
         return $this->scopeConfig->isSetFlag(
@@ -119,7 +119,7 @@ class Frontend extends AbstractHelper
      * @return float
      */
     public function getScoreThresholdCustomerCreate(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): float {
         return (float)$this->scopeConfig->getValue(
@@ -138,7 +138,7 @@ class Frontend extends AbstractHelper
      * @return bool
      */
     public function hasEnabledCustomerForgot(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): bool {
         return $this->scopeConfig->isSetFlag(
@@ -157,7 +157,7 @@ class Frontend extends AbstractHelper
      * @return float
      */
     public function getScoreThresholdCustomerForgot(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): float {
         return (float)$this->scopeConfig->getValue(
@@ -176,7 +176,7 @@ class Frontend extends AbstractHelper
      * @return bool
      */
     public function hasEnabledContact(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): bool {
         return $this->scopeConfig->isSetFlag(
@@ -195,7 +195,7 @@ class Frontend extends AbstractHelper
      * @return float
      */
     public function getScoreThresholdContact(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): float {
         return (float)$this->scopeConfig->getValue(
@@ -214,7 +214,7 @@ class Frontend extends AbstractHelper
      * @return bool
      */
     public function hasEnabledNewsletter(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): bool {
         return $this->scopeConfig->isSetFlag(
@@ -233,7 +233,7 @@ class Frontend extends AbstractHelper
      * @return float
      */
     public function getScoreThresholdNewsletter(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): float {
         return (float)$this->scopeConfig->getValue(
@@ -252,7 +252,7 @@ class Frontend extends AbstractHelper
      * @return bool
      */
     public function hasEnabledSendFriend(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): bool {
         return $this->scopeConfig->isSetFlag(
@@ -271,7 +271,7 @@ class Frontend extends AbstractHelper
      * @return float
      */
     public function getScoreThresholdSendFriend(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): float {
         return (float)$this->scopeConfig->getValue(
@@ -279,5 +279,15 @@ class Frontend extends AbstractHelper
             $scopeType,
             $scopeCode
         );
+    }
+
+    /**
+     * Disable config path
+     *
+     * @return string
+     */
+    public function disableConfigPath(): string
+    {
+        return self::CONFIG_PATH_FRONTEND_ENABLED;
     }
 }

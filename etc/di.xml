@@ -12,6 +12,8 @@
                 type="Hryvinskyi\InvisibleCaptcha\Model\CheckEnabledVerify"/>
     <preference for="Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\RequestMethodInterface"
                 type="Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\RequestMethod\CurlPost"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Model\Area\ConfigListInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Area\ConfigList"/>
 
     <type name="Magento\Config\Model\Config\TypePool">
         <arguments>
@@ -60,18 +62,24 @@
             </argument>
         </arguments>
     </type>
+
     <virtualType name="verifyValidatorList" type="Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\ValidatorList">
         <arguments>
             <argument name="entityTypes" xsi:type="array">
                 <item name="host" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\Host</item>
-                <item name="action" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\Action
-                </item>
-                <item name="threshold" xsi:type="object">
-                    Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\Threshold
-                </item>
-                <item name="timeoutSeconds" xsi:type="object">
-                    Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\TimeoutSeconds
-                </item>
+                <item name="action" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\Action</item>
+                <item name="threshold" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\Threshold</item>
+                <item name="timeoutSeconds" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\TimeoutSeconds</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="captchaAreaConfigList" type="Hryvinskyi\InvisibleCaptcha\Model\Area\ConfigList">
+        <arguments>
+            <argument name="list" xsi:type="array">
+                <item name="global" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Helper\Config\General</item>
+                <item name="adminhtml" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Helper\Config\Backend</item>
+                <item name="frontend" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Helper\Config\Frontend</item>
             </argument>
         </arguments>
     </virtualType>
@@ -79,6 +87,20 @@
     <type name="Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\VerifyReCaptcha">
         <arguments>
             <argument name="verifyValidatorList" xsi:type="object">verifyValidatorList</argument>
+        </arguments>
+    </type>
+
+    <type name="Hryvinskyi\InvisibleCaptcha\Command\Captcha">
+        <arguments>
+            <argument name="areaConfigList" xsi:type="object">captchaAreaConfigList</argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="hryvinskyi_invisible_captcha" xsi:type="object">\Hryvinskyi\InvisibleCaptcha\Command\Captcha</item>
+            </argument>
         </arguments>
     </type>
 </config>

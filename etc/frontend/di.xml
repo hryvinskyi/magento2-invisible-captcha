@@ -210,26 +210,17 @@
 
     <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\SendFriend" type="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\ObserverRedirectFailure">
         <arguments>
-            <argument name="redirectUrlProvider" xsi:type="object">
-                Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\RefererProvider
-            </argument>
+            <argument name="redirectUrlProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\RefererProvider</argument>
         </arguments>
     </virtualType>
 
     <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\SendFriend" type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
         <arguments>
             <argument name="action" xsi:type="string">send_friend</argument>
-            <argument name="scoreThreshold" xsi:type="object">
-                Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Frontend\SendFriend
-            </argument>
-            <argument name="checkEnabledVerify" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\SendFriend
-            </argument>
-            <argument name="failureProvider" xsi:type="object">
-                Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\SendFriend
-            </argument>
-            <argument name="tokenResponse" xsi:type="object">
-                Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse\General
-            </argument>
+            <argument name="scoreThreshold" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Frontend\SendFriend</argument>
+            <argument name="checkEnabledVerify" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\SendFriend</argument>
+            <argument name="failureProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\SendFriend</argument>
+            <argument name="tokenResponse" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse\General</argument>
         </arguments>
     </virtualType>
 

@@ -9,13 +9,13 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Helper\Config;
 
-use Magento\Framework\App\Helper\AbstractHelper;
+use Hryvinskyi\InvisibleCaptcha\Helper\AbstractConfig;
 use Magento\Store\Model\ScopeInterface;
 
 /**
  * Class General
  */
-class General extends AbstractHelper
+class General extends AbstractConfig
 {
     /**
      * Configuration path
@@ -34,7 +34,7 @@ class General extends AbstractHelper
      * @return bool
      */
     public function hasEnabled(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): bool {
         return $this->scopeConfig->isSetFlag(
@@ -53,7 +53,7 @@ class General extends AbstractHelper
      * @return string
      */
     public function getSiteKey(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): string {
         return $this->scopeConfig->getValue(
@@ -72,7 +72,7 @@ class General extends AbstractHelper
      * @return string
      */
     public function getSecretKey(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): string {
         return $this->scopeConfig->getValue(
@@ -91,7 +91,7 @@ class General extends AbstractHelper
      * @return bool
      */
     public function isLazyLoad(
-        string $scopeType = ScopeInterface::SCOPE_WEBSITE,
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
         $scopeCode = null
     ): bool {
         return $this->scopeConfig->isSetFlag(
@@ -100,7 +100,6 @@ class General extends AbstractHelper
             $scopeCode
         );
     }
-
 
     /**
      * Get config by path
@@ -114,8 +113,18 @@ class General extends AbstractHelper
     public function getConfigValueByPath(
         $path,
         $storeId = null,
-        $scope = ScopeInterface::SCOPE_WEBSITE
+        $scope = ScopeInterface::SCOPE_WEBSITES
     ) {
         return $this->scopeConfig->getValue($path, $scope, $storeId);
+    }
+
+    /**
+     * Disable config path
+     *
+     * @return string
+     */
+    public function disableConfigPath(): string
+    {
+        return self::CONFIG_PATH_GENERAL_ENABLE_MODULE;
     }
 }

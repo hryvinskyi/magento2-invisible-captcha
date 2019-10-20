@@ -45,12 +45,23 @@ bin/magento setup:upgrade
 3. Unzip two modules in the folder app\code\Hryvinskyi\Base and app\code\Hryvinskyi\InvisibleCaptcha
 4. Run commands:
 
-```
-bin/magento module:enable Hryvinskyi_Base
-bin/magento module:enable Hryvinskyi_InvisibleCaptcha
-bin/magento setup:upgrade
-```
+    ```
+    bin/magento module:enable Hryvinskyi_Base
+    bin/magento module:enable Hryvinskyi_InvisibleCaptcha
+    bin/magento setup:upgrade
+    ```
 5. Configure module in admin panel
+
+### Command-line:
+
+```
+php bin/magento hryvinskyi:invisible-captcha:disable <area> --website_id=<website_id>
+```
+
+This command will disable invisible captcha for the area and/or website_id.
+
+ * area = [global, frontend, adminhtml]
+ * website_id = ID Website
 
 # General Settings
 
