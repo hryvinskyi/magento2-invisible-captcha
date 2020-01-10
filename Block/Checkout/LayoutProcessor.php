@@ -1,24 +1,23 @@
 <?php
 /**
- * Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
+ * Copyright (c) 2020. Volodymyr Hryvinskyi.  All rights reserved.
  * @author: <mailto:volodymyr@hryvinskyi.com>
  * @github: <https://github.com/hryvinskyi>
  */
 
 declare(strict_types=1);
 
-namespace Hryvinskyi\InvisibleCaptcha\Plugin\Block\Checkout;
+namespace Hryvinskyi\InvisibleCaptcha\Block\Checkout;
 
-use Hryvinskyi\Base\Helper\Json;
 use Hryvinskyi\InvisibleCaptcha\Helper\Config\Frontend;
 use Hryvinskyi\InvisibleCaptcha\Helper\Config\General;
 use Hryvinskyi\InvisibleCaptcha\Model\LayoutSettings;
-use Magento\Checkout\Block\Onepage;
+use Magento\Checkout\Block\Checkout\LayoutProcessorInterface;
 
 /**
- * Class OnepagePlugin
+ * Class LayoutProcessor
  */
-class OnepagePlugin
+class LayoutProcessor implements LayoutProcessorInterface
 {
     /**
      * @var LayoutSettings
@@ -53,16 +52,10 @@ class OnepagePlugin
     }
 
     /**
-     * @param Onepage $subject
-     * @param string $result
-     *
-     * @return string
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @inheritDoc
      */
-    public function afterGetJsLayout(Onepage $subject, $result)
+    public function process($layout)
     {
-        $layout = Json::decode($result);
-
         $layout['components']['checkout']['children']['steps']['children']['shipping-step']['children']
         ['shippingAddress']['children']['customer-email']['children']['invisible-captcha']['config']
             = $this->layoutSettings->getCaptchaSettings();
@@ -85,6 +78,6 @@ class OnepagePlugin
             }
         }
 
-        return Json::encode($layout);
+        return $layout;
     }
 }

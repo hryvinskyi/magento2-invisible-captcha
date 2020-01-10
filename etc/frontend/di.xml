@@ -12,8 +12,12 @@
                 type="Hryvinskyi\InvisibleCaptcha\Plugin\Block\Account\AuthenticationPopupPlugin"/>
     </type>
     <type name="Magento\Checkout\Block\Onepage">
-        <plugin sortOrder="1" name="Hryvinskyi_InvisibleCaptcha:authentication_onepage_checkout"
-                type="Hryvinskyi\InvisibleCaptcha\Plugin\Block\Checkout\OnepagePlugin"/>
+        <arguments>
+            <argument name="layoutProcessors" xsi:type="array">
+                <item name="invisibleRecaptcheLayoutProcessor"
+                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Block\Checkout\LayoutProcessor</item>
+            </argument>
+        </arguments>
     </type>
 
     <!-- Verify enabled captcha on customer login or not -->
