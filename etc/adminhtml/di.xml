@@ -14,10 +14,23 @@
         </arguments>
     </type>
 
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Verify\Adminhtml\ForgotPassword">
+        <arguments>
+            <argument name="area" xsi:type="string">adminhtml</argument>
+        </arguments>
+    </type>
+
     <virtualType name="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Backend\Login"
                  type="Hryvinskyi\InvisibleCaptcha\Observer\Captcha">
         <arguments>
             <argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Adminhtml\LoginCaptcha</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Backend\ForgotPassword"
+                 type="Hryvinskyi\InvisibleCaptcha\Observer\Captcha">
+        <arguments>
+            <argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Adminhtml\ForgotPasswordCaptcha</argument>
         </arguments>
     </virtualType>
 
@@ -29,6 +42,21 @@
                       xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Backend\Login</argument>
             <argument name="checkEnabledVerify"
                       xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\Adminhtml\Login</argument>
+            <argument name="failureProvider"
+                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\AuthenticationExceptionFailure</argument>
+            <argument name="tokenResponse"
+                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse\General</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Adminhtml\ForgotPasswordCaptcha"
+                 type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
+        <arguments>
+            <argument name="action" xsi:type="string">admin_forgot_password</argument>
+            <argument name="scoreThreshold"
+                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Backend\ForgotPassword</argument>
+            <argument name="checkEnabledVerify"
+                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\Adminhtml\ForgotPassword</argument>
             <argument name="failureProvider"
                       xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\AuthenticationExceptionFailure</argument>
             <argument name="tokenResponse"
