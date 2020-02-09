@@ -34,6 +34,13 @@
         </arguments>
     </virtualType>
 
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\Backend\ForgotPassword"
+                 type="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\ObserverRedirectFailure">
+        <arguments>
+            <argument name="redirectUrlProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\RefererProvider</argument>
+        </arguments>
+    </virtualType>
+
     <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Adminhtml\LoginCaptcha"
                  type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
         <arguments>
@@ -58,7 +65,7 @@
             <argument name="checkEnabledVerify"
                       xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\Adminhtml\ForgotPassword</argument>
             <argument name="failureProvider"
-                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\AuthenticationExceptionFailure</argument>
+                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\Backend\ForgotPassword</argument>
             <argument name="tokenResponse"
                       xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse\General</argument>
         </arguments>

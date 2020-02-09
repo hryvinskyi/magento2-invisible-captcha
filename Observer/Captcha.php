@@ -7,7 +7,6 @@
 
 namespace Hryvinskyi\InvisibleCaptcha\Observer;
 
-use Hryvinskyi\Base\Helper\VarDumper;
 use Hryvinskyi\InvisibleCaptcha\Helper\Config\General;
 use Hryvinskyi\InvisibleCaptcha\Model\CaptchaInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\VerifyReCaptcha;
@@ -54,8 +53,7 @@ class Captcha implements ObserverInterface
      */
     public function execute(Observer $observer)
     {
-        if ($this->provider->isEnabled()) {
-
+        if (!$this->provider->isEnabled() && $_SERVER['REQUEST_METHOD'] !== 'GET') {
             $verifyReCaptcha = $this->verifyReCaptcha
                 ->setSecret($this->config->getSecretKey())
                 ->setExpectedAction($this->provider->getAction())
