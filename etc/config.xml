@@ -11,8 +11,8 @@
         <hryvinskyi_invisible_captcha>
             <general>
                 <enabledCaptcha>0</enabledCaptcha>
-                <captchaSiteKey><![CDATA[]]></captchaSiteKey>
-                <captchaSecretKey><![CDATA[]]></captchaSecretKey>
+                <captchaSiteKey><![CDATA[ ]]></captchaSiteKey>
+                <captchaSecretKey><![CDATA[ ]]></captchaSecretKey>
             </general>
             <frontend>
                 <enabled>0</enabled>

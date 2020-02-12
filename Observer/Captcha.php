@@ -53,7 +53,7 @@ class Captcha implements ObserverInterface
      */
     public function execute(Observer $observer)
     {
-        if (!$this->provider->isEnabled() && $_SERVER['REQUEST_METHOD'] !== 'GET') {
+        if ($this->provider->isEnabled() && $_SERVER['REQUEST_METHOD'] !== 'GET') {
             $verifyReCaptcha = $this->verifyReCaptcha
                 ->setSecret($this->config->getSecretKey())
                 ->setExpectedAction($this->provider->getAction())
