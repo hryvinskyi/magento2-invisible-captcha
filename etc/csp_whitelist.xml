@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020. Volodymyr Hryvinskyi.  All rights reserved.
+  ~ @author: <mailto:volodymyr@hryvinskyi.com>
+  ~ @github: <https://github.com/hryvinskyi>
+  -->
+<csp_whitelist xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Csp:etc/csp_whitelist.xsd">
+    <policies>
+        <policy id="script-src">
+            <values>
+                <value id="recaptcha_google" type="host">www.google.com</value>
+                <value id="recaptcha_gstatic" type="host">www.gstatic.com</value>
+            </values>
+        </policy>
+        <policy id="frame-src">
+            <values>
+                <value id="recaptcha_google" type="host">www.google.com</value>
+            </values>
+        </policy>
+    </policies>
+</csp_whitelist>
