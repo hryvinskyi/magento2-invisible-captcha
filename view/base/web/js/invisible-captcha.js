@@ -100,7 +100,7 @@ define([
          */
         initializeCaptcha: function (element, self) {
             if (self.lazyLoad === true) {
-                let form = $(element).closest('form'),
+                var form = $(element).closest('form'),
                     needSubmit = false;
 
                 form.on('focus blur change', ':input', $.proxy(self._loadRecaptchaScript, self));
