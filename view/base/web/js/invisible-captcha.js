@@ -108,14 +108,26 @@ define([
 
                 // Disable submit form
                 form.on('click', ':submit', function (e) {
-                    if (invisibleCaptcha.isApiLoaded() === false && !form.data('needSubmit')) {
+                    if (
+                        !form.data('needSubmit') &&
+                        (
+                            invisibleCaptcha.isApiLoaded() === false ||
+                            invisibleCaptcha.initializedForms().indexOf(self.captchaId) === -1
+                        )
+                    ) {
                         form.data('needSubmit', true);
                         e.preventDefault();
                     }
                 });
 
                 form.submit(function (e) {
-                    if (invisibleCaptcha.isApiLoaded() === false && !form.data('needSubmit')) {
+                    if (
+                        !form.data('needSubmit') &&
+                        (
+                            invisibleCaptcha.isApiLoaded() === false ||
+                            invisibleCaptcha.initializedForms().indexOf(self.captchaId) === -1
+                        )
+                    ) {
                         form.data('needSubmit', true);
                         e.preventDefault();
                     }

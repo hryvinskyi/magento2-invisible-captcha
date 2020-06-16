@@ -70,27 +70,29 @@ class DisableSubmit
 
         $html = $response->getBody();
 
-        $crawler = new Crawler($html);
-
-        $crawler->filter('[data-hryvinskyi-recaptcha="default"]')->each(function ($node, $i) {
-            /** @var $node Crawler */
-            $form = $this->closest($node, 'form');
-            $form->getNode(0)->setAttribute('onsubmit', 'return false;' . $form->attr('onsubmit'));
-            $form->getNode(0)
-                ->setAttribute('class', $form->attr('class') . ' hryvinskyi-recaptcha-disabled-submit');
-        });
-
-        $crawler->filter('[data-hryvinskyi-recaptcha="target"]')->each(function ($node) use ($crawler) {
-            /** @var $node Crawler */
-            $crawler->filter($node->attr('data-hryvinskyi-recaptcha-target'))->each(function ($form) {
-                $form->getNode(0)
-                    ->setAttribute('onsubmit', 'return false;' . $form->attr('onsubmit'));
+        try {
+            $crawler = new Crawler($html);
+            $crawler->filter('[data-hryvinskyi-recaptcha="default"]')->each(function ($node, $i) {
+                /** @var $node Crawler */
+                $form = $this->closest($node, 'form');
+                $form->getNode(0)->setAttribute('onsubmit', 'return false;' . $form->attr('onsubmit'));
                 $form->getNode(0)
                     ->setAttribute('class', $form->attr('class') . ' hryvinskyi-recaptcha-disabled-submit');
             });
-        });
 
-        $response->setBody($crawler->outerHtml());
+            $crawler->filter('[data-hryvinskyi-recaptcha="target"]')->each(function ($node) use ($crawler) {
+                /** @var $node Crawler */
+                $crawler->filter($node->attr('data-hryvinskyi-recaptcha-target'))->each(function ($form) {
+                    $form->getNode(0)
+                        ->setAttribute('onsubmit', 'return false;' . $form->attr('onsubmit'));
+                    $form->getNode(0)
+                        ->setAttribute('class', $form->attr('class') . ' hryvinskyi-recaptcha-disabled-submit');
+                });
+            });
+            $response->setBody($crawler->outerHtml());
+        } catch (\InvalidArgumentException $exception) {
+            $response->setBody($html);
+        }
 
         return $result;
     }
