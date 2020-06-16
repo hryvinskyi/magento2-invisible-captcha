@@ -24,6 +24,7 @@ class General extends AbstractConfig
     const CONFIG_PATH_GENERAL_SITE_KEY = 'hryvinskyi_invisible_captcha/general/captchaSiteKey';
     const CONFIG_PATH_GENERAL_SECRET_KEY = 'hryvinskyi_invisible_captcha/general/captchaSecretKey';
     const CONFIG_PATH_GENERAL_USE_LAZY_LOAD = 'hryvinskyi_invisible_captcha/general/useLazyLoad';
+    const CONFIG_PATH_GENERAL_DISABLE_SUBMIT_FORM = 'hryvinskyi_invisible_captcha/general/disableSubmitForm';
 
     /**
      * Is google recaptcha enable global
@@ -96,6 +97,25 @@ class General extends AbstractConfig
     ): bool {
         return $this->scopeConfig->isSetFlag(
             self::CONFIG_PATH_GENERAL_USE_LAZY_LOAD,
+            $scopeType,
+            $scopeCode
+        );
+    }
+
+    /**
+     * Is google recaptcha load lazy
+     *
+     * @param string $scopeType
+     * @param mixed $scopeCode
+     *
+     * @return bool
+     */
+    public function isDisabledSubmitForm(
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
+        $scopeCode = null
+    ): bool {
+        return $this->scopeConfig->isSetFlag(
+            self::CONFIG_PATH_GENERAL_DISABLE_SUBMIT_FORM,
             $scopeType,
             $scopeCode
         );

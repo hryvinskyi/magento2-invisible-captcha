@@ -12,7 +12,8 @@
             <general>
                 <enabledCaptcha>0</enabledCaptcha>
                 <captchaSiteKey><![CDATA[ ]]></captchaSiteKey>
-                <captchaSecretKey><![CDATA[ ]]></captchaSecretKey>
+                <useLazyLoad>0</useLazyLoad>
+                <disableSubmitForm>1</disableSubmitForm>
             </general>
             <frontend>
                 <enabled>0</enabled>

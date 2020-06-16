@@ -103,4 +103,9 @@
             </argument>
         </arguments>
     </type>
+
+    <type name="Magento\Framework\Controller\ResultInterface">
+        <plugin name="Hryvinskyi_InvisibleCaptcha::disable_submit"
+                type="Hryvinskyi\InvisibleCaptcha\Plugin\DisableSubmit" sortOrder="10000005" />
+    </type>
 </config>

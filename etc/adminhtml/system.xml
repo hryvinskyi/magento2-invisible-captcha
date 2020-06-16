@@ -56,6 +56,12 @@
                         ]]>
                     </comment>
                 </field>
+                <field id="disableSubmitForm" translate="label comment" type="select" sortOrder="50" showInDefault="1"
+                       showInWebsite="1">
+                    <label>Disable submit form</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Disable form submit before loading recaptcha</comment>
+                </field>
             </group>
             <group id="frontend" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1"
                    showInStore="1">

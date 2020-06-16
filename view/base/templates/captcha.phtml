@@ -9,7 +9,8 @@
  * @var \Hryvinskyi\InvisibleCaptcha\Block\Captcha $block
  */
 ?>
-<div class="field-recaptcha" id="<?php echo $block->getWidgetId() ?>" data-bind="scope:'invisible-captcha'">
+<div class="field-recaptcha" data-hryvinskyi-recaptcha="default"
+     id="<?php echo $block->getWidgetId() ?>" data-bind="scope:'invisible-captcha'">
     <!-- ko template: getTemplate() --><!-- /ko -->
 </div>
 

@@ -67,6 +67,16 @@ define([
             }
         },
 
+        _createToken: function(token, element, self) {
+            var tokenField = $('<input type="hidden" name="hryvinskyi_invisible_token" />'),
+                action = self.action;
+
+            tokenField.val(token);
+            tokenField.attr('data-action', action);
+            $(element).append(tokenField);
+            invisibleCaptcha.initializedForms.push(self.captchaId);
+        },
+
         /**
          * Loads google API and triggers event, when loaded
          *
@@ -74,19 +84,11 @@ define([
          */
         _initializeTokenField: function (element, self) {
             if (invisibleCaptcha.initializedForms.indexOf(self.captchaId) === -1) {
-                var tokenField = $('<input type="hidden" name="hryvinskyi_invisible_token" />'),
-                    siteKey = self.siteKey,
-                    action = self.action;
-
-                tokenField.attr('data-action', action);
-                $(element).append(tokenField);
-
                 window.grecaptcha.ready(function () {
                     window.grecaptcha
-                        .execute(siteKey, {action: action})
+                        .execute(self.siteKey, {action: self.action})
                         .then(function (token) {
-                            tokenField.val(token);
-                            invisibleCaptcha.initializedForms.push(self.captchaId);
+                            $.proxy(self._createToken(token, element, self));
                         });
                 });
             }
@@ -100,32 +102,37 @@ define([
          */
         initializeCaptcha: function (element, self) {
             if (self.lazyLoad === true) {
-                var form = $(element).closest('form'),
-                    needSubmit = false;
+                var form = $(element).closest('form');
 
                 form.on('focus blur change', ':input', $.proxy(self._loadRecaptchaScript, self));
 
                 // Disable submit form
                 form.on('click', ':submit', function (e) {
-                    if (invisibleCaptcha.isApiLoaded() === false) {
-                        needSubmit = true;
+                    if (invisibleCaptcha.isApiLoaded() === false && !form.data('needSubmit')) {
+                        form.data('needSubmit', true);
                         e.preventDefault();
                     }
                 });
 
                 form.submit(function (e) {
-                    if (invisibleCaptcha.isApiLoaded() === false) {
-                        needSubmit = true;
+                    if (invisibleCaptcha.isApiLoaded() === false && !form.data('needSubmit')) {
+                        form.data('needSubmit', true);
                         e.preventDefault();
                     }
                 });
 
                 // Submit form after recaptcha loaded
                 invisibleCaptcha.initializedForms.subscribe(function (newValue) {
-                    if (needSubmit === true && newValue.indexOf(self.captchaId) !== -1) {
+                    if (form.data('needSubmit') === true && newValue.indexOf(self.captchaId) !== -1 && invisibleCaptcha.isApiLoaded() === true) {
                         form.submit();
+                        form.data('needSubmit', null);
                     }
                 });
+
+                if (form.attr('onsubmit') !== undefined) {
+                    form.attr('onsubmit', form.attr('onsubmit').replace(/^.{13}/, ''));
+                }
+                form.removeClass('hryvinskyi-recaptcha-disabled-submit');
             }
 
             if ((invisibleCaptcha.isApiLoad() === true || self.lazyLoad === true) && invisibleCaptcha.isApiLoaded() !== true) {
