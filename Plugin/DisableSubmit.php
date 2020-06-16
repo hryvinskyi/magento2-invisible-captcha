@@ -14,8 +14,10 @@ use Magento\Framework\App\Request\Http as RequestHttp;
 use Magento\Framework\App\Response\Http;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultInterface;
-use Symfony\Component\CssSelector\CssSelectorConverter;
 use Symfony\Component\DomCrawler\Crawler;
+use voku\helper\HtmlDomParser;
+use voku\helper\SimpleHtmlDom;
+use voku\helper\SimpleHtmlDomInterface;
 
 /**
  * Class DisableSubmit
@@ -70,33 +72,38 @@ class DisableSubmit
 
         $html = $response->getBody();
 
+        $dom = new HtmlDomParser();
+        $dom = $dom->loadHtml($html);
+
         try {
-            $crawler = new Crawler($html);
-            $crawler->filter('[data-hryvinskyi-recaptcha="default"]')->each(function ($node, $i) {
-                /** @var $node Crawler */
-                $form = $this->closest($node, 'form');
-                $form->getNode(0)->setAttribute('onsubmit', 'return false;' . $form->attr('onsubmit'));
-                $form->getNode(0)
-                    ->setAttribute('class', $form->attr('class') . ' hryvinskyi-recaptcha-disabled-submit');
-            });
+            $elements = $dom->findMultiOrFalse('[data-hryvinskyi-recaptcha="default"]');
 
-            $crawler->filter('[data-hryvinskyi-recaptcha="target"]')->each(function ($node) use ($crawler) {
-                /** @var $node Crawler */
-                $crawler->filter($node->attr('data-hryvinskyi-recaptcha-target'))->each(function ($form) {
-                    $form->getNode(0)
-                        ->setAttribute('onsubmit', 'return false;' . $form->attr('onsubmit'));
-                    $form->getNode(0)
-                        ->setAttribute('class', $form->attr('class') . ' hryvinskyi-recaptcha-disabled-submit');
-                });
-            });
+            if ($elements !== false) {
+                foreach ($elements as $element) {
+                    $form = $this->closest($element, 'form');
 
-            $outerHtml = $crawler->outerHtml();
-
-            if (strpos($outerHtml, '<!DOCTYPE html>') !== 0) {
-                $outerHtml = '<!DOCTYPE html>' . $outerHtml;
+                    $form->setAttribute('onsubmit', 'return false;' .
+                        $form->getAttribute('onsubmit'));
+                    $form->setAttribute('class', $form->getAttribute('class') .
+                        ' hryvinskyi-recaptcha-disabled-submit');
+                }
             }
 
-            $response->setBody($outerHtml);
+            $elements = $dom->findMultiOrFalse('[data-hryvinskyi-recaptcha="target"]');
+
+            if ($elements !== false) {
+                foreach ($elements as $element) {
+                    $target = $dom->findOneOrFalse($element->getAttribute('data-hryvinskyi-recaptcha-target'));
+                    if ($target !== false) {
+                        $target->setAttribute('onsubmit', 'return false;' .
+                            $target->getAttribute('onsubmit'));
+                        $target->setAttribute('class', $target->getAttribute('class') .
+                            ' hryvinskyi-recaptcha-disabled-submit');
+                    }
+                }
+            }
+
+            $response->setBody($dom);
         } catch (\InvalidArgumentException $exception) {
             $response->setBody($html);
         }
@@ -105,35 +112,26 @@ class DisableSubmit
     }
 
     /**
-     * @param Crawler $crawler
-     * @param $cssSelector
+     * Return first parents (heading toward the document root) of the Element that matches the provided selector.
      *
-     * @return Crawler
+     * @param SimpleHtmlDomInterface $element
+     * @param string $selector
      */
-    private function closest(Crawler $crawler, $cssSelector)
+    public function closest($element, string $selector)
     {
-        $xpath = (new CssSelectorConverter())->toXPath($cssSelector, './');
+        $domNode = $element->getNode();
 
-        $closest = null;
+        while (XML_ELEMENT_NODE === $domNode->nodeType) {
+            $symfonyNode = new Crawler($domNode);
+            $domNode = new SimpleHtmlDom($domNode);
 
-        for (
-            $domNode = $crawler->getNode(0);
-            $domNode !== null && $domNode->nodeType === XML_ELEMENT_NODE;
-            $domNode = $domNode->parentNode
-        ) {
-            $subcrawler = new Crawler($domNode);
-            $subcrawlerFiltered = $subcrawler->filterXPath($xpath);
-
-            if (count($subcrawlerFiltered) > 0) {
-                $closest = $subcrawlerFiltered;
-                break;
+            if ($symfonyNode->matches($selector)) {
+                return $domNode;
             }
+
+            $domNode = $symfonyNode->getNode(0)->parentNode;
         }
 
-        if ($closest === null) {
-            $closest = new Crawler();
-        }
-
-        return $closest;
+        return $domNode;
     }
 }
