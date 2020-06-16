@@ -71,7 +71,7 @@ class DisableSubmit
         }
 
         $html = $response->getBody();
-
+        $html = str_replace('text/x-magento-template', 'text/x-custom-template', $html);
         $dom = new HtmlDomParser();
         $dom = $dom->loadHtml($html);
 
