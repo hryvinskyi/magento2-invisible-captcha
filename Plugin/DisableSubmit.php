@@ -89,7 +89,14 @@ class DisableSubmit
                         ->setAttribute('class', $form->attr('class') . ' hryvinskyi-recaptcha-disabled-submit');
                 });
             });
-            $response->setBody($crawler->outerHtml());
+
+            $outerHtml = $crawler->outerHtml();
+
+            if (strpos($outerHtml, '<!DOCTYPE html>') !== 0) {
+                $outerHtml = '<!DOCTYPE html>' . $outerHtml;
+            }
+
+            $response->setBody($outerHtml);
         } catch (\InvalidArgumentException $exception) {
             $response->setBody($html);
         }
