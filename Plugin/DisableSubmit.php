@@ -11,9 +11,9 @@ namespace Hryvinskyi\InvisibleCaptcha\Plugin;
 
 use Hryvinskyi\InvisibleCaptcha\Helper\Config\General;
 use Magento\Framework\App\Request\Http as RequestHttp;
-use Magento\Framework\App\Response\Http;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DomCrawler\Crawler;
 use voku\helper\HtmlDomParser;
 use voku\helper\SimpleHtmlDom;
@@ -35,23 +35,31 @@ class DisableSubmit
     private $generalConfig;
 
     /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * MergeJson constructor.
      *
      * @param RequestHttp $request
      * @param General $generalConfig
+     * @param LoggerInterface $logger
      */
     public function __construct(
         RequestHttp $request,
-        General $generalConfig
+        General $generalConfig,
+        LoggerInterface $logger
     ) {
         $this->request = $request;
         $this->generalConfig = $generalConfig;
+        $this->logger = $logger;
     }
 
     /**
      * @param ResultInterface $subject
-     * @param Closure $proceed
-     * @param Http $response
+     * @param \Closure $proceed
+     * @param ResponseInterface $response
      *
      * @return string
      */
@@ -76,7 +84,7 @@ class DisableSubmit
         $dom = $dom->loadHtml($html);
 
         try {
-            $elements = $dom->findMultiOrFalse('[data-hryvinskyi-recaptcha="default"]');
+            $elements = $dom->findMultiOrFalses('[data-hryvinskyi-recaptcha="default"]');
 
             if ($elements !== false) {
                 foreach ($elements as $element) {
@@ -103,9 +111,10 @@ class DisableSubmit
                 }
             }
 
-            $response->setBody($dom);
-        } catch (\InvalidArgumentException $exception) {
+            $response->setBody((string)$dom);
+        } catch (\Throwable $e) {
             $response->setBody($html);
+            $this->logger->critical($e->getMessage());
         }
 
         return $result;

@@ -14,6 +14,7 @@
                 <captchaSiteKey><![CDATA[ ]]></captchaSiteKey>
                 <useLazyLoad>0</useLazyLoad>
                 <disableSubmitForm>1</disableSubmitForm>
+                <debug>1</debug>
             </general>
             <frontend>
                 <enabled>0</enabled>

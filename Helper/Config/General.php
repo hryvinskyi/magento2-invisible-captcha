@@ -25,6 +25,7 @@ class General extends AbstractConfig
     const CONFIG_PATH_GENERAL_SECRET_KEY = 'hryvinskyi_invisible_captcha/general/captchaSecretKey';
     const CONFIG_PATH_GENERAL_USE_LAZY_LOAD = 'hryvinskyi_invisible_captcha/general/useLazyLoad';
     const CONFIG_PATH_GENERAL_DISABLE_SUBMIT_FORM = 'hryvinskyi_invisible_captcha/general/disableSubmitForm';
+    const CONFIG_PATH_GENERAL_DEBUG = 'hryvinskyi_invisible_captcha/general/debug';
 
     /**
      * Is google recaptcha enable global
@@ -119,6 +120,16 @@ class General extends AbstractConfig
             $scopeType,
             $scopeCode
         );
+    }
+
+    /**
+     * Is enabled debugging
+     *
+     * @return bool
+     */
+    public function isDebug(): bool
+    {
+        return $this->scopeConfig->isSetFlag(self::CONFIG_PATH_GENERAL_DEBUG);
     }
 
     /**

@@ -108,4 +108,18 @@
         <plugin name="Hryvinskyi_InvisibleCaptcha::disable_submit"
                 type="Hryvinskyi\InvisibleCaptcha\Plugin\DisableSubmit" sortOrder="10000005" />
     </type>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Logger" type="Magento\Framework\Logger\Monolog">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="debug" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Debug</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Hryvinskyi\InvisibleCaptcha\Plugin\DisableSubmit">
+        <arguments>
+            <argument name="logger" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Logger</argument>
+        </arguments>
+    </type>
 </config>
