@@ -15,7 +15,7 @@
     },
     "type": "magento2-module",
     "version": "2.2.5",
-    "license": "GPL-3.0-or-later",
+    "license": "MIT",
     "autoload": {
         "files": [ "registration.php" ],
         "psr-4": {
