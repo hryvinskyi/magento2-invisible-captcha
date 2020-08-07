@@ -79,12 +79,19 @@ class DisableSubmit
         }
 
         $html = $response->getBody();
-        $html = str_replace('text/x-magento-template', 'text/x-custom-template', $html);
         $dom = new HtmlDomParser();
+
+        $dom->overwriteSpecialScriptTags([
+            'text/html',
+            'text/x-magento-template'
+            'text/x-custom-template',
+            'text/x-handlebars-template',
+        ]);
+
         $dom = $dom->loadHtml($html);
 
         try {
-            $elements = $dom->findMultiOrFalses('[data-hryvinskyi-recaptcha="default"]');
+            $elements = $dom->findMultiOrFalse('[data-hryvinskyi-recaptcha="default"]');
 
             if ($elements !== false) {
                 foreach ($elements as $element) {
