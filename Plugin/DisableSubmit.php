@@ -83,7 +83,7 @@ class DisableSubmit
 
         $dom->overwriteSpecialScriptTags([
             'text/html',
-            'text/x-magento-template'
+            'text/x-magento-template',
             'text/x-custom-template',
             'text/x-handlebars-template',
         ]);
