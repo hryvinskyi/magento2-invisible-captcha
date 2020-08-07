@@ -9,7 +9,7 @@
 [![Build Status](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/badges/build.png?b=master)](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/build-status/master)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhryvinskyi%2Fmagento2-invisible-captcha.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhryvinskyi%2Fmagento2-invisible-captcha?ref=badge_shield)
 
-Module version 2.0.\*||2.1.\* support Magento 2.3.*  
+Module version 2.0.\*||2.1.\*||2.2.\* support Magento 2.3.*  
 Module version 1.0.* support Magento 2.1.\*||2.2.\*
 
 ## Features
