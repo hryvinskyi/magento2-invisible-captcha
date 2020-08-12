@@ -176,6 +176,17 @@
         </arguments>
     </virtualType>
 
+    <type name="Magento\Contact\Block\ContactForm">
+        <plugin name="Hryvinskyi_InvisibleCaptcha::add_form_additional_info_if_missing"
+                type="Hryvinskyi\InvisibleCaptcha\Plugin\Block\ContactForm\AddFormAdditionalInfoIfMissing"/>
+    </type>
+
+    <type name="Hryvinskyi\InvisibleCaptcha\Plugin\Block\ContactForm\AddFormAdditionalInfoIfMissing">
+        <arguments>
+            <argument name="logger" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Logger</argument>
+        </arguments>
+    </type>
+
     <!-- Newsletter -->
     <type name="Hryvinskyi\InvisibleCaptcha\Model\Verify\Newsletter">
         <arguments>
