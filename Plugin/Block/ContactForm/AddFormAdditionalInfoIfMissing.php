@@ -21,7 +21,7 @@ class AddFormAdditionalInfoIfMissing
         Subject $subject
     ) {
         $priceRender = $subjectg->getC('product.price.render.default');
-        <container name="" label="Form Additional Info"/>
+        
         if (!$priceRender) {
             /** @var Render $priceRender */
             $priceRender = $this->getLayout()->createBlock(
