@@ -20,15 +20,41 @@ class AddFormAdditionalInfoIfMissing
     public function beforeToHtml(
         Subject $subject
     ) {
-        $priceRender = $subjectg->getC('product.price.render.default');
-        
-        if (!$priceRender) {
-            /** @var Render $priceRender */
-            $priceRender = $this->getLayout()->createBlock(
-                Render::class,
-                'product.price.render.default',
-                ['data' => ['price_render_handle' => 'catalog_product_prices']]
-            );
+        try {
+            $childrens = $subject->getChildNames();
+
+            if (in_array('form.additional.info', $childrens) === false && $this->verifyContact->verify() === true) {
+                $subject->getLayout()->addContainer(
+                    'form.additional.info',
+                    'Form Additional Info',
+                    [],
+                    $subject->getNameInLayout(),
+                    'form.additional.info'
+                );
+
+
+                $block = $subject->getLayout()->createBlock(
+                    \Hryvinskyi\InvisibleCaptcha\Block\Captcha::class,
+                    $subject->getNameInLayout() . '.invisible.recaptcha',
+                    [
+                        'jsLayout' => [
+                            'components' => [
+                                'invisible-captcha' => [
+                                    'component' =>'Hryvinskyi_InvisibleCaptcha/js/invisible-captcha',
+                                    'action' => 'contact',
+                                    'captchaId' => 'contact'
+                                ]
+                            ]
+                        ],
+                        'data' => [
+                            'template' => 'Hryvinskyi_InvisibleCaptcha::captcha.phtml'
+                        ]
+                    ]
+                );
+                $subject->setChild('form.additional.info', $block);
+            }
+        } catch (\Throwable $exception) {
+            $this->logger->critical($exception->getMessage(), $exception->getTrace());
         }
     }
 }
