@@ -34,7 +34,7 @@ Module version 1.0.* support Magento 2.1.\*||2.2.\*
 ## Installation Guide
 ### Install by composer
 ```
-composer require scriptua/magento2-invisible-captcha
+composer require hryvinskyi/magento2-invisible-captcha
 bin/magento module:enable Hryvinskyi_Base
 bin/magento module:enable Hryvinskyi_InvisibleCaptcha
 bin/magento setup:upgrade
