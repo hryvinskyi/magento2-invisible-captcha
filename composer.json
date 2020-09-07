@@ -1,5 +1,5 @@
 {
-    "name": "scriptua/magento2-invisible-captcha",
+    "name": "hryvinskyi/magento2-invisible-captcha",
     "description": "",
     "require": {
         "ext-dom": "*",
@@ -10,10 +10,10 @@
         "magento/module-store": "*",
         "magento/module-customer": "*",
         "magento/module-checkout": "*",
-        "scriptua/magento2-base": "2.0.*"
+        "hryvinskyi/magento2-base": "2.1.0"
     },
     "type": "magento2-module",
-    "version": "2.2.7",
+    "version": "2.3.0",
     "license": "MIT",
     "autoload": {
         "files": [ "registration.php" ],
@@ -22,7 +22,7 @@
         }
     },
     "config": {
-        "secure-http":false
+        "secure-http": false
     },
     "repositories": [
         {
