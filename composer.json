@@ -12,9 +12,18 @@
         "magento/module-checkout": "*",
         "hryvinskyi/magento2-base": "2.1.0"
     },
+    "require-dev": {
+        "roave/security-advisories": "dev-latest"
+    },
     "type": "magento2-module",
-    "version": "2.3.1",
+    "version": "2.3.2",
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Volodymyr Hryvinskyi",
+            "email": "volodymyr@hryvinskyi.com"
+        }
+    ],
     "autoload": {
         "files": [ "registration.php" ],
         "psr-4": {

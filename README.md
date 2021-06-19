@@ -17,6 +17,7 @@ Module version 1.0.* support Magento 2.1.\*||2.2.\*
 2. Easy to add captcha to your custom form
 3. AJAX forms supported
 4. Knockout forms supported
+5. Refreshing invalid token after a long period of inactivity on the site and after ajax form submitted
 
 ## Frontend Forms
  * Login

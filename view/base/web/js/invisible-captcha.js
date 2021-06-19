@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
  * @author: <mailto:volodymyr@hryvinskyi.com>
  * @github: <https://github.com/hryvinskyi>
@@ -57,6 +57,11 @@ define([
             }
         },
 
+        /**
+         * Load google recaptcha main script
+         *
+         * @private
+         */
         _loadRecaptchaScript: function () {
             if (invisibleCaptcha.isApiLoaded() === false) {
                 require([
@@ -67,7 +72,13 @@ define([
             }
         },
 
-        _createToken: function(token, element, self) {
+        /**
+         * Create form input token
+         *
+         * @private
+         */
+        _createToken: function (token, element, self) {
+            $(element).find('[name="hryvinskyi_invisible_token"]').remove();
             var tokenField = $('<input type="hidden" name="hryvinskyi_invisible_token" />'),
                 action = self.action;
 
@@ -84,13 +95,16 @@ define([
          */
         _initializeTokenField: function (element, self) {
             if (invisibleCaptcha.initializedForms.indexOf(self.captchaId) === -1) {
-                window.grecaptcha.ready(function () {
+                var execute = function () {
                     window.grecaptcha
                         .execute(self.siteKey, {action: self.action})
                         .then(function (token) {
                             $.proxy(self._createToken(token, element, self));
                         });
-                });
+                };
+
+                window.grecaptcha.ready(execute);
+                setInterval(execute, 90 * 1000);
             }
         },
 
@@ -101,9 +115,21 @@ define([
          * @param {Object} self
          */
         initializeCaptcha: function (element, self) {
-            if (self.lazyLoad === true) {
-                var form = $(element).closest('form');
+            var form = $(element).closest('form');
 
+            form.on('submit', function (e) {
+                setTimeout(function () {
+                    if (invisibleCaptcha.initializedForms.indexOf(self.captchaId) !== -1) {
+                        invisibleCaptcha.initializedForms.remove(self.captchaId);
+                    }
+
+                    self._initializeTokenField(element, self);
+                }, 0);
+
+                return true;
+            });
+
+            if (self.lazyLoad === true) {
                 form.on('focus blur change', ':input', $.proxy(self._loadRecaptchaScript, self));
 
                 // Disable submit form
