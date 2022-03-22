@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2020. Volodymyr Hryvinskyi.  All rights reserved.
+ * Copyright (c) 2022. Volodymyr Hryvinskyi.  All rights reserved.
  * @author: <mailto:volodymyr@hryvinskyi.com>
  * @github: <https://github.com/hryvinskyi>
  */
@@ -104,10 +104,10 @@ class DisableSubmit
                 }
             }
 
-            $elements = $dom->findMultiOrFalse('[data-hryvinskyi-recaptcha="target"]');
+            $elementsTarget = $dom->findMultiOrFalse('[data-hryvinskyi-recaptcha="target"]');
 
-            if ($elements !== false) {
-                foreach ($elements as $element) {
+            if ($elementsTarget !== false) {
+                foreach ($elementsTarget as $element) {
                     $target = $dom->findOneOrFalse($element->getAttribute('data-hryvinskyi-recaptcha-target'));
                     if ($target !== false) {
                         $target->setAttribute('onsubmit', 'return false;' .
@@ -118,7 +118,9 @@ class DisableSubmit
                 }
             }
 
-            $response->setBody((string)$dom);
+            if ($elements !== false || $elementsTarget !== false) {
+                $response->setBody((string)$dom);
+            }
         } catch (\Throwable $e) {
             $response->setBody($html);
             $this->logger->critical($e->getMessage());
@@ -132,6 +134,7 @@ class DisableSubmit
      *
      * @param SimpleHtmlDomInterface $element
      * @param string $selector
+     * @return \DOMNode|SimpleHtmlDom
      */
     public function closest($element, string $selector)
     {
