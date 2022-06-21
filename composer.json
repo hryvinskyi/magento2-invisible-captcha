@@ -10,13 +10,13 @@
         "magento/module-store": "*",
         "magento/module-customer": "*",
         "magento/module-checkout": "*",
-        "hryvinskyi/magento2-base": "2.1.0"
+        "hryvinskyi/magento2-base": "2.1.1"
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest"
     },
     "type": "magento2-module",
-    "version": "2.4.2",
+    "version": "2.4.3",
     "license": "MIT",
     "authors": [
         {
