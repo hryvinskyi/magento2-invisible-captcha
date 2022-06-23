@@ -48,7 +48,7 @@ class Debug extends Base
      * @inheritDoc
      * @throws \Magento\Framework\Exception\FileSystemException
      */
-    public function write(array $record)
+    public function write(array $record): void
     {
         if ($this->config->isDebug() === false) {
             return;
