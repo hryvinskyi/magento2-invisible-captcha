@@ -27,6 +27,7 @@ class Captcha extends Template
      * @var string
      */
     private $widgetIdClass = '';
+    private $widgetScope = '';
 
     /**
      * @var General
@@ -59,6 +60,7 @@ class Captcha extends Template
         LayoutSettings $layoutSettings,
         array $data = []
     ) {
+
         parent::__construct($context, $data);
 
         $this->generalConfig = $generalConfig;
@@ -74,6 +76,7 @@ class Captcha extends Template
         parent::_construct();
 
         $this->widgetIdClass = 'invisible-captcha-container-' . ++self::$widgetId;
+        $this->widgetScope = 'invisible-captcha-scope-' . ++self::$widgetId;
     }
 
     /**
@@ -85,21 +88,31 @@ class Captcha extends Template
     }
 
     /**
+     * @return string
+     */
+    public function getScope(): string
+    {
+        return $this->widgetScope;
+    }
+
+    /**
      * @inheritdoc
      */
     public function getJsLayout()
     {
         $layout = Json::decode(parent::getJsLayout());
+        $layout['components'][$this->getScope()] = $layout['components']['invisible-captcha'];
+        unset($layout['components']['invisible-captcha']);
 
         if ($this->frontendConfig->hasEnabled() && $this->isModuleOn()) {
-            $layout['components']['invisible-captcha']['config'] = $this->layoutSettings->getCaptchaSettings();
+            $layout['components'][$this->getScope()]['config'] = $this->layoutSettings->getCaptchaSettings();
         }
 
         if (
             (!$this->frontendConfig->hasEnabled() || !$this->isModuleOn())
-            && isset($layout['components']['invisible-captcha'])
+            && isset($layout['components'][$this->getScope()])
         ) {
-            unset($layout['components']['invisible-captcha']);
+            unset($layout['components'][$this->getScope()]);
         }
 
         return Json::encode($layout);
@@ -114,6 +127,14 @@ class Captcha extends Template
     }
 
     /**
+     * @return bool
+     */
+    public function isLazyLoad(): bool
+    {
+        return $this->generalConfig->isLazyLoad();
+    }
+
+    /**
      * @return string
      */
     public function toHtml()
@@ -121,7 +142,6 @@ class Captcha extends Template
         if (!$this->isModuleOn()) {
             return '';
         }
-
         return parent::toHtml();
     }
 }

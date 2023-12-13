@@ -1,6 +1,6 @@
 {
     "name": "hryvinskyi/magento2-invisible-captcha",
-    "description": "",
+    "description": "Magento 2 Google Invisible Captcha (Recaptcha) module",
     "require": {
         "ext-dom": "*",
         "php": "~7.1.3||~7.2.0||~7.3.0||~7.4.0||~8.0||~8.1",
@@ -16,7 +16,7 @@
         "roave/security-advisories": "dev-latest"
     },
     "type": "magento2-module",
-    "version": "2.4.5-dev",
+    "version": "2.4.5",
     "license": "MIT",
     "authors": [
         {

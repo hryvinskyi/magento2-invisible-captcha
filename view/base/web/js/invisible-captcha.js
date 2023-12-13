@@ -16,6 +16,7 @@ define([
         defaults: {
             template: 'Hryvinskyi_InvisibleCaptcha/invisible-captcha',
             action: '',
+            siteKey: '',
             captchaId: '',
             lazyLoad: false
         },
@@ -77,15 +78,14 @@ define([
          *
          * @private
          */
-        _createToken: function (token, element, self) {
+        _createToken: function (token, element, action, captchaId) {
             $(element).find('[name="hryvinskyi_invisible_token"]').remove();
-            var tokenField = $('<input type="hidden" name="hryvinskyi_invisible_token" />'),
-                action = self.action;
+            var tokenField = $('<input type="hidden" name="hryvinskyi_invisible_token" />');
 
             tokenField.val(token);
             tokenField.attr('data-action', action);
             $(element).append(tokenField);
-            invisibleCaptcha.initializedForms.push(self.captchaId);
+            invisibleCaptcha.initializedForms.push(captchaId);
         },
 
         /**
@@ -99,13 +99,23 @@ define([
                     window.grecaptcha
                         .execute(self.siteKey, {action: self.action})
                         .then(function (token) {
-                            $.proxy(self._createToken(token, element, self));
+                            $.proxy(self._createToken(token, element, self.action, self.captchaId), self);
                         });
                 };
 
                 window.grecaptcha.ready(execute);
                 setInterval(execute, 90 * 1000);
             }
+        },
+
+        /**
+         * Check is recaptcha loaded
+         *
+         * @param captchaId
+         * @returns {boolean}
+         */
+        isRecaptchaLoaded: function (captchaId) {
+            return invisibleCaptcha.isApiLoaded() && invisibleCaptcha.initializedForms().indexOf(captchaId) !== -1;
         },
 
         /**
@@ -118,13 +128,15 @@ define([
             var form = $(element).closest('form');
 
             form.on('submit', function (e) {
+                form.addClass('hryvinskyi-recaptcha-disabled-submit');
                 setTimeout(function () {
                     if (invisibleCaptcha.initializedForms.indexOf(self.captchaId) !== -1) {
                         invisibleCaptcha.initializedForms.remove(self.captchaId);
                     }
 
-                    self._initializeTokenField(element, self);
-                }, 0);
+                    self._initializeTokenField(element, self.siteKey, self.action, self.captchaId);
+                    form.removeClass('hryvinskyi-recaptcha-disabled-submit');
+                }, 50);
 
                 return true;
             });
@@ -134,52 +146,54 @@ define([
 
                 // Disable submit form
                 form.on('click', ':submit', function (e) {
-                    if (
-                        !form.data('needSubmit') &&
-                        (
-                            invisibleCaptcha.isApiLoaded() === false ||
-                            invisibleCaptcha.initializedForms().indexOf(self.captchaId) === -1
-                        )
-                    ) {
-                        form.data('needSubmit', true);
+                    if (self.isRecaptchaLoaded(self.captchaId) === false) {
+                        form.data('needClickOnSubmit', e.target);
                         e.preventDefault();
+                        return false;
                     }
                 });
 
                 form.submit(function (e) {
-                    if (
-                        !form.data('needSubmit') &&
-                        (
-                            invisibleCaptcha.isApiLoaded() === false ||
-                            invisibleCaptcha.initializedForms().indexOf(self.captchaId) === -1
-                        )
-                    ) {
+                    if (self.isRecaptchaLoaded(self.captchaId) === false) {
                         form.data('needSubmit', true);
                         e.preventDefault();
+                        return false;
                     }
                 });
 
                 // Submit form after recaptcha loaded
                 invisibleCaptcha.initializedForms.subscribe(function (newValue) {
-                    if (form.data('needSubmit') === true && newValue.indexOf(self.captchaId) !== -1 && invisibleCaptcha.isApiLoaded() === true) {
-                        form.submit();
-                        form.data('needSubmit', null);
+                    let isLoaded = newValue.indexOf(self.captchaId) !== -1 && invisibleCaptcha.isApiLoaded() === true;
+
+                    if (isLoaded) {
+                        if (form.data('needSubmit')) {
+                            form.submit();
+                            form.data('needSubmit', null);
+                            return;
+                        }
+
+                        if (form.data('needClickOnSubmit')) {
+                            $(form.data('needClickOnSubmit')).trigger('click');
+                            form.data('needClickOnSubmit', null);
+                            return;
+                        }
                     }
                 });
 
                 if (form.attr('onsubmit') !== undefined) {
                     form.attr('onsubmit', form.attr('onsubmit').replace(/^.{13}/, ''));
                 }
+
                 form.removeClass('hryvinskyi-recaptcha-disabled-submit');
             }
 
             if ((invisibleCaptcha.isApiLoad() === true || self.lazyLoad === true) && invisibleCaptcha.isApiLoaded() !== true) {
                 invisibleCaptcha.initializeForms.push({'element': element, self: self});
             } else if (invisibleCaptcha.isApiLoaded() === true) {
-                self._initializeTokenField(element, self);
+                self._initializeTokenField(element, self.siteKey, self.action, self.captchaId);
             } else {
                 $(window).on('recaptcha_api_ready_' + self.captchaId, function () {
-                    self._initializeTokenField(element, self);
+                    self._initializeTokenField(element, self.siteKey, self.action, self.captchaId);
                 });
             }
         }

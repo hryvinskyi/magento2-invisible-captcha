@@ -10,10 +10,21 @@
  */
 ?>
 <div class="field-recaptcha" data-hryvinskyi-recaptcha="default"
-     id="<?php echo $block->getWidgetId() ?>" data-bind="scope:'invisible-captcha'">
+     id="<?php echo $block->getWidgetId() ?>" data-bind="scope:'<?php echo $block->getScope() ?>'">
     <!-- ko template: getTemplate() --><!-- /ko -->
 </div>
+<?php if ($block->isLazyLoad()): ?>
+    <script data-pagespeed-ignore-merge data-ignore-extreme-lazy-load type="text/javascript">
+        (() => {
+            const field = document.getElementById('<?php echo $block->getWidgetId() ?>');
+            const form = field.closest('form');
 
+            if (form !== null) {
+                form.classList.add('hryvinskyi-recaptcha-disabled-submit');
+            }
+        })();
+    </script>
+<?php endif; ?>
 <script type="text/x-magento-init">
 {
     "#<?php echo $block->getWidgetId() ?>": {
