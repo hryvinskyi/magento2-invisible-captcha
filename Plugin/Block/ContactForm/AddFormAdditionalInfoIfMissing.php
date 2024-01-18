@@ -63,17 +63,17 @@ class AddFormAdditionalInfoIfMissing
                     \Hryvinskyi\InvisibleCaptcha\Block\Captcha::class,
                     $subject->getNameInLayout() . '.invisible.recaptcha',
                     [
-                        'jsLayout' => [
-                            'components' => [
-                                'invisible-captcha' => [
-                                    'component' =>'Hryvinskyi_InvisibleCaptcha/js/invisible-captcha',
-                                    'action' => 'contact',
-                                    'captchaId' => 'contact'
+                        'data' => [
+                            'template' => 'Hryvinskyi_InvisibleCaptcha::captcha.phtml',
+                            'jsLayout' => [
+                                'components' => [
+                                    'invisible-captcha' => [
+                                        'component' =>'Hryvinskyi_InvisibleCaptcha/js/invisible-captcha',
+                                        'action' => 'contact',
+                                        'captchaId' => 'contact'
+                                    ]
                                 ]
                             ]
-                        ],
-                        'data' => [
-                            'template' => 'Hryvinskyi_InvisibleCaptcha::captcha.phtml'
                         ]
                     ]
                 );
