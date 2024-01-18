@@ -105,6 +105,7 @@ define([
 
                 window.grecaptcha.ready(execute);
                 setInterval(execute, 90 * 1000);
+                $(document).on("ajaxComplete", execute);
             }
         },
 
