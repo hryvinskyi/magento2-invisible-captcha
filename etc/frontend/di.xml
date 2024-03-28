@@ -244,4 +244,39 @@
             <argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\SendFriend</argument>
         </arguments>
     </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\SendFriend" type="Hryvinskyi\InvisibleCaptcha\Observer\Captcha">
+        <arguments>
+            <argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\SendFriend</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Product Reviews -->
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Verify\ProductReview">
+        <arguments>
+            <argument name="area" xsi:type="string">frontend</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\ProductReview" type="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\ObserverRedirectFailure">
+        <arguments>
+            <argument name="redirectUrlProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\RefererProvider</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\ProductReview" type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
+        <arguments>
+            <argument name="action" xsi:type="string">send_friend</argument>
+            <argument name="scoreThreshold" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Frontend\ProductReview</argument>
+            <argument name="checkEnabledVerify" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\ProductReview</argument>
+            <argument name="failureProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\ProductReview</argument>
+            <argument name="tokenResponse" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse\General</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\ProductReview" type="Hryvinskyi\InvisibleCaptcha\Observer\Captcha">
+        <arguments>
+            <argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\ProductReview</argument>
+        </arguments>
+    </virtualType>
 </config>

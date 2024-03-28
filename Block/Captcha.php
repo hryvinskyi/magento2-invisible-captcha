@@ -135,6 +135,22 @@ class Captcha extends Template
     }
 
     /**
+     * @return bool
+     */
+    public function isHideBadge(): bool
+    {
+        return $this->generalConfig->isHideBadge();
+    }
+
+    /**
+     * @return string
+     */
+    public function getHideBadgeText(): string
+    {
+        return $this->generalConfig->getHideBadgeText();
+    }
+
+    /**
      * @return string
      */
     public function toHtml()

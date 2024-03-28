@@ -12,6 +12,14 @@
 <div class="field-recaptcha" data-hryvinskyi-recaptcha="default"
      id="<?php echo $block->getWidgetId() ?>" data-bind="scope:'<?php echo $block->getScope() ?>'">
     <!-- ko template: getTemplate() --><!-- /ko -->
+    <?php if ($block->isHideBadge()): ?>
+    <style>
+        .grecaptcha-badge {
+            display: none;
+        }
+    </style>
+    <div class="hint"><?= $block->getHideBadgeText() ?></div>
+    <?php endif; ?>
 </div>
 <?php if ($block->isLazyLoad()): ?>
     <script data-pagespeed-ignore-merge data-ignore-extreme-lazy-load type="text/javascript">

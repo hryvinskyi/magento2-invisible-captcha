@@ -62,7 +62,28 @@
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>Disable form submit before loading recaptcha</comment>
                 </field>
-                <field id="debug" translate="label" type="select" sortOrder="60" showInDefault="1">
+                <field id="hideBadge" translate="label comment" type="select" sortOrder="60" showInDefault="1"
+                       showInWebsite="1">
+                    <label>Hide ReCaptha badge</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>
+                        <![CDATA[You are allowed to hide the badge as long as you include the reCAPTCHA branding visibly in the user flow. We include this following text:<br>
+<code>This site is protected by reCAPTCHA and the Google
+    <a href="https://policies.google.com/privacy">Privacy Policy</a> and
+    <a href="https://policies.google.com/terms">Terms of Service</a> apply.</code><br>
+For example:<br>
+<img src="https://developers.google.com/static/recaptcha/images/text_badge_example.png" alt="reCAPTCHA">
+                        ]]>
+                    </comment>
+                </field>
+                <field id="hideBadgeText" translate="label comment" type="textarea" sortOrder="70" showInDefault="1"
+                       showInWebsite="1">
+                    <label>Hide badge text</label>
+                    <depends>
+                        <field id="hideBadge">1</field>
+                    </depends>
+                </field>
+                <field id="debug" translate="label" type="select" sortOrder="1000" showInDefault="1">
                     <label>Debugging</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
@@ -168,7 +189,23 @@
                     <label>Send To Friend Score Threshold</label>
                     <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
                     <depends>
-                        <field id="enabledNewsletter">1</field>
+                        <field id="enabledSendFriend">1</field>
+                    </depends>
+                </field>
+                <field id="enabledProductReview" translate="label" type="select" sortOrder="140" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Use in Product Review</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="scoreThresholdProductReview" translate="label" type="select" sortOrder="150" showInDefault="1"
+                       showInWebsite="1" showInStore="0" canRestore="1">
+                    <label>Product Review Score Threshold</label>
+                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                    <depends>
+                        <field id="enabledProductReview">1</field>
                     </depends>
                 </field>
             </group>

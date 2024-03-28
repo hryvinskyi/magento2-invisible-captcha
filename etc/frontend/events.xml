@@ -35,4 +35,8 @@
         <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
                   instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\SendFriend"/>
     </event>
+    <event name="controller_action_predispatch_review_product_post">
+        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
+                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\ProductReview" />
+    </event>
 </config>

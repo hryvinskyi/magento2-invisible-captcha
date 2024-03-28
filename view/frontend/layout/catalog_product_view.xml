@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+ -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="product.review.form.fields.before">
+            <block class="Hryvinskyi\InvisibleCaptcha\Block\Captcha" name="invisible.recaptcha" after="-"
+                   template="Hryvinskyi_InvisibleCaptcha::captcha.phtml"
+                   ifconfig="hryvinskyi_invisible_captcha/frontend/enabledProductReview">
+                <arguments>
+                    <argument name="jsLayout" xsi:type="array">
+                        <item name="components" xsi:type="array">
+                            <item name="invisible-captcha" xsi:type="array">
+                                <item name="component"
+                                      xsi:type="string">Hryvinskyi_InvisibleCaptcha/js/invisible-captcha</item>
+                                <item name="action" xsi:type="string">product_review</item>
+                                <item name="captchaId" xsi:type="string">product_review</item>
+                            </item>
+                        </item>
+                    </argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

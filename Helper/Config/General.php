@@ -25,6 +25,8 @@ class General extends AbstractConfig
     const CONFIG_PATH_GENERAL_SECRET_KEY = 'hryvinskyi_invisible_captcha/general/captchaSecretKey';
     const CONFIG_PATH_GENERAL_USE_LAZY_LOAD = 'hryvinskyi_invisible_captcha/general/useLazyLoad';
     const CONFIG_PATH_GENERAL_DISABLE_SUBMIT_FORM = 'hryvinskyi_invisible_captcha/general/disableSubmitForm';
+    const CONFIG_PATH_GENERAL_HIDE_BADGE = 'hryvinskyi_invisible_captcha/general/hideBadge';
+    const CONFIG_PATH_GENERAL_HIDE_BADGE_TEXT = 'hryvinskyi_invisible_captcha/general/hideBadgeText';
     const CONFIG_PATH_GENERAL_DEBUG = 'hryvinskyi_invisible_captcha/general/debug';
 
     /**
@@ -117,6 +119,35 @@ class General extends AbstractConfig
     ): bool {
         return $this->scopeConfig->isSetFlag(
             self::CONFIG_PATH_GENERAL_DISABLE_SUBMIT_FORM,
+            $scopeType,
+            $scopeCode
+        );
+    }
+
+    /**
+     * Is hide badge
+     *
+     * @return bool
+     */
+    public function isHideBadge(): bool
+    {
+        return $this->scopeConfig->isSetFlag(self::CONFIG_PATH_GENERAL_HIDE_BADGE);
+    }
+
+    /**
+     * Return hide badge text
+     *
+     * @param string $scopeType
+     * @param mixed $scopeCode
+     *
+     * @return bool
+     */
+    public function getHideBadgeText(
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
+        $scopeCode = null
+    ): string {
+        return (string)$this->scopeConfig->getValue(
+            self::CONFIG_PATH_GENERAL_HIDE_BADGE_TEXT,
             $scopeType,
             $scopeCode
         );

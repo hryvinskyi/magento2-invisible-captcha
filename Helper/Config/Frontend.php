@@ -33,6 +33,8 @@ class Frontend extends AbstractConfig
     const CONFIG_PATH_FRONTEND_SCORE_THRESHOLD_NEWSLETTER = 'hryvinskyi_invisible_captcha/frontend/scoreThresholdNewsletter';
     const CONFIG_PATH_FRONTEND_ENABLED_SENDFRIEND = 'hryvinskyi_invisible_captcha/frontend/enabledSendFriend';
     const CONFIG_PATH_FRONTEND_SCORE_THRESHOLD_SENDFRIEND = 'hryvinskyi_invisible_captcha/frontend/scoreThresholdSendFriend';
+    const CONFIG_PATH_FRONTEND_ENABLED_PRODUCT_REVIEW = 'hryvinskyi_invisible_captcha/frontend/enabledProductReview';
+    const CONFIG_PATH_FRONTEND_SCORE_THRESHOLD_PRODUCT_REVIEW = 'hryvinskyi_invisible_captcha/frontend/scoreThresholdProductReview';
 
     /**
      * Is google recaptcha enable global
@@ -276,6 +278,44 @@ class Frontend extends AbstractConfig
     ): float {
         return (float)$this->scopeConfig->getValue(
             self::CONFIG_PATH_FRONTEND_SCORE_THRESHOLD_SENDFRIEND,
+            $scopeType,
+            $scopeCode
+        );
+    }
+
+    /**
+     * Is google recaptcha enable product review
+     *
+     * @param string $scopeType
+     * @param mixed $scopeCode
+     *
+     * @return bool
+     */
+    public function hasEnabledProductReview(
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
+        $scopeCode = null
+    ): bool {
+        return $this->scopeConfig->isSetFlag(
+            self::CONFIG_PATH_FRONTEND_ENABLED_PRODUCT_REVIEW,
+            $scopeType,
+            $scopeCode
+        );
+    }
+
+    /**
+     * Get google recaptcha score threshold product review
+     *
+     * @param string $scopeType
+     * @param mixed $scopeCode
+     *
+     * @return float
+     */
+    public function getScoreThresholdProductReview(
+        string $scopeType = ScopeInterface::SCOPE_WEBSITES,
+        $scopeCode = null
+    ): float {
+        return (float)$this->scopeConfig->getValue(
+            self::CONFIG_PATH_FRONTEND_SCORE_THRESHOLD_PRODUCT_REVIEW,
             $scopeType,
             $scopeCode
         );
