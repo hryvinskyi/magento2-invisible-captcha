@@ -135,7 +135,7 @@ define([
                         invisibleCaptcha.initializedForms.remove(self.captchaId);
                     }
 
-                    self._initializeTokenField(element, self.siteKey, self.action, self.captchaId);
+                    self._initializeTokenField(element, self);
                     form.removeClass('hryvinskyi-recaptcha-disabled-submit');
                 }, 50);
 
@@ -191,10 +191,10 @@ define([
             if ((invisibleCaptcha.isApiLoad() === true || self.lazyLoad === true) && invisibleCaptcha.isApiLoaded() !== true) {
                 invisibleCaptcha.initializeForms.push({'element': element, self: self});
             } else if (invisibleCaptcha.isApiLoaded() === true) {
-                self._initializeTokenField(element, self.siteKey, self.action, self.captchaId);
+                self._initializeTokenField(element, self);
             } else {
                 $(window).on('recaptcha_api_ready_' + self.captchaId, function () {
-                    self._initializeTokenField(element, self.siteKey, self.action, self.captchaId);
+                    self._initializeTokenField(element, self);
                 });
             }
         }
