@@ -1,37 +1,46 @@
 <?php
 /**
- * Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
+ * Copyright (c) 2019-2025. Volodymyr Hryvinskyi.  All rights reserved.
  * @author: <mailto:volodymyr@hryvinskyi.com>
  * @github: <https://github.com/hryvinskyi>
  */
 
 /**
  * @var \Hryvinskyi\InvisibleCaptcha\Block\Captcha $block
+ * @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
  */
 ?>
 <div class="field-recaptcha" data-hryvinskyi-recaptcha="default"
      id="<?php echo $block->getWidgetId() ?>" data-bind="scope:'<?php echo $block->getScope() ?>'">
     <!-- ko template: getTemplate() --><!-- /ko -->
     <?php if ($block->isHideBadge()): ?>
-    <style>
-        .grecaptcha-badge {
-            display: none;
-        }
-    </style>
+    <?= $secureRenderer->renderTag('style', [], '.grecaptcha-badge {display:none;}', false) ?>
     <div class="hint"><?= $block->getHideBadgeText() ?></div>
     <?php endif; ?>
 </div>
 <?php if ($block->isLazyLoad()): ?>
-    <script data-pagespeed-ignore-merge data-ignore-extreme-lazy-load type="text/javascript">
-        (() => {
-            const field = document.getElementById('<?php echo $block->getWidgetId() ?>');
-            const form = field.closest('form');
+    <?php
+    $scriptContent = <<<JS
+(() => {
+    const field = document.getElementById('{$block->getWidgetId()}');
+    const form = field.closest('form');
 
-            if (form !== null) {
-                form.classList.add('hryvinskyi-recaptcha-disabled-submit');
-            }
-        })();
-    </script>
+    if (form !== null) {
+        form.classList.add('hryvinskyi-recaptcha-disabled-submit');
+    }
+})();
+JS;
+
+    echo $secureRenderer->renderTag(
+        'script',
+        [
+            'data-pagespeed-ignore-merge' => null,
+            'data-ignore-extreme-lazy-load' => null,
+        ],
+        $scriptContent,
+        false
+    );
+    ?>
 <?php endif; ?>
 <script type="text/x-magento-init">
 {
