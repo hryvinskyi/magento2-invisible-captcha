@@ -1,13 +1,26 @@
 <?php
 /**
- * Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
+ * Copyright (c) 2019-2025. Volodymyr Hryvinskyi.  All rights reserved.
  * @author: <mailto:volodymyr@hryvinskyi.com>
  * @github: <https://github.com/hryvinskyi>
  */
 
 /**
- * @var $block \Hryvinskyi\InvisibleCaptcha\Block\Captcha
+ * @var \Hryvinskyi\InvisibleCaptcha\Block\Captcha $block
+ * @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
  */
+
+$scriptContent = <<<JS
+require(['jquery', 'domReady!'], function ($) {
+    $('#{$block->getWidgetId()}').appendTo('#newsletter-validate-detail');
+});
+JS;
+echo $secureRenderer->renderTag(
+    'script',
+    [],
+    $scriptContent,
+    false
+);
 ?>
 
 <div
@@ -19,13 +32,6 @@
 >
     <!-- ko template: getTemplate() --><!-- /ko -->
 </div>
-
-<script type="text/javascript">
-    require(['jquery', 'domReady!'], function ($) {
-        $('#<?= /* @noEscape */ $block->getWidgetId() ?>')
-            .appendTo('#newsletter-validate-detail');
-    });
-</script>
 
 <script type="text/x-magento-init">
 {
