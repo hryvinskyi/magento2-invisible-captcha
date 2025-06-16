@@ -1,8 +1,9 @@
-<!--
-/**
- * Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
- * @author: <mailto:volodymyr@hryvinskyi.com>
- * @github: <https://github.com/hryvinskyi>
- /
--->
-<div data-bind="afterRender: initializeCaptcha"></div>
+<!-- Invisible Captcha Container Template -->
+<div class="hryvinskyi-invisible-captcha-container"
+     data-bind="attr: {
+         'data-captcha-id': captchaId,
+         'data-site-key': siteKey,
+         'data-action': action
+     },
+     afterRender: initializeCaptcha
+"></div>

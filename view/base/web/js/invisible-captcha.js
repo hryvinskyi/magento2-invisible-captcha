@@ -1,15 +1,15 @@
 /**
- * Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
- * @author: <mailto:volodymyr@hryvinskyi.com>
- * @github: <https://github.com/hryvinskyi>
+ * Main Invisible Captcha Component
  */
-
 define([
     'jquery',
     'ko',
     'uiComponent',
-    './model/invisible-captcha'
-], function ($, ko, Component, invisibleCaptcha) {
+    './model/invisible-captcha',
+    './model/token-manager',
+    './model/form-manager',
+    './model/script-loader'
+], function ($, ko, Component, captchaModel, TokenManager, FormManager, ScriptLoader) {
     'use strict';
 
     return Component.extend({
@@ -20,183 +20,75 @@ define([
             captchaId: '',
             lazyLoad: false
         },
-        _initializedForms: [],
 
         /**
-         * Initialization
+         * Component initialization
          */
         initialize: function () {
             this._super();
-            this._loadGoogleApi();
-        },
 
-        /**
-         * Initialize Google ReCaptca Script
-         *
-         * @private
-         */
-        _loadGoogleApi: function () {
-            var self = this;
+            // Initialize managers
+            this.tokenManager = new TokenManager(this.captchaId, this.siteKey, this.action);
+            this.scriptLoader = new ScriptLoader(this.captchaId, this.siteKey);
+            this.formManager = new FormManager(this.captchaId, this.tokenManager, this.lazyLoad, this.scriptLoader);
 
-            if (invisibleCaptcha.isApiLoad() === true) {
-                $(window).trigger('recaptcha_api_ready_' + self.captchaId);
+            // Initialize script loading
+            this.scriptLoader.initialize();
 
-                return;
-            }
-
-            window.onloadCallbackGoogleRecapcha = function () {
-                invisibleCaptcha.isApiLoaded(true);
-                invisibleCaptcha.initializeForms.each(function (item) {
-                    self._initializeTokenField(item.element, item.self);
-                });
-
-                $(window).trigger('recaptcha_api_ready_' + self.captchaId);
-            };
-
-            if (self.lazyLoad === false) {
-                self._loadRecaptchaScript();
+            if (!this.lazyLoad) {
+                this.scriptLoader.loadScript();
             }
         },
 
         /**
-         * Load google recaptcha main script
-         *
-         * @private
-         */
-        _loadRecaptchaScript: function () {
-            if (invisibleCaptcha.isApiLoaded() === false) {
-                require([
-                    'https://www.google.com/recaptcha/api.js?onload=onloadCallbackGoogleRecapcha&render=' + this.siteKey
-                ]);
-
-                invisibleCaptcha.isApiLoad(true);
-            }
-        },
-
-        /**
-         * Create form input token
-         *
-         * @private
-         */
-        _createToken: function (token, element, action, captchaId) {
-            $(element).find('[name="hryvinskyi_invisible_token"]').remove();
-            var tokenField = $('<input type="hidden" name="hryvinskyi_invisible_token" />');
-
-            tokenField.val(token);
-            tokenField.attr('data-action', action);
-            $(element).append(tokenField);
-            invisibleCaptcha.initializedForms.push(captchaId);
-        },
-
-        /**
-         * Loads google API and triggers event, when loaded
-         *
-         * @private
-         */
-        _initializeTokenField: function (element, self) {
-            if (invisibleCaptcha.initializedForms.indexOf(self.captchaId) === -1) {
-                var execute = function () {
-                    window.grecaptcha
-                        .execute(self.siteKey, {action: self.action})
-                        .then(function (token) {
-                            $.proxy(self._createToken(token, element, self.action, self.captchaId), self);
-                        });
-                };
-
-                window.grecaptcha.ready(execute);
-                setInterval(execute, 90 * 1000);
-                $(document).on("ajaxComplete", execute);
-            }
-        },
-
-        /**
-         * Check is recaptcha loaded
-         *
-         * @param captchaId
-         * @returns {boolean}
+         * Check if reCAPTCHA is ready for a specific form
          */
         isRecaptchaLoaded: function (captchaId) {
-            return invisibleCaptcha.isApiLoaded() && invisibleCaptcha.initializedForms().indexOf(captchaId) !== -1;
+            return captchaModel.isApiLoaded() &&
+                captchaModel.initializedForms().indexOf(captchaId) !== -1;
         },
 
         /**
-         * Initialize recaptcha
-         *
-         * @param {Dom} element
-         * @param {Object} self
+         * Public initialization method called from template
          */
         initializeCaptcha: function (element, self) {
-            var form = $(element).closest('form');
+            const $container = $(element);
+            const $form = $container.closest('form');
 
-            form.on('submit', function (e) {
-                form.addClass('hryvinskyi-recaptcha-disabled-submit');
-                setTimeout(function () {
-                    if (invisibleCaptcha.initializedForms.indexOf(self.captchaId) !== -1) {
-                        invisibleCaptcha.initializedForms.remove(self.captchaId);
-                    }
+            console.log(`Initializing Invisible Captcha for form:`, $form);
 
-                    self._initializeTokenField(element, self);
-                    form.removeClass('hryvinskyi-recaptcha-disabled-submit');
-                }, 50);
-
-                return true;
-            });
-
-            if (self.lazyLoad === true) {
-                form.on('focus blur change', ':input', $.proxy(self._loadRecaptchaScript, self));
-
-                // Disable submit form
-                form.on('click', ':submit', function (e) {
-                    if (self.isRecaptchaLoaded(self.captchaId) === false) {
-                        form.data('needClickOnSubmit', e.target);
-                        e.preventDefault();
-                        return false;
-                    }
+            // Store reference for later use if API not loaded
+            if (!captchaModel.isApiLoaded()) {
+                captchaModel.initializeForms.push({
+                    element: element,
+                    self: self
                 });
-
-                form.submit(function (e) {
-                    if (self.isRecaptchaLoaded(self.captchaId) === false) {
-                        form.data('needSubmit', true);
-                        e.preventDefault();
-                        return false;
-                    }
-                });
-
-                // Submit form after recaptcha loaded
-                invisibleCaptcha.initializedForms.subscribe(function (newValue) {
-                    let isLoaded = newValue.indexOf(self.captchaId) !== -1 && invisibleCaptcha.isApiLoaded() === true;
-
-                    if (isLoaded) {
-                        if (form.data('needSubmit')) {
-                            form.submit();
-                            form.data('needSubmit', null);
-                            return;
-                        }
-
-                        if (form.data('needClickOnSubmit')) {
-                            $(form.data('needClickOnSubmit')).trigger('click');
-                            form.data('needClickOnSubmit', null);
-                            return;
-                        }
-                    }
-                });
-
-                if (form.attr('onsubmit') !== undefined) {
-                    form.attr('onsubmit', form.attr('onsubmit').replace(/^.{13}/, ''));
-                }
-
-                form.removeClass('hryvinskyi-recaptcha-disabled-submit');
             }
 
-            if ((invisibleCaptcha.isApiLoad() === true || self.lazyLoad === true) && invisibleCaptcha.isApiLoaded() !== true) {
-                invisibleCaptcha.initializeForms.push({'element': element, self: self});
-            } else if (invisibleCaptcha.isApiLoaded() === true) {
-                self._initializeTokenField(element, self);
+            // Initialize form
+            self.formManager.initializeForm(element);
+
+            // If API is already loaded, activate immediately
+            if (captchaModel.isApiLoaded()) {
+                self.formManager.activateForm($form, $container);
             } else {
-                $(window).on('recaptcha_api_ready_' + self.captchaId, function () {
-                    self._initializeTokenField(element, self);
+                $(window).one(`recaptcha_api_ready_${self.captchaId}`, () => {
+                    self.formManager.activateForm($form, $container);
                 });
             }
+        },
+
+        /**
+         * Component cleanup
+         */
+        destroy: function () {
+            if (this.tokenManager) {
+                this.tokenManager.destroy();
+            }
+            if (this.formManager) {
+                this.formManager.destroy();
+            }
+            this._super();
         }
     });
 });

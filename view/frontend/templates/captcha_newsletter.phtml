@@ -11,9 +11,8 @@
  */
 
 $scriptContent = <<<JS
-require(['jquery', 'domReady!'], function ($) {
-    $('#{$block->getWidgetId()}').appendTo('#newsletter-validate-detail');
-});
+document.getElementById('newsletter-validate-detail')
+        .appendChild(document.getElementById('{$block->getWidgetId()}'));
 JS;
 echo $secureRenderer->renderTag(
     'script',
@@ -22,17 +21,16 @@ echo $secureRenderer->renderTag(
     false
 );
 ?>
-
 <div
     class="field-recaptcha"
     data-hryvinskyi-recaptcha="target"
     data-hryvinskyi-recaptcha-target="form#newsletter-validate-detail"
     id="<?= /* @noEscape */ $block->getWidgetId() ?>"
     data-bind="scope:'invisible-captcha-newsletter'"
+    data-form-id="newsletter-validate-detail"
 >
     <!-- ko template: getTemplate() --><!-- /ko -->
 </div>
-
 <script type="text/x-magento-init">
 {
     "#<?= /* @noEscape */ $block->getWidgetId() ?>": {
