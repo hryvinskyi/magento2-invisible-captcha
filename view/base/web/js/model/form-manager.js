@@ -344,6 +344,9 @@ define([
 
                             // Handle pending submission
                             this.processPendingSubmission($form);
+
+                            // Remove disabled class if it was added
+                            $form.removeClass(SUBMIT_DISABLED_CLASS);
                         }
                     });
                 });
