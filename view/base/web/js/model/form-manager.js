@@ -214,14 +214,33 @@ define([
 
                 const formAction = $form.attr('action') || '';
                 const formId = $form.attr('id');
-
-                // Parse request data regardless of format
                 let requestData = '';
+
+                // Parse request data safely
                 if (settings.data) {
+                    // 1. String data — safe to use directly
                     if (typeof settings.data === 'string') {
                         requestData = settings.data;
-                    } else if (typeof settings.data === 'object') {
-                        requestData = $.param(settings.data);
+                    }
+                    // 2. FormData — iterate instead of $.param()
+                    else if (settings.data instanceof FormData) {
+                        const parts = [];
+                        for (const [key, value] of settings.data.entries()) {
+                            parts.push(`${key}=${value}`);
+                        }
+                        requestData = parts.join('&');
+                    }
+                    // 3. Plain object — serialize
+                    else if (
+                        typeof settings.data === 'object' &&
+                        !(settings.data instanceof $) &&
+                        !(settings.data instanceof Element)
+                    ) {
+                        try {
+                            requestData = $.param(settings.data);
+                        } catch (e) {
+                            console.error('Error serializing settings.data:', e);
+                        }
                     }
                 }
 
