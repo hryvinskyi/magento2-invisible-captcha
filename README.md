@@ -1,10 +1,10 @@
 # Google Invisible Captcha v3 for magento 2
 
-[![Latest Stable Version](https://poser.pugx.org/scriptua/magento2-invisible-captcha/v/stable)](https://packagist.org/packages/scriptua/magento2-invisible-captcha)
-[![Total Downloads](https://poser.pugx.org/scriptua/magento2-invisible-captcha/downloads)](https://packagist.org/packages/scriptua/magento2-invisible-captcha)
+[![Latest Stable Version](https://poser.pugx.org/hryvinskyi/magento2-invisible-captcha/v/stable)](https://packagist.org/packages/hryvinskyi/magento2-invisible-captcha)
+[![Total Downloads](https://poser.pugx.org/hryvinskyi/magento2-invisible-captcha/downloads)](https://packagist.org/packages/hryvinskyi/magento2-invisible-captcha)
 [![PayPal donate button](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=legionerblack%40yandex%2eru&lc=UA&item_name=Magento%202%20Invisible%20Captcha&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted "Donate once-off to this project using Paypal")
-[![Latest Unstable Version](https://poser.pugx.org/scriptua/magento2-invisible-captcha/v/unstable)](https://packagist.org/packages/scriptua/magento2-invisible-captcha)
-[![License](https://poser.pugx.org/scriptua/magento2-invisible-captcha/license)](https://packagist.org/packages/scriptua/magento2-invisible-captcha)
+[![Latest Unstable Version](https://poser.pugx.org/hryvinskyi/magento2-invisible-captcha/v/unstable)](https://packagist.org/packages/hryvinskyi/magento2-invisible-captcha)
+[![License](https://poser.pugx.org/hryvinskyi/magento2-invisible-captcha/license)](https://packagist.org/packages/hryvinskyi/magento2-invisible-captcha)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/?branch=master)
 [![Build Status](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/badges/build.png?b=master)](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/build-status/master)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhryvinskyi%2Fmagento2-invisible-captcha.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhryvinskyi%2Fmagento2-invisible-captcha?ref=badge_shield)
