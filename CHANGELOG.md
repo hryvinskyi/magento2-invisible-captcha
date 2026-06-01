@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.5] - 2026-06-01
+
+### Fixed
+
+- PHP 8.5: added the `: int` return type and an explicit `return Command::SUCCESS;`
+  to `Command\Captcha::execute()`, matching Symfony Console `Command::execute(): int`
+  (fixes the "must be compatible" fatal error).
+- Monolog 3: `Model\Debug::write()` now accepts `Monolog\LogRecord` instead of `array`
+  to match `Magento\Framework\Logger\Handler\Base::write()`.
+
 ## [2.5.4] - 2026-06-01
 
 ### Added

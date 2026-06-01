@@ -95,7 +95,7 @@ class Captcha extends Command
      * @SuppressWarnings("PHPMD.UnusedFormalParameter")
      * @throws LocalizedException
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $area = $input->getArgument('area');
         $website = $input->getOption('website_id');
@@ -109,6 +109,8 @@ class Captcha extends Command
 
         // flush cache
         $this->cacheManager->flush(['config']);
+
+        return Command::SUCCESS;
     }
 
     /**

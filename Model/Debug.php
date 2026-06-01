@@ -12,6 +12,7 @@ namespace Hryvinskyi\InvisibleCaptcha\Model;
 use Hryvinskyi\InvisibleCaptcha\Helper\Config\General;
 use Magento\Framework\Filesystem\DriverInterface;
 use Magento\Framework\Logger\Handler\Base;
+use Monolog\LogRecord;
 
 /**
  * Class Debug
@@ -48,7 +49,7 @@ class Debug extends Base
      * @inheritDoc
      * @throws \Magento\Framework\Exception\FileSystemException
      */
-    public function write(array $record): void
+    public function write(LogRecord $record): void
     {
         if ($this->config->isDebug() === false) {
             return;
