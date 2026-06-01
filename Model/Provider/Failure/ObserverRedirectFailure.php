@@ -61,7 +61,7 @@ class ObserverRedirectFailure extends AbstractFailure
         General $config,
         UrlInterface $url,
         FailureMessages $failureMessages,
-        RedirectUrlInterface $redirectUrlProvider = null
+        ?RedirectUrlInterface $redirectUrlProvider = null
     ) {
         $this->messageManager = $messageManager;
         $this->actionFlag = $actionFlag;
@@ -90,7 +90,7 @@ class ObserverRedirectFailure extends AbstractFailure
      *
      * @return void
      */
-    public function execute(Response $verifyReCaptcha, ResponseInterface $response = null)
+    public function execute(Response $verifyReCaptcha, ?ResponseInterface $response = null)
     {
         if ($response === null || !$response instanceof Http) {
             return;

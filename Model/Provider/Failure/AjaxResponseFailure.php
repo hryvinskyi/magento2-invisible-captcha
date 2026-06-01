@@ -65,7 +65,7 @@ class AjaxResponseFailure extends AbstractFailure
      *
      * @return void
      */
-    public function execute(Response $verifyReCaptcha, ResponseInterface $response = null)
+    public function execute(Response $verifyReCaptcha, ?ResponseInterface $response = null)
     {
         if ($response === null || !$response instanceof Http) {
             return;

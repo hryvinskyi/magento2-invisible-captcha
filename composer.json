@@ -3,8 +3,8 @@
     "description": "Magento 2 Google Invisible Captcha (Recaptcha) module",
     "require": {
         "ext-dom": "*",
-        "php": "~8.0||~8.1||~8.2||~8.3||~8.4",
-        "symfony/dom-crawler": ">=2.7 <5.0",
+        "php": "~8.0||~8.1||~8.2||~8.3||~8.4||~8.5",
+        "symfony/dom-crawler": "^5.4.52 || ^6.4.40 || ^7.4.12 || ^8.0.12",
         "voku/simple_html_dom": "^4.8",
         "magento/framework": "*",
         "magento/module-store": "*",
@@ -16,7 +16,7 @@
         "roave/security-advisories": "dev-latest"
     },
     "type": "magento2-module",
-    "version": "2.5.3",
+    "version": "2.5.4",
     "license": "MIT",
     "authors": [
         {

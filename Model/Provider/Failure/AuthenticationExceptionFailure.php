@@ -48,7 +48,7 @@ class AuthenticationExceptionFailure extends AbstractFailure
      * @throws AuthenticationException
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function execute(Response $verifyReCaptcha, ResponseInterface $response = null)
+    public function execute(Response $verifyReCaptcha, ?ResponseInterface $response = null)
     {
         throw new AuthenticationException(__($this->getMessagesString($verifyReCaptcha)));
     }

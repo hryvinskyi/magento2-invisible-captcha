@@ -35,7 +35,7 @@ abstract class AbstractConfig extends AbstractHelper implements AreaConfigInterf
      */
     public function __construct(
         Context $context,
-        ConfigInterface $config = null
+        ?ConfigInterface $config = null
     ) {
         $this->config = $config ?: ObjectManager::getInstance()->get(ConfigInterface::class);
 
@@ -60,7 +60,7 @@ abstract class AbstractConfig extends AbstractHelper implements AreaConfigInterf
      *
      * @param null|string $website
      */
-    public function disableCaptcha(string $website = null): void
+    public function disableCaptcha(?string $website = null): void
     {
         if (!$this->hasEnabled(ScopeInterface::SCOPE_WEBSITES, $website)) {
             return;

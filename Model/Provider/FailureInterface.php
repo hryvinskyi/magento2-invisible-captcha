@@ -22,5 +22,5 @@ interface FailureInterface
      *
      * @return void
      */
-    public function execute(Response $verifyReCaptcha, ResponseInterface $response = null);
+    public function execute(Response $verifyReCaptcha, ?ResponseInterface $response = null);
 }

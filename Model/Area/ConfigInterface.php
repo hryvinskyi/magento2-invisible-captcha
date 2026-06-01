@@ -23,5 +23,5 @@ interface ConfigInterface
      *
      * @param null|string $website
      */
-    public function disableCaptcha(string $website = null): void;
+    public function disableCaptcha(?string $website = null): void;
 }
