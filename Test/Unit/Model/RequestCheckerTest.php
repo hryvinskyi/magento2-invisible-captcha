@@ -92,6 +92,28 @@ class RequestCheckerTest extends TestCase
         $this->assertFalse($checker->needsChallenge());
     }
 
+    public function testVerifyEndpointIsNeverChallenged(): void
+    {
+        // The challenge page POSTs its token here — gating it would deadlock
+        // verification for any rule broad enough to match (e.g. a catch-all).
+        $this->config->method('isRouteProtectionEnabled')->willReturn(true);
+        $this->config->method('getExcludedIps')->willReturn([]);
+        $this->config->method('getExcludedUserAgents')->willReturn([]);
+        $this->request->method('getPathInfo')->willReturn('/invisiblecaptcha/verify');
+        $this->evaluator->expects($this->never())->method('evaluate');
+
+        $this->assertFalse($this->checker->needsChallenge());
+    }
+
+    public function testVerifyEndpointExclusionToleratesTrailingSlash(): void
+    {
+        $this->config->method('isRouteProtectionEnabled')->willReturn(true);
+        $this->request->method('getPathInfo')->willReturn('/invisiblecaptcha/verify/');
+        $this->evaluator->expects($this->never())->method('evaluate');
+
+        $this->assertFalse($this->checker->needsChallenge());
+    }
+
     public function testReturnsFalseForExcludedIp(): void
     {
         $this->config->method('isRouteProtectionEnabled')->willReturn(true);

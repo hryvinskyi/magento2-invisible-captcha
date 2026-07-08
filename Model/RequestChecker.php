@@ -12,7 +12,9 @@ use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionEvaluatorInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionParserInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface;
+use Hryvinskyi\InvisibleCaptcha\Controller\Router\VerificationRouter;
 use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\ClientIp;
+use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Framework\App\RequestInterface;
 
 /**
@@ -55,6 +57,13 @@ class RequestChecker
      */
     public function needsChallenge(): bool
     {
+        // The verify endpoint must never be gated: the challenge page POSTs the
+        // captcha token here, so challenging it would deadlock verification for
+        // any rule broad enough to match it (e.g. a catch-all).
+        if ($this->isVerifyEndpoint()) {
+            return false;
+        }
+
         if (!$this->isConfigured()) {
             return false;
         }
@@ -66,6 +75,19 @@ class RequestChecker
         $expression = $this->expressionParser->parse($this->config->getProtectionRulesConfig());
 
         return $this->expressionEvaluator->evaluate($expression);
+    }
+
+    /**
+     * Whether the current request targets the captcha verify endpoint (same
+     * path normalization as {@see VerificationRouter::match()}).
+     */
+    private function isVerifyEndpoint(): bool
+    {
+        if (!$this->request instanceof HttpRequest) {
+            return false;
+        }
+
+        return trim((string)$this->request->getPathInfo(), '/') === VerificationRouter::VERIFY_PATH;
     }
 
     /**

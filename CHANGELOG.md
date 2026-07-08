@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.4] - 2026-07-08
+
+### Fixed
+
+- **Catch-all route rules deadlocked verification.** The route gate also fired on
+  its own `invisiblecaptcha/verify` endpoint, so with a rule broad enough to match
+  it (e.g. `action_name regex .*`) the challenge page's token POST was answered
+  with another 403 challenge and a visitor could never pass. `RequestChecker` now
+  always exempts the verify path (same normalization as the router); a direct GET
+  on the endpoint now yields a plain 404 instead of a challenge.
+
 ## [3.0.3] - 2026-07-08
 
 ### Fixed
