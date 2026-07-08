@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.2] - 2026-07-08
+
+### Fixed
+
+- **Login-failure redirect never used the before-auth URL.** `RedirectUrl\BeforeAuthUrl`
+  was typed against `SessionManagerInterface`, whose global preference is
+  `Session\Generic` — a session object with the *default* storage namespace, while
+  `before_auth_url` is written into the *customer* namespace. The provider therefore
+  always fell back to the login URL. It now depends on `Magento\Customer\Model\Session`
+  (Proxy-wired in `etc/frontend/di.xml`), so a failed login challenge redirects back
+  to the customer's intended page again.
+- Unit test suite runs green end-to-end on PHP 8.5 / PHPUnit 10 (598 tests): fixed a
+  by-reference capture bug in `RouteGateTest`, seeded the global ObjectManager for the
+  backend block in `ProtectionRulesTest`, avoided the undefined `BP` constant in
+  `DebugTest`, and re-pointed `BeforeAuthUrlTest` at the concrete customer session
+  (mocking the magic accessor on the interface fatally failed under PHPUnit 10).
+
 ## [3.0.1] - 2026-07-08
 
 ### Fixed

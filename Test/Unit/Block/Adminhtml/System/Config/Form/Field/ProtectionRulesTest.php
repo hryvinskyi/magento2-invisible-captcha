@@ -13,6 +13,8 @@ use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldProviderInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorProviderInterface;
 use Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\ProtectionRules;
+use Magento\Framework\App\ObjectManager as AppObjectManager;
+use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use PHPUnit\Framework\TestCase;
@@ -23,6 +25,18 @@ class ProtectionRulesTest extends TestCase
 
     protected function setUp(): void
     {
+        // The Backend\Template base constructor resolves JsonHelper/DirectoryHelper
+        // through the global ObjectManager unconditionally — seed it with an
+        // auto-mocking stub so the block can be constructed in a unit test.
+        $objectManager = $this->createMock(ObjectManagerInterface::class);
+        $objectManager->method('get')->willReturnCallback(
+            fn (string $type): object => $this->createMock($type)
+        );
+        $objectManager->method('create')->willReturnCallback(
+            fn (string $type): object => $this->createMock($type)
+        );
+        AppObjectManager::setInstance($objectManager);
+
         $field = $this->createMock(FieldInterface::class);
         $field->method('getCode')->willReturn('action_name');
         $field->method('getLabel')->willReturn(__('Full Action Name'));
@@ -48,6 +62,13 @@ class ProtectionRulesTest extends TestCase
             'operatorProvider' => $operatorProvider,
             'serializer' => $json,
         ]);
+    }
+
+    protected function tearDown(): void
+    {
+        // Clear the seeded global ObjectManager so no other test inherits it.
+        $property = new \ReflectionProperty(AppObjectManager::class, '_instance');
+        $property->setValue(null, null);
     }
 
     public function testGetEditorConfigJsonExposesFieldsOperatorsDefaultsAndInitialValue(): void

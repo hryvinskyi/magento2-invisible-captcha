@@ -76,6 +76,14 @@
         </arguments>
     </virtualType>
 
+    <!-- Customer session via Proxy: before_auth_url lives in the customer session
+         namespace, and the Proxy defers session start until first real use. -->
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Strategy\Failure\RedirectUrl\BeforeAuthUrl">
+        <arguments>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
+
     <!-- ========================= Failure strategies (forms) ================== -->
     <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Strategy\Failure\Form\Login"
                  type="Hryvinskyi\InvisibleCaptcha\Model\Strategy\Failure\Redirect">

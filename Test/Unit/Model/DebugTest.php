@@ -37,7 +37,10 @@ class DebugTest extends TestCase
         $this->filesystem->expects(self::never())->method('isDirectory');
         $this->filesystem->expects(self::never())->method('createDirectory');
 
-        $handler = new Debug($this->filesystem, $this->config, null, '/var/log/invisible_captcha.log');
+        // Explicit filePath: with null the Base handler falls back to the BP
+        // constant, which only Magento's app bootstrap defines. No stream is
+        // ever opened — write() returns before any I/O when debug is off.
+        $handler = new Debug($this->filesystem, $this->config, sys_get_temp_dir(), '/var/log/invisible_captcha.log');
         $handler->write($this->makeRecord());
 
         $this->addToAssertionCount(1);

@@ -186,13 +186,17 @@ class RouteGateTest extends TestCase
     /**
      * Record every header written to the response into a name => value map.
      *
-     * @return array<string, string>
+     * Returns an ArrayObject (shared handle) rather than an array: a plain
+     * array would be returned by value while the closure mutates the local,
+     * so the caller's copy would never see the captured headers.
+     *
+     * @return \ArrayObject<string, string>
      */
-    private function captureHeaders(): array
+    private function captureHeaders(): \ArrayObject
     {
-        $headers = [];
+        $headers = new \ArrayObject();
         $this->response->method('setHeader')->willReturnCallback(
-            function (string $name, $value) use (&$headers): HttpResponse {
+            function (string $name, $value) use ($headers): HttpResponse {
                 $headers[$name] = $value;
 
                 return $this->response;
