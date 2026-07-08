@@ -33,7 +33,7 @@
         "roave/security-advisories": "dev-latest"
     },
     "type": "magento2-module",
-    "version": "3.0.0",
+    "version": "3.0.1",
     "license": "MIT",
     "authors": [
         {

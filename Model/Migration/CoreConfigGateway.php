@@ -82,4 +82,12 @@ class CoreConfigGateway implements CoreConfigGatewayInterface
     {
         $this->configResource->saveConfig($path, $value, $scope, $scopeId);
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function delete(string $path, string $scope, int $scopeId): void
+    {
+        $this->configResource->deleteConfig($path, $scope, $scopeId);
+    }
 }

@@ -12,6 +12,7 @@ use Hryvinskyi\InvisibleCaptcha\Api\Migration\CoreConfigGatewayInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Migration\RecaptchaMigratorInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\Migration\ChangeRecord;
 use Hryvinskyi\InvisibleCaptcha\Model\Migration\RecaptchaMigrator;
+use Magento\Framework\Encryption\EncryptorInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -23,15 +24,20 @@ class RecaptchaMigratorTest extends TestCase
 {
     /** @var CoreConfigGatewayInterface&MockObject */
     private CoreConfigGatewayInterface $gateway;
+    /** @var EncryptorInterface&MockObject */
+    private EncryptorInterface $encryptor;
     private RecaptchaMigrator $migrator;
 
     /** @var array<string, string> Captured write() calls keyed "scope|id|path". */
     private array $written = [];
+    /** @var string[] Captured delete() calls as "scope|id|path". */
+    private array $deleted = [];
     private bool $targetsExist = false;
 
     protected function setUp(): void
     {
         $this->written = [];
+        $this->deleted = [];
         $this->targetsExist = false;
 
         $this->gateway = $this->createMock(CoreConfigGatewayInterface::class);
@@ -41,12 +47,26 @@ class RecaptchaMigratorTest extends TestCase
                 $this->written[$scope . '|' . $scopeId . '|' . $path] = $value;
             }
         );
+        $this->gateway->method('delete')->willReturnCallback(
+            function (string $path, string $scope, int $scopeId): void {
+                $this->deleted[] = $scope . '|' . $scopeId . '|' . $path;
+            }
+        );
 
-        $this->migrator = new RecaptchaMigrator($this->gateway);
+        // Native keys carry the Magento crypt envelope; "0:3:ENCPUB" decrypts to
+        // the plain site key, anything else is treated as undecryptable.
+        $this->encryptor = $this->createMock(EncryptorInterface::class);
+        $this->encryptor->method('decrypt')->willReturnCallback(
+            static fn (string $value): string => $value === '0:3:ENCPUB' ? 'PUBKEY' : ''
+        );
+
+        $this->migrator = new RecaptchaMigrator($this->gateway, $this->encryptor);
     }
 
     /**
      * Native config indexed as the gateway returns it: [scope][scopeId][path] => value.
+     * The frontend v3 site key is stored encrypted (as the native module does);
+     * the backend invisible one is legacy plaintext to cover the passthrough path.
      *
      * @return array<string, array<int, array<string, string>>>
      */
@@ -55,7 +75,7 @@ class RecaptchaMigratorTest extends TestCase
         return [
             'default' => [
                 0 => [
-                    'recaptcha_frontend/type_recaptcha_v3/public_key' => 'PUBKEY',
+                    'recaptcha_frontend/type_recaptcha_v3/public_key' => '0:3:ENCPUB',
                     'recaptcha_frontend/type_recaptcha_v3/private_key' => 'ENC_SECRET',
                     'recaptcha_frontend/type_recaptcha_v3/score_threshold' => '0.7',
                     'recaptcha_frontend/type_for/contact' => 'recaptcha_v3',
@@ -68,6 +88,14 @@ class RecaptchaMigratorTest extends TestCase
             ],
         ];
     }
+
+    /** Native selector rows the tree above should hand over (clear). */
+    private const EXPECTED_DISABLED = [
+        'default|0|recaptcha_frontend/type_for/contact',
+        'default|0|recaptcha_frontend/type_for/customer_login',
+        'default|0|recaptcha_frontend/type_for/place_order',
+        'default|0|recaptcha_backend/type_for/user_login',
+    ];
 
     /**
      * @param ChangeRecord[] $records
@@ -90,11 +118,11 @@ class RecaptchaMigratorTest extends TestCase
         $records = $this->migrator->migrate(false, false);
         $byTarget = $this->indexByTarget($records);
 
-        // Credentials copied to provider tree.
+        // Encrypted native site key is decrypted; legacy plaintext one passes through.
         $this->assertSame('PUBKEY', $this->written['default|0|hryvinskyi_invisible_captcha/providers/recaptcha_v3/site_key']);
         $this->assertSame('BE_PUB', $this->written['default|0|hryvinskyi_invisible_captcha/providers/recaptcha_v2_invisible/site_key']);
 
-        // Secret is masked in the change log but copied verbatim to the DB.
+        // Secret is masked in the change log but copied verbatim (stays encrypted).
         $secretKey = 'default|0|hryvinskyi_invisible_captcha/providers/recaptcha_v3/secret_key';
         $this->assertSame('********', $byTarget[$secretKey]->value);
         $this->assertSame('ENC_SECRET', $this->written[$secretKey]);
@@ -121,6 +149,26 @@ class RecaptchaMigratorTest extends TestCase
         $this->assertSame('1', $this->written['default|0|hryvinskyi_invisible_captcha/form_protection/frontend/enabled']);
         $this->assertSame('1', $this->written['default|0|hryvinskyi_invisible_captcha/form_protection/backend/enabled']);
         $this->assertSame('recaptcha_v3', $this->written['default|0|hryvinskyi_invisible_captcha/general/active_provider']);
+
+        // Status hand-over: every migrated native selector is cleared and reported.
+        $this->assertEqualsCanonicalizing(self::EXPECTED_DISABLED, $this->deleted);
+        foreach (self::EXPECTED_DISABLED as $key) {
+            $this->assertSame(RecaptchaMigratorInterface::STATUS_SOURCE_DISABLED, $byTarget[$key]->status);
+        }
+    }
+
+    public function testUndecryptableSiteKeyIsSkipped(): void
+    {
+        $this->gateway->method('fetchTree')->willReturn([
+            'default' => [
+                0 => ['recaptcha_frontend/type_recaptcha_v3/public_key' => '0:3:GARBAGE'],
+            ],
+        ]);
+
+        $records = $this->migrator->migrate(false, false);
+
+        $this->assertSame([], $this->written, 'a ciphertext that cannot be decrypted must never be written as a site key');
+        $this->assertSame([], $records);
     }
 
     public function testReturnsEmptyWhenNoNativeConfig(): void
@@ -129,6 +177,7 @@ class RecaptchaMigratorTest extends TestCase
 
         $this->assertSame([], $this->migrator->migrate(false, false));
         $this->assertSame([], $this->written);
+        $this->assertSame([], $this->deleted);
     }
 
     public function testDryRunWritesNothingButReportsChanges(): void
@@ -139,12 +188,17 @@ class RecaptchaMigratorTest extends TestCase
 
         $this->assertNotEmpty($records);
         $this->assertSame([], $this->written, 'dry run must not persist anything');
-        foreach ($records as $record) {
-            $this->assertSame(RecaptchaMigratorInterface::STATUS_MIGRATED, $record->status);
-        }
+        $this->assertSame([], $this->deleted, 'dry run must not delete native rows');
+
+        $statuses = array_unique(array_map(static fn (ChangeRecord $r): string => $r->status, $records));
+        $this->assertEqualsCanonicalizing(
+            [RecaptchaMigratorInterface::STATUS_MIGRATED, RecaptchaMigratorInterface::STATUS_SOURCE_DISABLED],
+            $statuses,
+            'dry run previews both target writes and native-selector disables'
+        );
     }
 
-    public function testExistingValuesAreSkippedWithoutForce(): void
+    public function testExistingValuesAreSkippedWithoutForceButNativeIsStillDisabled(): void
     {
         $this->gateway->method('fetchTree')->willReturn($this->nativeTree());
         $this->targetsExist = true;
@@ -153,9 +207,15 @@ class RecaptchaMigratorTest extends TestCase
 
         $this->assertNotEmpty($records);
         $this->assertSame([], $this->written, 'existing targets must not be overwritten without --force');
-        foreach ($records as $record) {
-            $this->assertSame(RecaptchaMigratorInterface::STATUS_SKIPPED_EXISTS, $record->status);
-        }
+        // The hand-over still happens: this module is already configured, the
+        // native selectors are cleared so it takes over.
+        $this->assertEqualsCanonicalizing(self::EXPECTED_DISABLED, $this->deleted);
+
+        $statuses = array_unique(array_map(static fn (ChangeRecord $r): string => $r->status, $records));
+        $this->assertEqualsCanonicalizing(
+            [RecaptchaMigratorInterface::STATUS_SKIPPED_EXISTS, RecaptchaMigratorInterface::STATUS_SOURCE_DISABLED],
+            $statuses
+        );
     }
 
     public function testForceOverwritesExistingValues(): void
@@ -171,5 +231,6 @@ class RecaptchaMigratorTest extends TestCase
             $byTarget['default|0|hryvinskyi_invisible_captcha/providers/recaptcha_v3/site_key']->status
         );
         $this->assertSame('PUBKEY', $this->written['default|0|hryvinskyi_invisible_captcha/providers/recaptcha_v3/site_key']);
+        $this->assertEqualsCanonicalizing(self::EXPECTED_DISABLED, $this->deleted);
     }
 }

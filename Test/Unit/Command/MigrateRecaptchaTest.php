@@ -54,6 +54,14 @@ class MigrateRecaptchaTest extends TestCase
                 'recaptcha_v3',
                 RecaptchaMigratorInterface::STATUS_SKIPPED_EXISTS
             ),
+            new ChangeRecord(
+                'recaptcha_frontend/type_for/contact',
+                'recaptcha_frontend/type_for/contact',
+                'default',
+                0,
+                '',
+                RecaptchaMigratorInterface::STATUS_SOURCE_DISABLED
+            ),
         ];
     }
 
@@ -67,7 +75,7 @@ class MigrateRecaptchaTest extends TestCase
 
         $this->assertSame(Command::SUCCESS, $exitCode);
         $display = $tester->getDisplay();
-        $this->assertStringContainsString('1 written, 0 overwritten, 1 skipped', $display);
+        $this->assertStringContainsString('1 written, 0 overwritten, 1 skipped (already set), 1 native selectors disabled', $display);
         $this->assertStringContainsString('Config cache flushed', $display);
     }
 
@@ -126,6 +134,29 @@ class MigrateRecaptchaTest extends TestCase
         $exitCode = $tester->execute([]);
 
         $this->assertSame(Command::SUCCESS, $exitCode);
-        $this->assertStringContainsString('0 written, 0 overwritten, 1 skipped', $tester->getDisplay());
+        $this->assertStringContainsString('0 written, 0 overwritten, 1 skipped (already set), 0 native selectors disabled', $tester->getDisplay());
+    }
+
+    public function testDisabledOnlyRunStillFlushesCache(): void
+    {
+        // Clearing native selectors changes effective config → cache must flush.
+        $records = [
+            new ChangeRecord(
+                'recaptcha_frontend/type_for/contact',
+                'recaptcha_frontend/type_for/contact',
+                'default',
+                0,
+                '',
+                RecaptchaMigratorInterface::STATUS_SOURCE_DISABLED
+            ),
+        ];
+        $this->migrator->expects($this->once())->method('migrate')->willReturn($records);
+        $this->cacheManager->expects($this->once())->method('flush')->with(['config']);
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute([]);
+
+        $this->assertSame(Command::SUCCESS, $exitCode);
+        $this->assertStringContainsString('1 native selectors disabled', $tester->getDisplay());
     }
 }

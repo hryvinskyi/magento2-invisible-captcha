@@ -122,24 +122,39 @@ The command reads every `recaptcha_frontend/*` and `recaptcha_backend/*` row fro
 `hryvinskyi_invisible_captcha/*` settings:
 
 - **Credentials** — v3, v2-checkbox and v2-invisible site/secret keys map to the
-  matching provider under *Provider Credentials*. Secret keys are copied verbatim
-  (both modules encrypt with `Config\Backend\Encrypted`, so the ciphertext stays
-  valid). Frontend keys win when frontend and backend differ.
+  matching provider under *Provider Credentials*. The native module stores **both**
+  keys encrypted; the secret key is copied verbatim (this module's field is
+  encrypted too, so the ciphertext stays valid under the same crypt key), while the
+  **site key is decrypted** on copy because this module stores it in plain text.
+  Run the command on the installation that owns the crypt key. Frontend keys win
+  when frontend and backend differ.
 - **Per-form selectors** — each `type_for/<form>` that isn't "disabled" turns on the
   corresponding form under *Form Protection* (the native `place_order` gate enables
   both checkout **and** in-store pickup here). The v3 section-wide score threshold is
   fanned out to each enabled v3 form.
 - **Derived** — the active provider (most-used across the enabled forms), the master
   switch and the form-protection switches are set so protection stays live.
+- **Status hand-over** — after copying, each migrated native `type_for/*` selector
+  row is **cleared**, so the built-in reCAPTCHA stops challenging those forms and
+  this module takes over in the same run (`source_disabled` in the summary table).
+  Native credentials are left in place, so the switch is easy to revert.
 
 Existing values in the target tree are never overwritten unless you pass `--force`.
 The command flushes the config cache and prints a per-path summary table.
 
-To actually **remove** the native reCAPTCHA modules, require the companion
-metapackage `hryvinskyi/magento2-invisible-captcha-recaptcha-replace`, which
-`replace`s every `magento/module-re-captcha-*` package (Two-Factor Auth and
-`security.txt` from `magento/security-package` are left untouched). This module does
-not replace core modules on its own — the swap is opt-in.
+> Upgrading from a version whose migration copied the site key without decrypting
+> it? Re-run with `--force` to overwrite the broken ciphertext values.
+
+Because the hand-over disables the native reCAPTCHA at config level, physically
+removing its modules is **optional**. If you still want them gone, the companion
+metapackage `hryvinskyi/magento2-invisible-captcha-recaptcha-replace` `replace`s
+every `magento/module-re-captcha-*` package (Two-Factor Auth and `security.txt`
+from `magento/security-package` are left untouched). **Caution:** other installed
+code may compile against the reCAPTCHA API modules — notably the bundled
+PayPal Braintree module implements
+`Magento\ReCaptchaWebapiApi\Api\WebapiValidationConfigProviderInterface`, so
+removing all 25 packages breaks `setup:di:compile` on standard installs. On such
+stores prefer the config-level disable above.
 
 ## CLI
 

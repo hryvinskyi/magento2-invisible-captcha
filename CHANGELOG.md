@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1] - 2026-07-08
+
+### Fixed
+
+- **`migrate-recaptcha`: native site key was copied as ciphertext.** Magento's
+  native reCAPTCHA stores `public_key` through `Config\Backend\Encrypted`, while
+  this module keeps `site_key` in plain text — the migration now decrypts values
+  carrying the Magento crypt envelope (`N:N:…`) and passes legacy plaintext keys
+  through untouched; undecryptable values are skipped instead of written. Stores
+  that migrated with the broken version can repair by re-running with `--force`.
+
+### Added
+
+- **`migrate-recaptcha`: status hand-over.** After copying, the command clears
+  every migrated native `type_for/*` selector row (new `source_disabled` change
+  status, previewed in `--dry-run`), so the built-in reCAPTCHA is disabled and
+  this module is enabled in one run. Native credentials are left in place;
+  physically removing the native modules becomes optional — which also avoids
+  `setup:di:compile` breakage on installs whose bundled code (e.g. PayPal
+  Braintree) compiles against the reCAPTCHA API modules.
+
 ## [3.0.0] - 2026-07-08
 
 Major rewrite into a **multi-provider** captcha & bot-protection module. The

@@ -78,14 +78,16 @@ class MigrateRecaptcha extends Command
         $counts = $this->summarize($records);
 
         $output->writeln(sprintf(
-            '<info>%d written, %d overwritten, %d skipped (already set).</info>',
+            '<info>%d written, %d overwritten, %d skipped (already set), %d native selectors disabled.</info>',
             $counts[RecaptchaMigratorInterface::STATUS_MIGRATED],
             $counts[RecaptchaMigratorInterface::STATUS_OVERWRITTEN],
-            $counts[RecaptchaMigratorInterface::STATUS_SKIPPED_EXISTS]
+            $counts[RecaptchaMigratorInterface::STATUS_SKIPPED_EXISTS],
+            $counts[RecaptchaMigratorInterface::STATUS_SOURCE_DISABLED]
         ));
 
         $written = $counts[RecaptchaMigratorInterface::STATUS_MIGRATED]
-            + $counts[RecaptchaMigratorInterface::STATUS_OVERWRITTEN];
+            + $counts[RecaptchaMigratorInterface::STATUS_OVERWRITTEN]
+            + $counts[RecaptchaMigratorInterface::STATUS_SOURCE_DISABLED];
 
         if ($dryRun) {
             $output->writeln('<comment>Re-run without --dry-run to apply.</comment>');
@@ -130,6 +132,7 @@ class MigrateRecaptcha extends Command
             RecaptchaMigratorInterface::STATUS_MIGRATED => 0,
             RecaptchaMigratorInterface::STATUS_OVERWRITTEN => 0,
             RecaptchaMigratorInterface::STATUS_SKIPPED_EXISTS => 0,
+            RecaptchaMigratorInterface::STATUS_SOURCE_DISABLED => 0,
         ];
         foreach ($records as $record) {
             if (isset($counts[$record->status])) {

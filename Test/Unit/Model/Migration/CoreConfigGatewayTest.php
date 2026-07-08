@@ -86,4 +86,13 @@ class CoreConfigGatewayTest extends TestCase
 
         $this->gateway->write('some/path', 'value', 'websites', 2);
     }
+
+    public function testDeleteDelegatesToConfigResource(): void
+    {
+        $this->configResource->expects($this->once())
+            ->method('deleteConfig')
+            ->with('recaptcha_frontend/type_for/contact', 'default', 0);
+
+        $this->gateway->delete('recaptcha_frontend/type_for/contact', 'default', 0);
+    }
 }

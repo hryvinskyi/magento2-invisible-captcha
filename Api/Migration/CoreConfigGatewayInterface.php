@@ -33,4 +33,9 @@ interface CoreConfigGatewayInterface
      * Insert or update a single config row.
      */
     public function write(string $path, string $value, string $scope, int $scopeId): void;
+
+    /**
+     * Delete a single config row (no-op when the row does not exist).
+     */
+    public function delete(string $path, string $scope, int $scopeId): void;
 }

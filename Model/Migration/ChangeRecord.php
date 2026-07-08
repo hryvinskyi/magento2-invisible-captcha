@@ -13,7 +13,8 @@ use Hryvinskyi\InvisibleCaptcha\Api\Migration\RecaptchaMigratorInterface;
 /**
  * Immutable record of one path the migration considered: where it came from,
  * where it went, at which scope, and what happened. Secret values arrive
- * pre-masked. Replaces the previous untyped associative-array shape.
+ * pre-masked. For STATUS_SOURCE_DISABLED, source and target both hold the
+ * cleared native path and the value is empty.
  */
 final class ChangeRecord
 {

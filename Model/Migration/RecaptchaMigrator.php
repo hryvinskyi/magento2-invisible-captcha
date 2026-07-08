@@ -12,6 +12,7 @@ use Hryvinskyi\InvisibleCaptcha\Api\Migration\CoreConfigGatewayInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Migration\RecaptchaMigratorInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Encryption\EncryptorInterface;
 
 /**
  * @inheritDoc
@@ -109,10 +110,22 @@ class RecaptchaMigrator implements RecaptchaMigratorInterface
     private const SECRET_FIELDS = ['secret_key'];
 
     /**
+     * Provider field ids whose native value is stored encrypted but is plain text
+     * in this module (the native module encrypts BOTH keys; only the secret stays
+     * encrypted on our side, so the site key must be decrypted on copy).
+     */
+    private const DECRYPT_FIELDS = ['site_key'];
+
+    /** Envelope of a Magento-encrypted value: <key_version>:<cipher_version>:<base64>. */
+    private const ENCRYPTED_ENVELOPE_PATTERN = '/^\d+:\d+:.+$/';
+
+    /**
      * @param CoreConfigGatewayInterface $gateway
+     * @param EncryptorInterface $encryptor
      */
     public function __construct(
-        private readonly CoreConfigGatewayInterface $gateway
+        private readonly CoreConfigGatewayInterface $gateway,
+        private readonly EncryptorInterface $encryptor
     ) {
     }
 
@@ -150,6 +163,9 @@ class RecaptchaMigrator implements RecaptchaMigratorInterface
                     foreach ($data as $scope => $byId) {
                         foreach ($byId as $scopeId => $paths) {
                             $value = $paths[$sourcePath] ?? '';
+                            if ($value !== '' && in_array($providerField, self::DECRYPT_FIELDS, true)) {
+                                $value = $this->decryptIfEncrypted($value);
+                            }
                             if ($value === '') {
                                 continue;
                             }
@@ -211,6 +227,10 @@ class RecaptchaMigrator implements RecaptchaMigratorInterface
                                 );
                             }
                         }
+
+                        // Hand-over: clear the migrated native selector so the
+                        // built-in reCAPTCHA stops challenging this form.
+                        $this->disableSource($run, $section . '/type_for/' . $nativeField, $scope, $scopeId);
                     }
                 }
 
@@ -274,6 +294,40 @@ class RecaptchaMigrator implements RecaptchaMigratorInterface
     private function record(?string $source, string $target, string $scope, int $scopeId, string $value, bool $isSecret, string $status): ChangeRecord
     {
         return new ChangeRecord($source, $target, $scope, $scopeId, $isSecret ? '********' : $value, $status);
+    }
+
+    /**
+     * Clear a migrated native `type_for/*` row (unless dry-run) so the built-in
+     * reCAPTCHA no longer challenges that form. Runs regardless of whether the
+     * matching target writes were skipped — the hand-over to this module is the
+     * point of the migration. Native credentials are intentionally left in place.
+     */
+    private function disableSource(MigrationRun $run, string $path, string $scope, int $scopeId): void
+    {
+        if (!$run->claim($scope, $scopeId, $path)) {
+            return;
+        }
+
+        if (!$run->dryRun) {
+            $this->gateway->delete($path, $scope, $scopeId);
+        }
+
+        $run->add(new ChangeRecord($path, $path, $scope, $scopeId, '', self::STATUS_SOURCE_DISABLED));
+    }
+
+    /**
+     * The native module stores the site key through Config\Backend\Encrypted while
+     * this module keeps it in plain text — decrypt values carrying the Magento
+     * crypt envelope; pass legacy plaintext values through untouched. Returns ''
+     * when decryption yields nothing usable (caller skips the row).
+     */
+    private function decryptIfEncrypted(string $value): string
+    {
+        if (!preg_match(self::ENCRYPTED_ENVELOPE_PATTERN, $value)) {
+            return $value;
+        }
+
+        return (string)$this->encryptor->decrypt($value);
     }
 
     /**

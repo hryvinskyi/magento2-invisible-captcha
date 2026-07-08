@@ -13,11 +13,15 @@ namespace Hryvinskyi\InvisibleCaptcha\Api\Migration;
  * (`recaptcha_frontend/*`, `recaptcha_backend/*`) into the unified
  * `hryvinskyi_invisible_captcha/*` tree.
  *
- * Implementations copy provider credentials verbatim (secret keys stay encrypted
- * — both modules use the same {@see \Magento\Config\Model\Config\Backend\Encrypted}
- * backend), translate the per-form `type_for/*` selectors into this module's
- * per-form enable flags + score thresholds, and derive the active provider and
- * master switches so the merchant's existing protection posture is preserved.
+ * Implementations copy provider credentials (the native module stores both keys
+ * through {@see \Magento\Config\Model\Config\Backend\Encrypted} — the secret key
+ * is copied verbatim because this module's field is encrypted too, while the
+ * site key is decrypted because this module keeps it in plain text), translate
+ * the per-form `type_for/*` selectors into this module's per-form enable flags +
+ * score thresholds, and derive the active provider and master switches so the
+ * merchant's existing protection posture is preserved. Each migrated native
+ * selector is then cleared, so the built-in reCAPTCHA stops challenging that
+ * form and this module takes over — native credentials are left in place.
  */
 interface RecaptchaMigratorInterface
 {
@@ -29,6 +33,9 @@ interface RecaptchaMigratorInterface
 
     /** The target path already held a value and was replaced (--force). */
     public const STATUS_OVERWRITTEN = 'overwritten';
+
+    /** A migrated native `type_for/*` selector row was cleared (native reCAPTCHA disabled). */
+    public const STATUS_SOURCE_DISABLED = 'source_disabled';
 
     /**
      * Perform the migration.
