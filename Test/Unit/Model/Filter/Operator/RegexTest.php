@@ -59,13 +59,32 @@ class RegexTest extends TestCase
         $this->assertTrue($this->operator->evaluate('/CheckOut', '~^/checkout~i'));
     }
 
+    public function testBareCloudflareStylePatternIsAccepted(): void
+    {
+        // Admins write Cloudflare-style patterns without PCRE delimiters —
+        // `.*` must match every action name instead of erroring out.
+        $this->logger->expects($this->never())->method('warning');
+        $this->assertTrue($this->operator->evaluate('cms_index_index', '.*'));
+        $this->assertTrue($this->operator->evaluate('catalog_product_view', '^catalog_.*'));
+        $this->assertFalse($this->operator->evaluate('cms_index_index', '^catalog_.*'));
+    }
+
+    public function testBarePatternWithLiteralTextNeverErrors(): void
+    {
+        // Wrapped as ~not-a-valid-regex~ this is a valid literal pattern.
+        $this->logger->expects($this->never())->method('warning');
+        $this->assertTrue($this->operator->evaluate('xx not-a-valid-regex yy', 'not-a-valid-regex'));
+        $this->assertFalse($this->operator->evaluate('whatever', 'not-a-valid-regex'));
+    }
+
     public function testInvalidPatternLogsAndReturnsFalse(): void
     {
         $this->logger->expects($this->once())
             ->method('warning')
             ->with($this->stringContains('invalid regex skipped'));
 
-        $this->assertFalse($this->operator->evaluate('whatever', 'not-a-valid-regex'));
+        // Unclosed group is invalid both as-is and wrapped.
+        $this->assertFalse($this->operator->evaluate('whatever', '(unclosed'));
     }
 
     public function testNullFieldValueTreatedAsEmptyString(): void

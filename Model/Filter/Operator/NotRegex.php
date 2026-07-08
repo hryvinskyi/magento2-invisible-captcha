@@ -8,21 +8,10 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator;
 
-use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
-use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorInterface;
 use Magento\Framework\Phrase;
-use Psr\Log\LoggerInterface;
 
-class NotRegex implements OperatorInterface
+class NotRegex extends AbstractRegex
 {
-    /**
-     * @param LoggerInterface $logger
-     */
-    public function __construct(
-        private readonly LoggerInterface $logger
-    ) {
-    }
-
     /**
      * @inheritDoc
      */
@@ -41,14 +30,9 @@ class NotRegex implements OperatorInterface
 
     /**
      * @inheritDoc
-     */
-    public function supports(string $fieldType): bool
-    {
-        return $fieldType === FieldInterface::TYPE_STRING;
-    }
-
-    /**
-     * @inheritDoc
+     *
+     * True only when the pattern is valid and did not match; an invalid pattern
+     * returns false (fail safe — see {@see AbstractRegex::match()}).
      */
     public function evaluate(string|int|float|null $fieldValue, string $configValue): bool
     {
@@ -56,17 +40,6 @@ class NotRegex implements OperatorInterface
             return true;
         }
 
-        $result = @preg_match($configValue, (string)($fieldValue ?? ''));
-        if ($result === false) {
-            $this->logger->warning(sprintf(
-                '[InvisibleCaptcha] invalid regex skipped | pattern=%s | error=%s',
-                $configValue,
-                (string)preg_last_error_msg()
-            ));
-
-            return false;
-        }
-
-        return $result === 0;
+        return $this->match($fieldValue, $configValue) === false;
     }
 }

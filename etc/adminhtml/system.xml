@@ -380,7 +380,7 @@
                     <label>Protection Rules</label>
                     <frontend_model>Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\ProtectionRules</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment><![CDATA[Cloudflare-style filter expression. Each row is one condition — Field / Operator / Value — joined to the previous by AND / OR (AND binds tighter than OR). The challenge fires when the expression is true for the request.]]></comment>
+                    <comment><![CDATA[Cloudflare-style filter expression. Each row is one condition — Field / Operator / Value — joined to the previous by AND / OR (AND binds tighter than OR). The challenge fires when the expression is true for the request. Regex operators take bare patterns without delimiters or quotes (e.g. <code>^catalog_.*</code>); delimited PCRE with modifiers (e.g. <code>~^/checkout~i</code>) also works.]]></comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
                 <field id="layered_nav_ignored_params" translate="label comment" type="textarea" sortOrder="80" showInDefault="1" showInWebsite="1">

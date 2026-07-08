@@ -145,6 +145,13 @@ The command flushes the config cache and prints a per-path summary table.
 > Upgrading from a version whose migration copied the site key without decrypting
 > it? Re-run with `--force` to overwrite the broken ciphertext values.
 
+> **`skipped_undecryptable` rows / missing site keys?** The installation's crypt key
+> (`app/etc/env.php`) cannot decrypt those values — typical when the database was
+> imported from another environment without its crypt key. Nothing else encrypted
+> (payment keys, SMTP passwords) will decrypt on such an installation either.
+> Restore the original crypt key (all versions, in order) or re-enter the keys in
+> the admin, then re-run the command.
+
 Because the hand-over disables the native reCAPTCHA at config level, physically
 removing its modules is **optional**. If you still want them gone, the companion
 metapackage `hryvinskyi/magento2-invisible-captcha-recaptcha-replace` `replace`s

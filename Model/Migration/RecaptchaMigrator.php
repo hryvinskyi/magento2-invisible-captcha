@@ -163,11 +163,26 @@ class RecaptchaMigrator implements RecaptchaMigratorInterface
                     foreach ($data as $scope => $byId) {
                         foreach ($byId as $scopeId => $paths) {
                             $value = $paths[$sourcePath] ?? '';
-                            if ($value !== '' && in_array($providerField, self::DECRYPT_FIELDS, true)) {
-                                $value = $this->decryptIfEncrypted($value);
-                            }
                             if ($value === '') {
                                 continue;
+                            }
+                            if (in_array($providerField, self::DECRYPT_FIELDS, true)) {
+                                $value = $this->decryptIfEncrypted($value);
+                                if ($value === '') {
+                                    // Enveloped but undecryptable under this crypt
+                                    // key — surface it instead of silently dropping.
+                                    // No claim: another section may still fill the
+                                    // target with a decryptable value.
+                                    $run->add(new ChangeRecord(
+                                        $sourcePath,
+                                        $targetPath,
+                                        $scope,
+                                        $scopeId,
+                                        '',
+                                        self::STATUS_SKIPPED_UNDECRYPTABLE
+                                    ));
+                                    continue;
+                                }
                             }
                             $this->write($run, $sourcePath, $targetPath, $scope, $scopeId, $value, $isSecret);
                         }

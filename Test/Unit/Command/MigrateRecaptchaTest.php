@@ -137,6 +137,31 @@ class MigrateRecaptchaTest extends TestCase
         $this->assertStringContainsString('0 written, 0 overwritten, 1 skipped (already set), 0 native selectors disabled', $tester->getDisplay());
     }
 
+    public function testUndecryptableValuesTriggerCryptKeyWarning(): void
+    {
+        $records = [
+            new ChangeRecord(
+                'recaptcha_frontend/type_recaptcha_v3/public_key',
+                'hryvinskyi_invisible_captcha/providers/recaptcha_v3/site_key',
+                'websites',
+                2,
+                '',
+                RecaptchaMigratorInterface::STATUS_SKIPPED_UNDECRYPTABLE
+            ),
+        ];
+        $this->migrator->expects($this->once())->method('migrate')->willReturn($records);
+        // Nothing was written — no cache flush.
+        $this->cacheManager->expects($this->never())->method('flush');
+
+        $tester = new CommandTester($this->command);
+        $exitCode = $tester->execute([]);
+
+        $this->assertSame(Command::SUCCESS, $exitCode);
+        $display = $tester->getDisplay();
+        $this->assertStringContainsString('could not be decrypted', $display);
+        $this->assertStringContainsString('crypt key', $display);
+    }
+
     public function testDisabledOnlyRunStillFlushesCache(): void
     {
         // Clearing native selectors changes effective config → cache must flush.

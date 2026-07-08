@@ -85,6 +85,18 @@ class MigrateRecaptcha extends Command
             $counts[RecaptchaMigratorInterface::STATUS_SOURCE_DISABLED]
         ));
 
+        if ($counts[RecaptchaMigratorInterface::STATUS_SKIPPED_UNDECRYPTABLE] > 0) {
+            $output->writeln(sprintf(
+                '<error>%d encrypted value(s) could not be decrypted with this installation\'s crypt key and were NOT migrated.</error>',
+                $counts[RecaptchaMigratorInterface::STATUS_SKIPPED_UNDECRYPTABLE]
+            ));
+            $output->writeln(
+                '<comment>This usually means the database was imported from another environment while '
+                . 'app/etc/env.php holds a different crypt key. Restore the original crypt key (all versions, '
+                . 'in order) or re-enter the affected keys in the admin, then re-run this command.</comment>'
+            );
+        }
+
         $written = $counts[RecaptchaMigratorInterface::STATUS_MIGRATED]
             + $counts[RecaptchaMigratorInterface::STATUS_OVERWRITTEN]
             + $counts[RecaptchaMigratorInterface::STATUS_SOURCE_DISABLED];
@@ -133,6 +145,7 @@ class MigrateRecaptcha extends Command
             RecaptchaMigratorInterface::STATUS_OVERWRITTEN => 0,
             RecaptchaMigratorInterface::STATUS_SKIPPED_EXISTS => 0,
             RecaptchaMigratorInterface::STATUS_SOURCE_DISABLED => 0,
+            RecaptchaMigratorInterface::STATUS_SKIPPED_UNDECRYPTABLE => 0,
         ];
         foreach ($records as $record) {
             if (isset($counts[$record->status])) {

@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.3] - 2026-07-08
+
+### Fixed
+
+- **Route-protection regex rules accept bare (Cloudflare-style) patterns.** The
+  `regex` / `not_regex` operators passed the admin value straight to
+  `preg_match()`, which requires PCRE delimiters — so a natural pattern like
+  `.*` or `^catalog_.*` errored out ("invalid regex skipped" in the log) and the
+  rule never fired. Values are now tried as delimited PCRE first (modifiers like
+  `~…~i` keep working) and auto-wrapped in `~…~` on a parse error; only patterns
+  invalid in both forms are skipped (still fail-safe, still logged).
+
+### Changed
+
+- **`migrate-recaptcha`: undecryptable values are reported, not silently skipped.**
+  When a native encrypted value cannot be decrypted with this installation's crypt
+  key (e.g. a DB imported from another environment), the row now appears in the
+  change table with the new `skipped_undecryptable` status and the command prints
+  a crypt-key warning with remediation steps, instead of omitting the row without
+  a trace.
+
 ## [3.0.2] - 2026-07-08
 
 ### Fixed

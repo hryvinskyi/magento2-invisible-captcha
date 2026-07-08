@@ -38,6 +38,14 @@ interface RecaptchaMigratorInterface
     public const STATUS_SOURCE_DISABLED = 'source_disabled';
 
     /**
+     * An encrypted native value could not be decrypted with this installation's
+     * crypt key (typically a DB imported from another environment) and was NOT
+     * migrated. Fix the crypt key in app/etc/env.php or re-enter the value, then
+     * re-run.
+     */
+    public const STATUS_SKIPPED_UNDECRYPTABLE = 'skipped_undecryptable';
+
+    /**
      * Perform the migration.
      *
      * @param bool $dryRun When true, compute and return the change set without writing anything.

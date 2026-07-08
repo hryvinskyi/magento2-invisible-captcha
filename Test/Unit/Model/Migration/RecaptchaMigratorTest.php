@@ -157,7 +157,7 @@ class RecaptchaMigratorTest extends TestCase
         }
     }
 
-    public function testUndecryptableSiteKeyIsSkipped(): void
+    public function testUndecryptableSiteKeyIsReportedNotWritten(): void
     {
         $this->gateway->method('fetchTree')->willReturn([
             'default' => [
@@ -168,7 +168,11 @@ class RecaptchaMigratorTest extends TestCase
         $records = $this->migrator->migrate(false, false);
 
         $this->assertSame([], $this->written, 'a ciphertext that cannot be decrypted must never be written as a site key');
-        $this->assertSame([], $records);
+        // ...but the failure is surfaced in the change log instead of dropped silently.
+        $this->assertCount(1, $records);
+        $this->assertSame(RecaptchaMigratorInterface::STATUS_SKIPPED_UNDECRYPTABLE, $records[0]->status);
+        $this->assertSame('recaptcha_frontend/type_recaptcha_v3/public_key', $records[0]->source);
+        $this->assertSame('hryvinskyi_invisible_captcha/providers/recaptcha_v3/site_key', $records[0]->target);
     }
 
     public function testReturnsEmptyWhenNoNativeConfig(): void

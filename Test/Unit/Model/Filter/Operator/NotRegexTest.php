@@ -53,9 +53,18 @@ class NotRegexTest extends TestCase
         $this->assertTrue($this->operator->evaluate('/customer', '~^/checkout~'));
     }
 
+    public function testBareCloudflareStylePatternIsAccepted(): void
+    {
+        $this->logger->expects($this->never())->method('warning');
+        // Bare pattern, no delimiters: matched → false; not matched → true.
+        $this->assertFalse($this->operator->evaluate('catalog_product_view', '^catalog_.*'));
+        $this->assertTrue($this->operator->evaluate('cms_index_index', '^catalog_.*'));
+    }
+
     public function testInvalidPatternLogsAndReturnsFalse(): void
     {
         $this->logger->expects($this->once())->method('warning');
-        $this->assertFalse($this->operator->evaluate('whatever', 'not-a-valid-regex'));
+        // Unclosed group is invalid both as-is and wrapped; fail safe → false.
+        $this->assertFalse($this->operator->evaluate('whatever', '(unclosed'));
     }
 }
