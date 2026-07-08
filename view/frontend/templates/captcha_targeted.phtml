@@ -1,0 +1,29 @@
+<?php
+/**
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
+ *
+ * Renders a captcha container that injects its token into a form located by the
+ * `target_form` CSS selector (used for forms that have no dedicated container).
+ *
+ * @var \Hryvinskyi\InvisibleCaptcha\Block\Captcha $block
+ */
+$targetForm = (string)$block->getData('target_form');
+?>
+<div
+    class="field-recaptcha"
+    data-hryvinskyi-captcha="target"
+    data-hryvinskyi-captcha-target="<?= $block->escapeHtmlAttr($targetForm) ?>"
+    id="<?= $block->escapeHtmlAttr($block->getWidgetId()) ?>"
+    data-bind="scope:'<?= $block->escapeHtmlAttr($block->getScope()) ?>'"
+>
+    <!-- ko template: getTemplate() --><!-- /ko -->
+</div>
+<script type="text/x-magento-init">
+{
+    "#<?= $block->escapeHtmlAttr($block->getWidgetId()) ?>": {
+        "Magento_Ui/js/core/app": <?= /* @noEscape */ $block->getJsLayout() ?>
+    }
+}
+</script>

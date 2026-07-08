@@ -1,5 +1,21 @@
 /**
- * Form Manager - Handles form interactions and submissions
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
+ */
+
+/**
+ * Form Manager.
+ *
+ * Provider-aware form wiring: widget rendering, submit gating, AJAX-resubmit
+ * token refresh and lazy loading. Behaviour branches on the strategy's
+ * executionMode:
+ *   - 'auto'     : token executed on load and kept fresh; refreshed before
+ *                  every (re)submission (reCAPTCHA v3 / Enterprise).
+ *   - 'onSubmit' : token executed on submit, then the form is resubmitted
+ *                  (reCAPTCHA v2 invisible).
+ *   - 'callback' : token produced by a visible widget; submission is gated
+ *                  until a token exists (reCAPTCHA v2 checkbox / Turnstile).
  */
 define([
     'jquery',
@@ -8,52 +24,61 @@ define([
 ], function ($, _, captchaModel) {
     'use strict';
 
-    const SUBMIT_DISABLED_CLASS = 'hryvinskyi-recaptcha-disabled-submit';
+    const SUBMIT_DISABLED_CLASS = 'hryvinskyi-captcha-disabled-submit';
 
-    return function (captchaId, tokenManager, lazyLoad, scriptLoader, config = {}) {
+    return function (captchaId, tokenManager, strategy, scriptLoader, config) {
+        config = config || {};
+
+        const provider = config.provider;
+        const lazyLoad = !!config.lazyLoad;
+        const gateSubmit = !!config.isDisabledSubmitForm;
+        const mode = strategy.executionMode; // 'auto' | 'onSubmit' | 'callback'
+
         const pendingSubmissions = new WeakMap();
         const formStates = new Map();
 
-        // Default settings with debug option
-        const settings = $.extend({
-            debug: true  // Debug setting defaults to false
-        }, config);
+        const settings = $.extend({ debug: false }, config);
 
-        // Logger functions that respect debug setting
+        // Debug-gated logger.
         const logger = {
-            log: function(...args) {
+            log: function () {
                 if (settings.debug) {
-                    console.log(...args);
+                    console.log.apply(console, ['[InvisibleCaptcha]'].concat(Array.prototype.slice.call(arguments)));
                 }
             },
-            error: function(...args) {
+            error: function () {
                 if (settings.debug) {
-                    console.error(...args);
+                    console.error.apply(console, ['[InvisibleCaptcha]'].concat(Array.prototype.slice.call(arguments)));
                 }
             },
-            trace: function(...args) {
+            trace: function () {
                 if (settings.debug) {
-                    console.trace(...args);
+                    console.trace.apply(console, arguments);
                 }
             }
         };
 
         return {
             /**
-             * Initialize form with captcha
+             * Initialize form with captcha.
              */
             initializeForm: function (container) {
                 const $container = $(container);
                 const $form = $container.closest('form');
                 const formId = this.getFormId($form);
 
-                // Store container reference for this form
                 formStates.set(formId, {
                     container: $container,
                     form: $form,
                     initialized: false,
-                    captchaId: captchaId
+                    captchaId: captchaId,
+                    widgetId: null
                 });
+
+                // Gate submission until the captcha is ready / solved.
+                if (gateSubmit) {
+                    $form.addClass(SUBMIT_DISABLED_CLASS);
+                }
 
                 if (lazyLoad) {
                     this.setupLazyLoad($form, $container);
@@ -61,13 +86,13 @@ define([
 
                 this.setupSubmitHandler($form, $container);
 
-                if (!lazyLoad && window.grecaptcha) {
+                if (!lazyLoad && scriptLoader.isApiReady()) {
                     this.activateForm($form, $container);
                 }
             },
 
             /**
-             * Get unique form ID
+             * Get (or assign) a unique form id.
              */
             getFormId: function ($form) {
                 let formId = $form.attr('id');
@@ -79,17 +104,20 @@ define([
             },
 
             /**
-             * Setup lazy loading
+             * Setup lazy loading triggers.
              */
             setupLazyLoad: function ($form, $container) {
-                const loadOnce = _.once(() => scriptLoader.loadScript());
+                const self = this;
+                const loadOnce = _.once(function () {
+                    scriptLoader.loadScript();
+                });
 
-                // Load on interaction
+                // Load on first interaction.
                 $form.on('focus blur change', ':input', loadOnce);
 
-                // Handle submit attempts before load
-                $form.on('click', ':submit', (e) => {
-                    if (!this.isFormReady($form)) {
+                // Handle submit attempts before the script has loaded.
+                $form.on('click', ':submit', function (e) {
+                    if (!self.isFormReady($form)) {
                         e.preventDefault();
                         pendingSubmissions.set($form[0], {
                             type: 'button',
@@ -100,7 +128,9 @@ define([
                     }
                 });
 
-                // Clean up inline submit handler
+                // Strip any legacy inline `return false;` onsubmit guard left in
+                // stale full-page-cache HTML from older versions (current code
+                // gates submission via the disabled-submit class + CSS instead).
                 const onsubmit = $form.attr('onsubmit');
                 if (onsubmit && onsubmit.startsWith('return false;')) {
                     $form.attr('onsubmit', onsubmit.substring(13));
@@ -108,91 +138,138 @@ define([
             },
 
             /**
-             * Setup form submit handler
+             * Setup the provider-aware submit handler.
              */
             setupSubmitHandler: function ($form, $container) {
                 let isSubmitting = false;
                 const formId = this.getFormId($form);
                 const self = this;
 
-                // Mark this form with its captcha ID for identification
                 $form.attr('data-captcha-form-id', formId);
                 $form.attr('data-captcha-id', captchaId);
 
-                // Standard form submission
-                $form.on('submit', (e) => {
-                    $form.addClass(SUBMIT_DISABLED_CLASS);
+                $form.on('submit', function (e) {
+                    // Allow a programmatic resubmit (after on-submit token fetch).
+                    if ($form.data('captcha-resubmit')) {
+                        $form.data('captcha-resubmit', false);
+                        return true;
+                    }
 
-                    if (!this.isFormReady($form)) {
+                    // Not ready: gate and queue until the API/widget is available.
+                    if (!self.isFormReady($form)) {
                         e.preventDefault();
+                        $form.addClass(SUBMIT_DISABLED_CLASS);
                         pendingSubmissions.set($form[0], { type: 'submit' });
+                        if (lazyLoad) {
+                            scriptLoader.loadScript();
+                        }
                         return false;
                     }
 
-                    // For standard (non-AJAX) form submissions
-                    if (!isSubmitting && tokenManager && !$form.data('ajax')) {
-                        isSubmitting = true;
+                    // Visible widgets: a token must already exist.
+                    if (mode === 'callback') {
+                        const token = tokenManager.getCurrentToken() || tokenManager.getResponse();
+                        if (!token) {
+                            e.preventDefault();
+                            $form.addClass(SUBMIT_DISABLED_CLASS);
+                            logger.log('Form ' + formId + ' blocked: captcha not completed');
+                            return false;
+                        }
+                        tokenManager.updateTokenInput($container, token);
+                        $form.removeClass(SUBMIT_DISABLED_CLASS);
+                        return true;
+                    }
 
-                        tokenManager.refreshForForm(formId, $container).then(token => {
+                    // reCAPTCHA v2 invisible: fetch token, then resubmit.
+                    if (mode === 'onSubmit') {
+                        if (isSubmitting || $form.data('ajax')) {
+                            return true;
+                        }
+                        isSubmitting = true;
+                        $form.addClass(SUBMIT_DISABLED_CLASS);
+                        e.preventDefault();
+
+                        tokenManager.refreshForForm(formId, $container).then(function (token) {
+                            isSubmitting = false;
+                            $form.removeClass(SUBMIT_DISABLED_CLASS);
+                            if (token) {
+                                $form.data('captcha-resubmit', true);
+                                $form.submit();
+                            }
+                        }).catch(function (error) {
+                            isSubmitting = false;
+                            $form.removeClass(SUBMIT_DISABLED_CLASS);
+                            logger.error('Token fetch failed for form ' + formId + ':', error);
+                        });
+
+                        return false;
+                    }
+
+                    // Score-based 'auto': token already present; refresh for next.
+                    $form.addClass(SUBMIT_DISABLED_CLASS);
+                    if (!isSubmitting && !$form.data('ajax')) {
+                        isSubmitting = true;
+                        tokenManager.refreshForForm(formId, $container).then(function () {
+                            $form.removeClass(SUBMIT_DISABLED_CLASS);
+                            isSubmitting = false;
+                        }).catch(function () {
                             $form.removeClass(SUBMIT_DISABLED_CLASS);
                             isSubmitting = false;
                         });
+                    } else {
+                        $form.removeClass(SUBMIT_DISABLED_CLASS);
                     }
 
                     return true;
                 });
 
-                // Setup AJAX detection for this specific form
                 this.monitorFormAjax($form, $container);
             },
 
             /**
-             * Monitor AJAX submissions for specific form
+             * Monitor AJAX submissions for this specific form.
              */
             monitorFormAjax: function ($form, $container) {
                 const formId = this.getFormId($form);
                 const self = this;
 
-                // Store reference to token manager
-                $form.data('recaptcha-token-manager', tokenManager);
-                $form.data('recaptcha-container', $container);
-                $form.data('recaptcha-form-id', formId);
+                $form.data('captcha-token-manager', tokenManager);
+                $form.data('captcha-container', $container);
+                $form.data('captcha-form-id', formId);
 
-                // Method 1: Direct AJAX detection via jQuery
-                $(document).ajaxComplete(function(event, xhr, settings) {
-                    // Check if this request belongs to our form
+                // Method 1: direct AJAX detection via jQuery.
+                $(document).ajaxComplete(function (event, xhr, settings) {
                     if (self.isFormRequest($form, settings)) {
-                        logger.log(`AJAX complete detected for form ${formId}`);
+                        logger.log('AJAX complete detected for form ' + formId);
                         self.refreshFormToken($form, $container, 'ajaxComplete');
                     }
                 });
 
-                // Method 2: Form validation events (Magento)
-                $form.on('ajax:complete', function(e) {
+                // Method 2: Magento form validation events.
+                $form.on('ajax:complete', function (e) {
                     if (e.target === this) {
-                        logger.log(`Form ajax:complete event for ${formId}`);
+                        logger.log('Form ajax:complete event for ' + formId);
                         self.refreshFormToken($form, $container, 'form-ajax-event');
                     }
                 });
 
-                // Method 3: Monitor form submit with preventDefault
-                $form.on('submit', function(e) {
+                // Method 3: monitor prevented (likely AJAX) submits.
+                $form.on('submit', function (e) {
                     if (e.isDefaultPrevented()) {
-                        // Form submission was prevented, likely AJAX
-                        logger.log(`Prevented submit detected for form ${formId}`);
-                        setTimeout(() => {
+                        logger.log('Prevented submit detected for form ' + formId);
+                        setTimeout(function () {
                             self.refreshFormToken($form, $container, 'prevented-submit');
                         }, 1000);
                     }
                 });
 
-                // Method 4: Override jQuery.ajax to detect form submissions
+                // Method 4: wrap jQuery.ajax to detect form submissions.
                 const originalAjax = $.ajax;
-                $.ajax = function(settings) {
+                $.ajax = function (settings) {
                     if (settings && self.isFormRequest($form, settings)) {
-                        logger.trace(`$.ajax called with form ${formId} data`);
+                        logger.trace('$.ajax called with form ' + formId + ' data');
                         const originalComplete = settings.complete;
-                        settings.complete = function(xhr, status) {
+                        settings.complete = function () {
                             self.refreshFormToken($form, $container, 'jquery-ajax');
                             if (originalComplete) {
                                 return originalComplete.apply(this, arguments);
@@ -202,36 +279,33 @@ define([
                     return originalAjax.apply(this, arguments);
                 };
 
-                // Store reference to restore later
-                $form.data('original-ajax', originalAjax);
+                // Keep a reference so it can be restored on destroy.
+                $form.data('captcha-original-ajax', originalAjax);
             },
 
             /**
-             * Check if AJAX request belongs to form
+             * Check whether an AJAX request belongs to this form.
              */
-            isFormRequest: function($form, settings) {
-                if (!settings) return false;
+            isFormRequest: function ($form, settings) {
+                if (!settings) {
+                    return false;
+                }
 
                 const formAction = $form.attr('action') || '';
                 const formId = $form.attr('id');
+                const tokenField = config.tokenField || 'hryvinskyi_invisible_token';
                 let requestData = '';
 
-                // Parse request data safely
                 if (settings.data) {
-                    // 1. String data — safe to use directly
                     if (typeof settings.data === 'string') {
                         requestData = settings.data;
-                    }
-                    // 2. FormData — iterate instead of $.param()
-                    else if (settings.data instanceof FormData) {
+                    } else if (settings.data instanceof FormData) {
                         const parts = [];
                         for (const [key, value] of settings.data.entries()) {
-                            parts.push(`${key}=${value}`);
+                            parts.push(key + '=' + value);
                         }
                         requestData = parts.join('&');
-                    }
-                    // 3. Plain object — serialize
-                    else if (
+                    } else if (
                         typeof settings.data === 'object' &&
                         !(settings.data instanceof $) &&
                         !(settings.data instanceof Element)
@@ -239,12 +313,12 @@ define([
                         try {
                             requestData = $.param(settings.data);
                         } catch (e) {
-                            console.error('Error serializing settings.data:', e);
+                            logger.error('Error serializing settings.data:', e);
                         }
                     }
                 }
 
-                // Look for form ID or action in URL or data - strongest indicators
+                // Strongest indicators: form id present in URL or data.
                 if (formId && (
                     (settings.url && settings.url.indexOf(formId) !== -1) ||
                     (requestData && requestData.indexOf(formId) !== -1)
@@ -252,9 +326,9 @@ define([
                     return true;
                 }
 
-                // Check URL match with action
+                // URL match with the form action.
                 if (formAction && settings.url) {
-                    const actionUrl = formAction.replace(/^https?:\/\/[^\/]+/, ''); // Remove domain
+                    const actionUrl = formAction.replace(/^https?:\/\/[^\/]+/, '');
                     const requestUrl = settings.url.replace(/^https?:\/\/[^\/]+/, '');
 
                     if (requestUrl === actionUrl || requestUrl.endsWith(actionUrl)) {
@@ -262,11 +336,10 @@ define([
                     }
                 }
 
-                // Check for form token that's specific to this form
-                const tokenInput = $form.find(`input[name="hryvinskyi_invisible_token"]`);
+                // The neutral captcha token is present in the payload.
+                const tokenInput = $form.find('input[name="' + tokenField + '"]');
                 if (tokenInput.length && tokenInput.val()) {
-                    const token = tokenInput.val();
-                    if (requestData.indexOf(token) !== -1) {
+                    if (requestData.indexOf(tokenInput.val()) !== -1) {
                         return true;
                     }
                 }
@@ -275,110 +348,145 @@ define([
             },
 
             /**
-             * Refresh token for specific form only
+             * Refresh / reset the token for a single form (provider-aware).
              */
             refreshFormToken: function ($form, $container, source) {
                 const formId = this.getFormId($form);
                 const formState = formStates.get(formId);
 
-                // Disable the form during token refresh
                 $form.addClass(SUBMIT_DISABLED_CLASS);
 
                 if (!formState || !formState.initialized) {
-                    logger.log(`Form ${formId} not initialized, skipping refresh`);
+                    logger.log('Form ' + formId + ' not initialized, skipping refresh');
                     return;
                 }
 
-                // Check if this form's captcha ID matches
                 if (formState.captchaId !== captchaId) {
-                    logger.log(`Form ${formId} captcha ID mismatch, skipping refresh`);
+                    logger.log('Form ' + formId + ' captcha id mismatch, skipping refresh');
                     return;
                 }
 
-                // Check if there's already a refresh in progress
                 if (formState.pendingRefresh) {
-                    logger.log(`[${captchaId}] Skipping refresh for form ${formId} - refresh already in progress (source: ${source})`);
+                    logger.log('[' + captchaId + '] Refresh already in progress for ' + formId + ' (source: ' + source + ')');
                     return;
                 }
 
-                // Mark as pending to prevent parallel refresh requests
                 formState.pendingRefresh = true;
+                logger.log('[' + captchaId + '] Refreshing token for form ' + formId + ' (source: ' + source + ')');
 
-                logger.log(`[${captchaId}] Refreshing token for form ${formId} (source: ${source})`);
-
-                if (tokenManager) {
-                    tokenManager.refreshForForm(formId, $container).then(() => {
-                        logger.log(`[${captchaId}] Token refreshed successfully for form ${formId}`);
-                        formState.lastRefresh = Date.now();
-                        formState.pendingRefresh = false;
-
-                        // Re-enable the form after successful token refresh
-                        $form.removeClass(SUBMIT_DISABLED_CLASS);
-                    }).catch((error) => {
-                        logger.error(`[${captchaId}] Error refreshing token for form ${formId}:`, error);
-                        formState.pendingRefresh = false;
-
-                        // Also re-enable the form if token refresh fails
-                        $form.removeClass(SUBMIT_DISABLED_CLASS);
-                    });
-                } else {
-                    logger.error(`Token manager not available for form ${formId}`);
+                // Visible widgets: the token is single-use. Reset so the user
+                // re-verifies; the widget callback re-enables submission.
+                if (mode === 'callback') {
+                    tokenManager.reset();
+                    tokenManager.updateTokenInput($container, '');
+                    formState.lastRefresh = Date.now();
                     formState.pendingRefresh = false;
-
-                    // Re-enable the form if token manager is not available
-                    $form.removeClass(SUBMIT_DISABLED_CLASS);
+                    if (!gateSubmit) {
+                        $form.removeClass(SUBMIT_DISABLED_CLASS);
+                    }
+                    return;
                 }
+
+                // Execute-based providers ('auto' / 'onSubmit'): fetch a fresh token.
+                tokenManager.refreshForForm(formId, $container).then(function () {
+                    logger.log('[' + captchaId + '] Token refreshed for form ' + formId);
+                    formState.lastRefresh = Date.now();
+                    formState.pendingRefresh = false;
+                    $form.removeClass(SUBMIT_DISABLED_CLASS);
+                }).catch(function (error) {
+                    logger.error('[' + captchaId + '] Error refreshing token for form ' + formId + ':', error);
+                    formState.pendingRefresh = false;
+                    $form.removeClass(SUBMIT_DISABLED_CLASS);
+                });
             },
 
             /**
-             * Activate form after reCAPTCHA loads
+             * Activate the form once the provider API is ready.
              */
             activateForm: function ($form, $container) {
                 const formId = this.getFormId($form);
                 const formState = formStates.get(formId);
+                const self = this;
 
                 if (formState && formState.initialized) {
                     return;
                 }
 
-                window.grecaptcha.ready(() => {
-                    tokenManager.generateToken().then(token => {
-                        if (token) {
-                            tokenManager.setFormIdTokenLifetime(formId, tokenManager.TOKEN_REFRESH_INTERVAL);
-
-                            // Put token input in the recaptcha container
-                            tokenManager.updateTokenInput($container, token);
-
-                            // Start auto refresh only for this form
-                            tokenManager.startAutoRefresh(formId, $container);
-
-                            if (formState) {
-                                formState.initialized = true;
-                                formState.lastRefresh = Date.now();
+                strategy.ready().then(function () {
+                    // Visible / explicit widgets need an actual render.
+                    if (strategy.requiresRender) {
+                        const widgetId = strategy.render($container[0], {
+                            onToken: function (token) {
+                                tokenManager.setToken(token);
+                                tokenManager.updateTokenInput($container, token);
+                                $form.removeClass(SUBMIT_DISABLED_CLASS);
+                            },
+                            onExpired: function () {
+                                tokenManager.setToken(null);
+                                tokenManager.updateTokenInput($container, '');
+                                if (gateSubmit) {
+                                    $form.addClass(SUBMIT_DISABLED_CLASS);
+                                }
+                            },
+                            onError: function () {
+                                logger.error('Widget error for form ' + formId);
                             }
+                        });
 
-                            if (captchaModel.initializedForms().indexOf(captchaId) === -1) {
-                                captchaModel.initializedForms.push(captchaId);
-                            }
-
-                            // Handle pending submission
-                            this.processPendingSubmission($form);
-
-                            // Remove disabled class if it was added
-                            $form.removeClass(SUBMIT_DISABLED_CLASS);
+                        if (formState) {
+                            formState.widgetId = widgetId;
                         }
-                    });
+                        tokenManager.setWidgetId(widgetId);
+                    }
+
+                    if (mode === 'auto') {
+                        // Score-based: fetch the initial token and keep it fresh.
+                        tokenManager.generateToken().then(function (token) {
+                            if (token) {
+                                tokenManager.updateTokenInput($container, token);
+                                tokenManager.setFormIdTokenLifetime(formId, tokenManager.TOKEN_REFRESH_INTERVAL);
+                                tokenManager.startAutoRefresh(formId, $container);
+                            }
+                            self.finishActivation($form, formState, formId);
+                        }).catch(function (error) {
+                            logger.error('Initial token fetch failed for form ' + formId + ':', error);
+                            self.finishActivation($form, formState, formId);
+                        });
+                    } else {
+                        // 'onSubmit' (token on submit) / 'callback' (token via widget).
+                        self.finishActivation($form, formState, formId);
+                    }
                 });
             },
 
             /**
-             * Process pending submission
+             * Mark a form as activated and flush any queued submission.
+             */
+            finishActivation: function ($form, formState, formId) {
+                if (formState) {
+                    formState.initialized = true;
+                    formState.lastRefresh = Date.now();
+                }
+
+                captchaModel.markFormInitialized(provider, captchaId);
+
+                // 'callback' widgets stay gated until the user solves them; for
+                // every other mode the form can be released here.
+                if (mode !== 'callback') {
+                    $form.removeClass(SUBMIT_DISABLED_CLASS);
+                }
+
+                this.processPendingSubmission($form);
+            },
+
+            /**
+             * Re-trigger a queued submission once the form became ready.
              */
             processPendingSubmission: function ($form) {
                 const pending = pendingSubmissions.get($form[0]);
                 if (pending) {
                     pendingSubmissions.delete($form[0]);
-                    setTimeout(() => {
+                    setTimeout(function () {
                         if (pending.type === 'submit') {
                             $form.submit();
                         } else if (pending.type === 'button') {
@@ -389,49 +497,47 @@ define([
             },
 
             /**
-             * Check if form is ready
+             * Whether the form's captcha is ready (API loaded + activated).
              */
             isFormReady: function ($form) {
                 const formId = this.getFormId($form);
                 const formState = formStates.get(formId);
 
-                return captchaModel.isApiLoaded() &&
-                    formState &&
+                return scriptLoader.isApiReady() &&
+                    !!formState &&
                     formState.initialized;
             },
 
             /**
-             * Get all managed forms
+             * Get all managed form states.
              */
             getManagedForms: function () {
                 return formStates;
             },
 
             /**
-             * Enable or disable debug logging
+             * Enable or disable debug logging.
              */
-            setDebug: function(enable) {
+            setDebug: function (enable) {
                 settings.debug = !!enable;
             },
 
             /**
-             * Cleanup
+             * Cleanup.
              */
             destroy: function () {
-                // Restore original $.ajax if we modified it
-                formStates.forEach((state, formId) => {
+                formStates.forEach(function (state, formId) {
                     if (state.form) {
-                        const originalAjax = state.form.data('original-ajax');
+                        const originalAjax = state.form.data('captcha-original-ajax');
                         if (originalAjax) {
                             $.ajax = originalAjax;
                         }
 
-                        const namespace = `.recaptcha_${state.captchaId}_${formId}`;
+                        const namespace = '.captcha_' + state.captchaId + '_' + formId;
                         state.form.off(namespace);
                         state.form.off('ajax:complete');
-                        state.form.off('submit.recaptcha');
+                        state.form.off('submit.captcha');
 
-                        // Restore original submit if modified
                         if (state.form[0]._originalSubmit) {
                             state.form[0].submit = state.form[0]._originalSubmit;
                         }

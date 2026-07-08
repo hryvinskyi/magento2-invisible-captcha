@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
+ */
+-->
+<actionGroups xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/actionGroupSchema.xsd">
+    <actionGroup name="EnableInvisibleCaptchaActionGroup">
+        <annotations>
+            <description>Open the Invisible Captcha admin configuration, enable the module, pick an active provider and save.</description>
+        </annotations>
+        <arguments>
+            <argument name="provider" type="string" defaultValue="{{InvisibleCaptchaTurnstileConfig.provider}}"/>
+        </arguments>
+
+        <amOnPage url="{{AdminInvisibleCaptchaConfigPage.url}}" stepKey="navigateToConfig"/>
+        <waitForPageLoad stepKey="waitForConfigPageLoad"/>
+        <conditionalClick selector="{{InvisibleCaptchaConfigSection.generalGroupHead}}" dependentSelector="{{InvisibleCaptchaConfigSection.enableRow}}" visible="false" stepKey="expandGeneralGroup"/>
+        <scrollTo selector="{{InvisibleCaptchaConfigSection.enableRow}}" stepKey="scrollToEnable"/>
+        <waitForElementVisible selector="{{InvisibleCaptchaConfigSection.enable}}" stepKey="waitForEnableField"/>
+        <selectOption selector="{{InvisibleCaptchaConfigSection.enable}}" userInput="1" stepKey="enableModule"/>
+        <waitForElementVisible selector="{{InvisibleCaptchaConfigSection.activeProvider}}" stepKey="waitForActiveProvider"/>
+        <selectOption selector="{{InvisibleCaptchaConfigSection.activeProvider}}" userInput="{{provider}}" stepKey="selectActiveProvider"/>
+        <click selector="{{InvisibleCaptchaConfigSection.saveButton}}" stepKey="clickSave"/>
+        <waitForPageLoad stepKey="waitForSave"/>
+        <see selector="{{AdminMessagesSection.success}}" userInput="You saved the configuration." stepKey="seeSuccessMessage"/>
+    </actionGroup>
+</actionGroups>

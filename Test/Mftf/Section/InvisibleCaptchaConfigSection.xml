@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
+ */
+-->
+<sections xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="urn:magento:mftf:Page/etc/SectionObject.xsd">
+    <!-- Admin: Stores > Configuration > Invisible Captcha section -->
+    <section name="InvisibleCaptchaConfigSection">
+        <!-- General group -->
+        <element name="generalGroupHead" type="button" selector="a#hryvinskyi_invisible_captcha_general-head"/>
+        <element name="enable" type="select" selector="#hryvinskyi_invisible_captcha_general_enabled"/>
+        <element name="enableRow" type="text" selector="#row_hryvinskyi_invisible_captcha_general_enabled"/>
+        <element name="activeProvider" type="select" selector="#hryvinskyi_invisible_captcha_general_active_provider"/>
+        <element name="activeProviderRow" type="text" selector="#row_hryvinskyi_invisible_captcha_general_active_provider"/>
+
+        <!-- Form Protection group -->
+        <element name="formProtectionGroupHead" type="button" selector="a#hryvinskyi_invisible_captcha_form_protection-head"/>
+        <element name="formProtectionEnabled" type="select" selector="#hryvinskyi_invisible_captcha_form_protection_enabled"/>
+        <element name="formProtectionEnabledRow" type="text" selector="#row_hryvinskyi_invisible_captcha_form_protection_enabled"/>
+
+        <!-- Form Protection > Storefront Forms nested group -->
+        <element name="frontendGroupHead" type="button" selector="a#hryvinskyi_invisible_captcha_form_protection_frontend-head"/>
+        <element name="frontendEnabled" type="select" selector="#hryvinskyi_invisible_captcha_form_protection_frontend_enabled"/>
+        <element name="frontendEnabledContact" type="select" selector="#hryvinskyi_invisible_captcha_form_protection_frontend_enabled_contact"/>
+        <element name="frontendEnabledCustomerLogin" type="select" selector="#hryvinskyi_invisible_captcha_form_protection_frontend_enabled_customer_login"/>
+
+        <!-- Save -->
+        <element name="saveButton" type="button" selector="#save" timeout="60"/>
+    </section>
+
+    <!-- Storefront: rendered captcha container / injected hidden token field -->
+    <section name="StorefrontInvisibleCaptchaSection">
+        <element name="captchaContainer" type="block" selector="#contact-form .field-recaptcha"/>
+        <element name="tokenField" type="input" selector="#contact-form .field-recaptcha input[name='hryvinskyi_invisible_token']"/>
+    </section>
+</sections>

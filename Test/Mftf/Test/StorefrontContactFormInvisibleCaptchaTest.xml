@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
+ */
+-->
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+    <test name="StorefrontContactFormInvisibleCaptchaTest">
+        <annotations>
+            <features value="InvisibleCaptcha"/>
+            <stories value="Storefront form protection with Invisible Captcha"/>
+            <title value="Invisible Captcha is rendered on the storefront Contact Us form and the form can be submitted"/>
+            <description value="With the module enabled, the Turnstile provider active and contact form protection on, the Contact Us page should render the captcha container and inject the hidden token field, and a valid submission should succeed."/>
+            <severity value="AVERAGE"/>
+            <group value="invisible_captcha"/>
+        </annotations>
+        <before>
+            <!-- Enable the module and select the Turnstile provider -->
+            <magentoCLI command="config:set hryvinskyi_invisible_captcha/general/enabled 1" stepKey="enableModule"/>
+            <magentoCLI command="config:set hryvinskyi_invisible_captcha/general/active_provider {{InvisibleCaptchaTurnstileConfig.provider}}" stepKey="setActiveProvider"/>
+            <!-- Cloudflare Turnstile public testing keys: always issue and verify a dummy token -->
+            <magentoCLI command="config:set hryvinskyi_invisible_captcha/providers/turnstile/site_key {{InvisibleCaptchaTurnstileConfig.siteKey}}" stepKey="setSiteKey"/>
+            <magentoCLI command="config:set hryvinskyi_invisible_captcha/providers/turnstile/secret_key {{InvisibleCaptchaTurnstileConfig.secretKey}}" stepKey="setSecretKey"/>
+            <!-- Turn on form protection for the storefront contact form -->
+            <magentoCLI command="config:set hryvinskyi_invisible_captcha/form_protection/enabled 1" stepKey="enableFormProtection"/>
+            <magentoCLI command="config:set hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1" stepKey="enableFrontendForms"/>
+            <magentoCLI command="config:set hryvinskyi_invisible_captcha/form_protection/frontend/enabled_contact 1" stepKey="enableContactForm"/>
+            <actionGroup ref="CliCacheCleanActionGroup" stepKey="flushCacheBefore">
+                <argument name="tags" value="config full_page block_html layout"/>
+            </actionGroup>
+        </before>
+        <after>
+            <!-- Restore defaults -->
+            <magentoCLI command="config:set hryvinskyi_invisible_captcha/form_protection/frontend/enabled_contact 0" stepKey="disableContactForm"/>
+            <magentoCLI command="config:set hryvinskyi_invisible_captcha/form_protection/frontend/enabled 0" stepKey="disableFrontendForms"/>
+            <magentoCLI command="config:set hryvinskyi_invisible_captcha/form_protection/enabled 0" stepKey="disableFormProtection"/>
+            <magentoCLI command="config:set hryvinskyi_invisible_captcha/general/enabled 0" stepKey="disableModule"/>
+            <actionGroup ref="CliCacheCleanActionGroup" stepKey="flushCacheAfter">
+                <argument name="tags" value="config full_page block_html layout"/>
+            </actionGroup>
+        </after>
+
+        <!-- Open the storefront Contact Us page -->
+        <actionGroup ref="StorefrontOpenContactUsPageActionGroup" stepKey="openContactPage"/>
+
+        <!-- The captcha container is rendered by the module on the contact form -->
+        <waitForElementVisible selector="{{StorefrontInvisibleCaptchaSection.captchaContainer}}" stepKey="waitForCaptchaContainer"/>
+        <seeElement selector="{{StorefrontInvisibleCaptchaSection.captchaContainer}}" stepKey="assertCaptchaContainerPresent"/>
+
+        <!-- Turnstile (test key) resolves automatically and the hidden token field is injected -->
+        <waitForElement selector="{{StorefrontInvisibleCaptchaSection.tokenField}}" time="30" stepKey="waitForTokenField"/>
+        <seeElementInDOM selector="{{StorefrontInvisibleCaptchaSection.tokenField}}" stepKey="assertTokenFieldPresent"/>
+
+        <!-- Fill and submit the contact form -->
+        <fillField selector="{{StorefrontContactUsFormSection.nameField}}" userInput="Jane Doe" stepKey="fillName"/>
+        <fillField selector="{{StorefrontContactUsFormSection.emailField}}" userInput="jane.doe@example.com" stepKey="fillEmail"/>
+        <fillField selector="{{StorefrontContactUsFormSection.commentField}}" userInput="Invisible Captcha MFTF storefront contact submission." stepKey="fillComment"/>
+        <actionGroup ref="StorefrontSubmitContactUsFormActionGroup" stepKey="submitContactForm"/>
+
+        <!-- Submission succeeds -->
+        <actionGroup ref="AssertMessageContactUsFormActionGroup" stepKey="assertSuccessMessage">
+            <argument name="message" value="Thanks for contacting us with your comments and questions. We'll respond to you very soon."/>
+            <argument name="messageType" value="success"/>
+        </actionGroup>
+    </test>
+</tests>

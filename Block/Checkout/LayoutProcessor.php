@@ -1,83 +1,67 @@
 <?php
 /**
- * Copyright (c) 2020. Volodymyr Hryvinskyi.  All rights reserved.
- * @author: <mailto:volodymyr@hryvinskyi.com>
- * @github: <https://github.com/hryvinskyi>
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
  */
-
 declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Block\Checkout;
 
-use Hryvinskyi\InvisibleCaptcha\Helper\Config\Frontend;
-use Hryvinskyi\InvisibleCaptcha\Helper\Config\General;
-use Hryvinskyi\InvisibleCaptcha\Model\LayoutSettings;
+use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
+use Hryvinskyi\InvisibleCaptcha\Model\ClientConfigProvider;
 use Magento\Checkout\Block\Checkout\LayoutProcessorInterface;
 
 /**
- * Class LayoutProcessor
+ * Injects the invisible-captcha config into the checkout login (customer-email
+ * and authentication) jsLayout, or removes it when not enabled.
  */
 class LayoutProcessor implements LayoutProcessorInterface
 {
     /**
-     * @var LayoutSettings
-     */
-    private $layoutSettings;
-
-    /**
-     * @var General
-     */
-    private $generalConfig;
-
-    /**
-     * @var Frontend
-     */
-    private $frontendConfig;
-
-    /**
-     * AuthenticationPopupPlugin constructor.
-     *
-     * @param LayoutSettings $layoutSettings
-     * @param General $generalConfig
-     * @param Frontend $frontendConfig
+     * @param ClientConfigProvider $clientConfigProvider
+     * @param ConfigInterface $config
      */
     public function __construct(
-        LayoutSettings $layoutSettings,
-        General $generalConfig,
-        Frontend $frontendConfig
+        private readonly ClientConfigProvider $clientConfigProvider,
+        private readonly ConfigInterface $config
     ) {
-        $this->layoutSettings = $layoutSettings;
-        $this->generalConfig = $generalConfig;
-        $this->frontendConfig = $frontendConfig;
     }
 
     /**
      * @inheritDoc
      */
-    public function process($layout)
+    public function process($jsLayout)
     {
-        $layout['components']['checkout']['children']['steps']['children']['shipping-step']['children']
-        ['shippingAddress']['children']['customer-email']['children']['invisible-captcha']['config']
-            = $this->layoutSettings->getCaptchaSettings();
+        $settings = $this->clientConfigProvider->getFormConfig();
 
-        $layout['components']['checkout']['children']['authentication']['children']['invisible-captcha']['config']
-            = $this->layoutSettings->getCaptchaSettings();
+        $jsLayout['components']['checkout']['children']['steps']['children']['shipping-step']['children']
+        ['shippingAddress']['children']['customer-email']['children']['invisible-captcha']['config'] = $settings;
 
-        if (!$this->generalConfig->hasEnabled()
-            || !$this->frontendConfig->hasEnabled()
-            || !$this->frontendConfig->hasEnabledCustomerLogin()
-        ) {
-            if (isset($layout['components']['checkout']['children']['authentication']['children']['invisible-captcha'])) {
-                unset($layout['components']['checkout']['children']['authentication']['children']['invisible-captcha']);
-            }
+        $jsLayout['components']['checkout']['children']['authentication']['children']['invisible-captcha']['config']
+            = $settings;
 
-            if (isset($layout['components']['checkout']['children']['steps']['children']['shipping-step']['children']
-                ['shippingAddress']['children']['customer-email']['children']['invisible-captcha'])) {
-                unset($layout['components']['checkout']['children']['steps']['children']['shipping-step']['children']
-                    ['shippingAddress']['children']['customer-email']['children']['invisible-captcha']);
-            }
+        if ($this->isLoginCaptchaEnabled()) {
+            return $jsLayout;
         }
 
-        return $layout;
+        unset(
+            $jsLayout['components']['checkout']['children']['authentication']['children']['invisible-captcha'],
+            $jsLayout['components']['checkout']['children']['steps']['children']['shipping-step']['children']
+            ['shippingAddress']['children']['customer-email']['children']['invisible-captcha']
+        );
+
+        return $jsLayout;
+    }
+
+    /**
+     * Whether captcha protection for customer login is active.
+     */
+    private function isLoginCaptchaEnabled(): bool
+    {
+        return $this->config->isEnabled()
+            && $this->config->isFormProtectionEnabled()
+            && $this->config->isFormAreaEnabled(ConfigInterface::AREA_FRONTEND)
+            && $this->config->isFormEnabled(ConfigInterface::FORM_CUSTOMER_LOGIN);
     }
 }

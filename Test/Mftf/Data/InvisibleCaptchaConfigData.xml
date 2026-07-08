@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
+ */
+-->
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="urn:magento:mftf:DataGenerator/etc/dataProfileSchema.xsd">
+    <!-- Active provider = Cloudflare Turnstile (non score-based, simplest to verify) -->
+    <entity name="InvisibleCaptchaTurnstileConfig">
+        <data key="provider">turnstile</data>
+        <data key="label">Cloudflare Turnstile</data>
+        <!-- Cloudflare Turnstile public testing keys (always pass) -->
+        <data key="siteKey">1x00000000000000000000AA</data>
+        <data key="secretKey">1x0000000000000000000000000000000AA</data>
+    </entity>
+
+    <!-- Active provider = reCAPTCHA v3 (score-based) -->
+    <entity name="InvisibleCaptchaRecaptchaV3Config">
+        <data key="provider">recaptcha_v3</data>
+        <data key="label">reCAPTCHA v3</data>
+        <data key="siteKey">6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI</data>
+        <data key="secretKey">6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe</data>
+    </entity>
+
+    <!-- Module disabled / no active provider -->
+    <entity name="InvisibleCaptchaDisabledConfig">
+        <data key="provider"></data>
+        <data key="label">Disabled</data>
+    </entity>
+</entities>

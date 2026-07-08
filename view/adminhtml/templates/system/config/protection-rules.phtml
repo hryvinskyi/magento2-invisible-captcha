@@ -1,0 +1,24 @@
+<?php
+/**
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
+ */
+
+/** @var \Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\ProtectionRules $block */
+/** @var \Magento\Framework\Escaper $escaper */
+
+$htmlId = (string)$block->getHtmlId();
+$rootId = 'hryvinskyi-captcha-editor-' . $htmlId;
+$configJson = $block->getEditorConfigJson();
+?>
+<div class="hryvinskyi-fx"
+     id="<?= $escaper->escapeHtmlAttr($rootId) ?>"
+     data-captcha-config="<?= $escaper->escapeHtmlAttr($configJson) ?>"></div>
+<script type="text/x-magento-init">
+    {
+        "#<?= $escaper->escapeJs($rootId) ?>": {
+            "Hryvinskyi_InvisibleCaptcha/js/protection-rules": {}
+        }
+    }
+</script>

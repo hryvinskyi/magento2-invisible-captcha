@@ -1,5 +1,16 @@
 /**
- * Main Invisible Captcha Component
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
+ */
+
+/**
+ * Invisible Captcha UI component.
+ *
+ * Provider-agnostic entry point. Resolves the matching client-side strategy via
+ * the registry (by `this.provider`) and wires the per-form managers. The block
+ * injects the per-form config produced by ClientConfigProvider / the active
+ * provider's getRenderConfig().
  */
 define([
     'jquery',
@@ -8,76 +19,129 @@ define([
     './model/invisible-captcha',
     './model/token-manager',
     './model/form-manager',
-    './model/script-loader'
-], function ($, ko, Component, captchaModel, TokenManager, FormManager, ScriptLoader) {
+    './model/script-loader',
+    './provider/registry'
+], function ($, ko, Component, captchaModel, TokenManager, FormManager, ScriptLoader, registry) {
     'use strict';
 
     return Component.extend({
         defaults: {
             template: 'Hryvinskyi_InvisibleCaptcha/invisible-captcha',
-            action: '',
+            provider: '',
             siteKey: '',
-            captchaId: '',
-            lazyLoad: false
+            scriptUrl: '',
+            responseParam: '',
+            tokenTtl: 90000,
+            isScoreBased: false,
+            supportsAction: false,
+            action: '',
+            widgetMode: 'score',
+            theme: '',
+            size: '',
+            badge: 'bottomright',
+            appearance: '',
+            hideBadge: false,
+            hideBadgeText: '',
+            lazyLoad: false,
+            isDisabledSubmitForm: false,
+            tokenField: 'hryvinskyi_invisible_token',
+            captchaId: ''
         },
 
         /**
-         * Component initialization
+         * Component initialization.
          */
         initialize: function () {
             this._super();
 
-            // Initialize managers
-            this.tokenManager = new TokenManager(this.captchaId, this.siteKey, this.action);
-            this.scriptLoader = new ScriptLoader(this.captchaId, this.siteKey);
-            this.formManager = new FormManager(this.captchaId, this.tokenManager, this.lazyLoad, this.scriptLoader);
+            if (!this.provider || !registry.has(this.provider)) {
+                console.error('[InvisibleCaptcha] Unknown or missing provider:', this.provider);
+                return this;
+            }
 
-            // Initialize script loading
+            this.captchaConfig = this.buildConfig();
+
+            // Resolve the provider strategy and wire the managers.
+            this.strategy = registry.create(this.provider, this.captchaConfig);
+            this.tokenManager = new TokenManager(this.strategy, this.captchaConfig, this.captchaId);
+            this.scriptLoader = new ScriptLoader(this.strategy, this.captchaConfig);
+            this.formManager = new FormManager(
+                this.captchaId,
+                this.tokenManager,
+                this.strategy,
+                this.scriptLoader,
+                this.captchaConfig
+            );
+
             this.scriptLoader.initialize();
 
-            if (!this.lazyLoad) {
+            if (!this.captchaConfig.lazyLoad) {
                 this.scriptLoader.loadScript();
             }
+
+            return this;
         },
 
         /**
-         * Check if reCAPTCHA is ready for a specific form
+         * Collect the client config from component properties.
          */
-        isRecaptchaLoaded: function (captchaId) {
-            return captchaModel.isApiLoaded() &&
-                captchaModel.initializedForms().indexOf(captchaId) !== -1;
+        buildConfig: function () {
+            return {
+                provider: this.provider,
+                siteKey: this.siteKey,
+                scriptUrl: this.scriptUrl,
+                responseParam: this.responseParam,
+                tokenTtl: this.tokenTtl,
+                isScoreBased: this.isScoreBased,
+                supportsAction: this.supportsAction,
+                action: this.action,
+                widgetMode: this.widgetMode,
+                theme: this.theme,
+                size: this.size,
+                badge: this.badge,
+                appearance: this.appearance,
+                hideBadge: this.hideBadge,
+                hideBadgeText: this.hideBadgeText,
+                lazyLoad: this.lazyLoad,
+                isDisabledSubmitForm: this.isDisabledSubmitForm,
+                tokenField: this.tokenField || 'hryvinskyi_invisible_token',
+                captchaId: this.captchaId,
+                debug: this.debug
+            };
         },
 
         /**
-         * Public initialization method called from template
+         * Whether the provider API is ready for this component.
+         */
+        isCaptchaReady: function () {
+            return !!this.scriptLoader && this.scriptLoader.isApiReady();
+        },
+
+        /**
+         * Public initialization method called from the template (afterRender).
          */
         initializeCaptcha: function (element, self) {
-            const $container = $(element);
-            const $form = $container.closest('form');
-            
-            // Store reference for later use if API not loaded
-            if (!captchaModel.isApiLoaded()) {
-                captchaModel.initializeForms.push({
-                    element: element,
-                    self: self
-                });
+            if (!self.strategy) {
+                return;
             }
 
-            // Initialize form
+            const $container = $(element);
+            const $form = $container.closest('form');
+
             self.formManager.initializeForm(element);
 
-            // If API is already loaded, activate immediately
-            if (captchaModel.isApiLoaded()) {
+            // Activate now if ready, otherwise wait for this provider's event.
+            if (self.scriptLoader.isApiReady()) {
                 self.formManager.activateForm($form, $container);
             } else {
-                $(window).one(`recaptcha_api_ready_${self.captchaId}`, () => {
+                $(window).one('captcha_api_ready_' + self.provider, function () {
                     self.formManager.activateForm($form, $container);
                 });
             }
         },
 
         /**
-         * Component cleanup
+         * Component cleanup.
          */
         destroy: function () {
             if (this.tokenManager) {

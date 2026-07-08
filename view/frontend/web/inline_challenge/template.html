@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="{{lang}}">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<title>{{title}}</title>
+{{styles}}
+</head>
+<body>
+
+<header class="band">
+    <div class="band-inner">
+        <div class="band-side left"><span class="dot" aria-hidden="true"></span>{{conn_secure}}</div>
+        <div class="band-side right">Ref&nbsp;{{ref_id}}</div>
+    </div>
+</header>
+
+<main>
+    <section class="stage">
+
+        <div class="eyebrow">{{eyebrow}}</div>
+
+        <div class="mark" aria-hidden="true">
+            <span class="ring"></span>
+            <svg class="glyph" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M24 5 8 11 v11 C8 33 14.5 39.5 24 43 33.5 39.5 40 33 40 22 V11 Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+                <path d="M17 23.5 22 28.5 32 17.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+
+        <h1>{{heading}}</h1>
+        <p class="lede">{{lede_verifying}}</p>
+
+        <div class="progress" aria-hidden="true"><i></i></div>
+
+        <!-- Primary captcha widget mounts here (invisible/managed providers show their UI only when an interactive challenge is required) -->
+        <div id="turnstile-widget" class="turnstile-host"></div>
+
+        <!-- Failure state -->
+        <div class="actions" aria-hidden="true">
+            <p class="fail-note">{{lede_failed}}</p>
+            {{fail_support}}
+            <button class="btn" id="tryAgain" type="button">
+                {{try_again}}<span class="arrow" aria-hidden="true">&#8594;</span>
+            </button>
+        </div>
+
+        <!-- Fallback widget — revealed after the configured delay -->
+        <div class="human-check" id="humanCheck">
+            <p class="hc-note">{{hc_note}}</p>
+            <p class="hc-title">{{hc_title}}</p>
+
+            <div class="hc-arrow-row" aria-hidden="true">
+                <span class="hc-arrow">
+                    <svg width="14" height="20" viewBox="0 0 14 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="7" y1="0" x2="7" y2="15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <polyline points="1,10 7,17 13,10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span class="hc-arrow-label">{{hc_arrow_label}}</span>
+            </div>
+
+            <div class="recaptcha-mount" id="recaptchaMount">
+                <div class="rc-placeholder" aria-hidden="true">
+                    <span class="rc-box"></span>
+                    <span class="rc-label">
+                        {{rc_label}}
+                    </span>
+                </div>
+            </div>
+
+            <p class="hc-help">{{hc_help}}</p>
+        </div>
+
+        <div class="meta">
+            <div class="row">
+                <span class="label">{{row_connection}}</span>
+                <span class="check"><span class="check-dot"></span>{{status_secure}}</span>
+            </div>
+            <div class="row">
+                <span class="label">{{row_request}}</span>
+                <span class="check"><span class="check-dot"></span>{{status_confirmed}}</span>
+            </div>
+            <div class="row">
+                <span class="label">{{row_human}}</span>
+                <span class="check pending"><span class="check-dot pending"></span>{{status_checking}}</span>
+            </div>
+        </div>
+
+    </section>
+</main>
+
+<footer class="foot">
+    <div class="foot-inner">
+        <div class="foot-left">
+            <span class="dot" aria-hidden="true"></span>
+            <span id="footState" data-waiting="{{foot_waiting}}">{{foot_verifying}}</span>
+        </div>
+        <div class="foot-center">
+            <a href="#">{{link_privacy}}</a>
+            <a href="#">{{link_terms}}</a>
+            <a href="#">{{link_cookies}}</a>
+        </div>
+        <div class="foot-right">{{host}}</div>
+    </div>
+</footer>
+
+{{script}}
+</body>
+</html>

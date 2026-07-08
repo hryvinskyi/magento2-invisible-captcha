@@ -10,7 +10,7 @@
         <referenceContainer name="form.additional.info">
             <block class="Hryvinskyi\InvisibleCaptcha\Block\Captcha" name="invisible.recaptcha" after="-"
                    template="Hryvinskyi_InvisibleCaptcha::captcha.phtml"
-                   ifconfig="hryvinskyi_invisible_captcha/backend/enabledLogin">
+                   ifconfig="hryvinskyi_invisible_captcha/form_protection/backend/enabled_login">
                 <arguments>
                     <argument name="jsLayout" xsi:type="array">
                         <item name="components" xsi:type="array">

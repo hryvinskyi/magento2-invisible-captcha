@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
+ */
+-->
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+    <test name="AdminInvisibleCaptchaConfigurationTest">
+        <annotations>
+            <features value="InvisibleCaptcha"/>
+            <stories value="Admin configuration of Hryvinskyi Invisible Captcha"/>
+            <title value="Admin can enable Invisible Captcha and select an active provider"/>
+            <description value="Admin should be able to open the Invisible Captcha section, enable the module, pick an active provider, save and see the success message."/>
+            <severity value="AVERAGE"/>
+            <group value="invisible_captcha"/>
+        </annotations>
+        <before>
+            <actionGroup ref="AdminLoginActionGroup" stepKey="loginAsAdmin"/>
+        </before>
+        <after>
+            <actionGroup ref="DisableInvisibleCaptchaActionGroup" stepKey="disableCaptcha"/>
+            <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>
+        </after>
+
+        <!-- Open the Invisible Captcha configuration section -->
+        <amOnPage url="{{AdminInvisibleCaptchaConfigPage.url}}" stepKey="openConfigSection"/>
+        <waitForPageLoad stepKey="waitForConfigPageLoad"/>
+        <conditionalClick selector="{{InvisibleCaptchaConfigSection.generalGroupHead}}" dependentSelector="{{InvisibleCaptchaConfigSection.enableRow}}" visible="false" stepKey="expandGeneralGroup"/>
+        <seeElement selector="{{InvisibleCaptchaConfigSection.enable}}" stepKey="assertEnableFieldPresent"/>
+
+        <!-- Enable the module and pick the Turnstile provider, then save -->
+        <actionGroup ref="EnableInvisibleCaptchaActionGroup" stepKey="enableCaptchaWithTurnstile">
+            <argument name="provider" value="{{InvisibleCaptchaTurnstileConfig.provider}}"/>
+        </actionGroup>
+
+        <!-- Verify the saved values persisted on the form -->
+        <conditionalClick selector="{{InvisibleCaptchaConfigSection.generalGroupHead}}" dependentSelector="{{InvisibleCaptchaConfigSection.enableRow}}" visible="false" stepKey="reExpandGeneralGroup"/>
+        <seeOptionIsSelected selector="{{InvisibleCaptchaConfigSection.enable}}" userInput="Yes" stepKey="assertEnabledPersisted"/>
+        <seeOptionIsSelected selector="{{InvisibleCaptchaConfigSection.activeProvider}}" userInput="{{InvisibleCaptchaTurnstileConfig.label}}" stepKey="assertProviderPersisted"/>
+    </test>
+</tests>

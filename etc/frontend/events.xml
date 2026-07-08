@@ -1,42 +1,69 @@
 <?xml version="1.0"?>
 <!--
-  ~ Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
-  ~ @author: <mailto:volodymyr@hryvinskyi.com>
-  ~ @github: <https://github.com/hryvinskyi>
+  ~ Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+  ~ Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+  ~ GitHub: https://github.com/hryvinskyi
   -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
 
+    <!-- ============================ Form protection =========================== -->
     <event name="controller_action_predispatch_customer_account_loginPost">
-        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
-                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\Login"/>
+        <observer name="Hryvinskyi_InvisibleCaptcha::form_login"
+                  instance="Hryvinskyi\InvisibleCaptcha\Observer\Form\Login"/>
     </event>
     <event name="controller_action_predispatch_customer_ajax_login">
-        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
-                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\LoginPopup"/>
+        <observer name="Hryvinskyi_InvisibleCaptcha::form_login_popup"
+                  instance="Hryvinskyi\InvisibleCaptcha\Observer\Form\LoginPopup"/>
     </event>
     <event name="controller_action_predispatch_customer_account_createpost">
-        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
-                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\CustomerCreate"/>
+        <observer name="Hryvinskyi_InvisibleCaptcha::form_customer_create"
+                  instance="Hryvinskyi\InvisibleCaptcha\Observer\Form\CustomerCreate"/>
     </event>
     <event name="controller_action_predispatch_customer_account_forgotpasswordpost">
-        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
-                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\CustomerForgot"/>
+        <observer name="Hryvinskyi_InvisibleCaptcha::form_customer_forgot"
+                  instance="Hryvinskyi\InvisibleCaptcha\Observer\Form\CustomerForgot"/>
     </event>
     <event name="controller_action_predispatch_contact_index_post">
-        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
-                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\Contact"/>
+        <observer name="Hryvinskyi_InvisibleCaptcha::form_contact"
+                  instance="Hryvinskyi\InvisibleCaptcha\Observer\Form\Contact"/>
     </event>
     <event name="controller_action_predispatch_newsletter_subscriber_new">
-        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
-                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\Newsletter"/>
+        <observer name="Hryvinskyi_InvisibleCaptcha::form_newsletter"
+                  instance="Hryvinskyi\InvisibleCaptcha\Observer\Form\Newsletter"/>
     </event>
     <event name="controller_action_predispatch_sendfriend_product_sendmail">
-        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
-                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\SendFriend"/>
+        <observer name="Hryvinskyi_InvisibleCaptcha::form_send_friend"
+                  instance="Hryvinskyi\InvisibleCaptcha\Observer\Form\SendFriend"/>
     </event>
     <event name="controller_action_predispatch_review_product_post">
-        <observer name="Hryvinskyi_InvisibleCaptcha::invisible-captcha"
-                  instance="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Frontend\ProductReview" />
+        <observer name="Hryvinskyi_InvisibleCaptcha::form_product_review"
+                  instance="Hryvinskyi\InvisibleCaptcha\Observer\Form\ProductReview"/>
+    </event>
+    <event name="controller_action_predispatch_customer_account_editPost">
+        <observer name="Hryvinskyi_InvisibleCaptcha::form_customer_edit"
+                  instance="Hryvinskyi\InvisibleCaptcha\Observer\Form\CustomerEdit"/>
+    </event>
+    <event name="controller_action_predispatch_wishlist_index_send">
+        <observer name="Hryvinskyi_InvisibleCaptcha::form_wishlist"
+                  instance="Hryvinskyi\InvisibleCaptcha\Observer\Form\Wishlist"/>
+    </event>
+    <event name="controller_action_predispatch_checkout_cart_couponPost">
+        <observer name="Hryvinskyi_InvisibleCaptcha::form_coupon_code"
+                  instance="Hryvinskyi\InvisibleCaptcha\Observer\Form\CouponCode"/>
+    </event>
+    <event name="controller_action_predispatch_paypal_transparent_requestsecuretoken">
+        <observer name="Hryvinskyi_InvisibleCaptcha::form_paypal_payflowpro"
+                  instance="Hryvinskyi\InvisibleCaptcha\Observer\Form\PaypalPayflowpro"/>
+    </event>
+
+    <!-- =========================== Route protection ========================== -->
+    <event name="controller_action_predispatch">
+        <observer name="Hryvinskyi_InvisibleCaptcha::route_gate"
+                  instance="Hryvinskyi\InvisibleCaptcha\Observer\RouteGate"/>
+    </event>
+    <event name="http_response_send_before">
+        <observer name="Hryvinskyi_InvisibleCaptcha::route_http_context"
+                  instance="Hryvinskyi\InvisibleCaptcha\Observer\SetCaptchaHttpContext"/>
     </event>
 </config>

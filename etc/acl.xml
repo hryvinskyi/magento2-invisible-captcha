@@ -1,10 +1,9 @@
 <?xml version="1.0"?>
 <!--
-  ~ Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
-  ~ @author: <mailto:volodymyr@hryvinskyi.com>
-  ~ @github: <https://github.com/hryvinskyi>
+  ~ Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+  ~ Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+  ~ GitHub: https://github.com/hryvinskyi
   -->
-
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Acl/etc/acl.xsd">
     <acl>
@@ -13,8 +12,9 @@
                 <resource id="Magento_Backend::stores">
                     <resource id="Magento_Backend::stores_settings">
                         <resource id="Magento_Config::config">
-                            <resource id="Hryvinskyi_InvisibleCaptcha::invisible_captcha"
-                                      title="Google Invisible Captcha"/>
+                            <resource id="Hryvinskyi_InvisibleCaptcha::config"
+                                      title="Invisible Captcha &amp; Bot Protection"
+                                      sortOrder="100"/>
                         </resource>
                     </resource>
                 </resource>

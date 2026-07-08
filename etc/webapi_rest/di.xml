@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+  ~ Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+  ~ GitHub: https://github.com/hryvinskyi
+  -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Webapi\Controller\Rest\RequestValidator">
+        <plugin name="hryvinskyi_invisible_captcha_rest_validation"
+                type="Hryvinskyi\InvisibleCaptcha\Plugin\Webapi\RestValidationPlugin"/>
+    </type>
+</config>

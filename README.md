@@ -1,78 +1,149 @@
-# Google Invisible Captcha v3 for magento 2
+# Hryvinskyi_InvisibleCaptcha
 
-[![Latest Stable Version](https://poser.pugx.org/hryvinskyi/magento2-invisible-captcha/v/stable)](https://packagist.org/packages/hryvinskyi/magento2-invisible-captcha)
-[![Total Downloads](https://poser.pugx.org/hryvinskyi/magento2-invisible-captcha/downloads)](https://packagist.org/packages/hryvinskyi/magento2-invisible-captcha)
-[![PayPal donate button](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=volodymyr%40hryvinskyi%2ecom&lc=UA&item_name=Magento%202%20Invisible%20Captcha&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted "Donate once-off to this project using Paypal")
-[![Latest Unstable Version](https://poser.pugx.org/hryvinskyi/magento2-invisible-captcha/v/unstable)](https://packagist.org/packages/hryvinskyi/magento2-invisible-captcha)
-[![License](https://poser.pugx.org/hryvinskyi/magento2-invisible-captcha/license)](https://packagist.org/packages/hryvinskyi/magento2-invisible-captcha)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/?branch=master)
-[![Build Status](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/badges/build.png?b=master)](https://scrutinizer-ci.com/g/hryvinskyi/magento2-invisible-captcha/build-status/master)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhryvinskyi%2Fmagento2-invisible-captcha.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhryvinskyi%2Fmagento2-invisible-captcha?ref=badge_shield)
+Multi-provider invisible captcha **and** bot protection for Magento 2.
 
-Module version 2.0.\*||2.1.\*||2.2.\* support Magento 2.3.*  
-Module version 1.0.* support Magento 2.1.\*||2.2.\*
+Version 3 merges the former `Hryvinskyi_TurnstileProtection` module into a single,
+provider-agnostic extension that protects both **individual forms** and **whole
+routes**, using whichever CAPTCHA provider you configure.
 
-## Features
-1. Lazy Load, google page speed improvements
-2. Easy to add captcha to your custom form
-3. AJAX forms supported
-4. Knockout forms supported
-5. Refreshing invalid token after a long period of inactivity on the site and after ajax form submitted
+## Providers
 
-## Frontend Forms
- * Login
- * Register
- * Forgot password
- * Contact
- * Newsletter
- * Send to Friend
- 
+| Code | Provider | Mode |
+|------|----------|------|
+| `recaptcha_v2_checkbox` | Google reCAPTCHA v2 — "I'm not a robot" | visible checkbox |
+| `recaptcha_v2_invisible` | Google reCAPTCHA v2 — invisible badge | invisible |
+| `recaptcha_v3` | Google reCAPTCHA v3 | invisible, score-based |
+| `recaptcha_enterprise` | Google reCAPTCHA Enterprise | invisible, score-based (assessments API) |
+| `turnstile` | Cloudflare Turnstile | managed / invisible |
 
-## Backend Forms
- * Login
- * Forgot password
+## Capabilities
 
-## Installation Guide
-### Install by composer
-```
+- **Form protection** — invisibly protects the same surface as Magento's native
+  reCAPTCHA suite: customer **login** (incl. AJAX popup & checkout), **register**,
+  **forgot password**, **account edit**, **contact**, **newsletter**,
+  **send-to-friend**, **product review**, **share wishlist**, **apply coupon**
+  (cart), **PayPal Payflow Pro**, and the admin **login** / **forgot-password**
+  forms. Each is toggled independently; score-based providers also support a
+  per-form threshold.
+- **WebAPI / headless protection** — REST and GraphQL validation for
+  **place order**, **apply coupon** (checkout), **in-store pickup place order**,
+  and **resend confirmation email**. Protected endpoints require the captcha
+  token in the `X-Captcha-Token` request header (`X-ReCaptcha` also accepted).
+  A `hryvinskyiInvisibleCaptchaConfig(formType:)` GraphQL query exposes the
+  active provider's client config for headless storefronts. Endpoint coverage is
+  extensible via `Api\Webapi\WebapiConfigProviderInterface`.
+- **Route protection** — a full-page interstitial challenge for requests that
+  match a Cloudflare-style rule expression (field / operator / value rows joined
+  by AND/OR). A verified visitor receives an HMAC-signed cookie and is keyed into
+  a separate Varnish cache bucket via the HTTP context. An optional **fallback
+  provider** is revealed on the challenge page after a delay. The interstitial is
+  a self-contained, system-font page (no external font/CDN requests) whose accent
+  color is themeable from the admin.
+
+## Installation
+
+```bash
 composer require hryvinskyi/magento2-invisible-captcha
-bin/magento module:enable Hryvinskyi_Base
 bin/magento module:enable Hryvinskyi_InvisibleCaptcha
 bin/magento setup:upgrade
+bin/magento setup:di:compile
+bin/magento setup:static-content:deploy
 ```
 
-### Install download package
-1. Download module https://github.com/hryvinskyi/magento2-base [Link](https://github.com/hryvinskyi/magento2-base/archive/v1.1.2.zip)
-2. Download this module [Link](https://github.com/hryvinskyi/magento2-invisible-captcha/archive/2.0.4.zip)
-3. Unzip two modules in the folder app\code\Hryvinskyi\Base and app\code\Hryvinskyi\InvisibleCaptcha
-4. Run commands:
+Dependencies: `hryvinskyi/magento2-base`, `hryvinskyi/magento2-theme-assets`,
+`symfony/http-client` + PSR-7/17/18.
 
-    ```
-    bin/magento module:enable Hryvinskyi_Base
-    bin/magento module:enable Hryvinskyi_InvisibleCaptcha
-    bin/magento setup:upgrade
-    ```
-5. Configure module in admin panel
+## Configuration
 
-### Command-line:
+*Stores → Configuration → Hryvinskyi → Invisible Captcha & Bot Protection*
+(`hryvinskyi_invisible_captcha/*`):
 
+- **General** — master switch, active provider, lazy-load, disable-submit, debug.
+- **Provider Credentials** — site/secret keys (+ Enterprise project id, widget
+  options) per provider. Secret keys are encrypted and flagged sensitive.
+- **Form Protection** — per-form toggles and score thresholds (storefront + admin).
+- **Route Protection** — rules editor, route-gate provider override, fallback
+  provider, cookie lifetime, IP / user-agent exclusions, AJAX-marker params, etc.
+  Includes a **Challenge Page Appearance** sub-group that themes the interstitial
+  accent palette — `primary_color` (#2f6bd8), `primary_color_deep` (#2557b6) and
+  `primary_color_soft` (rgba(47,107,216,0.12)) under
+  `hryvinskyi_invisible_captcha/route_protection/appearance/*`, injected as
+  CSP-safe `--primary*` overrides and configurable per store view.
+- **Advanced** — outbound verification HTTP timeout.
+
+## Architecture (extension points)
+
+- `Api\Provider\ProviderInterface` + `ProviderPoolInterface` — add a provider by
+  implementing the interface and adding it to the `Model\Provider\Pool` DI array.
+- `Api\Verification\VerifierInterface` / `VerificationRequestInterface` /
+  `VerificationResultInterface` — provider-agnostic verification.
+- `Api\Filter\FieldProviderInterface` / `OperatorProviderInterface` — extend the
+  route rule engine with custom fields/operators via DI arrays.
+- `Model\Strategy\{Token,Failure}\*` — pluggable token extraction & failure handling.
+
+## WebAPI / checkout note
+
+The `place_order`, `coupon_code` (checkout), `store_pickup` and
+`resend_confirmation_email` keys validate **server-side** on the WebAPI/GraphQL
+call. They are **off by default**. Before enabling one, make sure your storefront
+/ headless client sends the captcha token in the `X-Captcha-Token` header on that
+call (for score-based providers, execute the provider with the matching action,
+e.g. `place_order`) — otherwise those requests will be rejected. The token for
+form-level (non-WebAPI) submissions is handled automatically via the hidden
+`hryvinskyi_invisible_token` field.
+
+## Verify endpoint & caching
+
+The route-gate challenge POSTs to `invisiblecaptcha/verify`. On success it sets the
+`hryvinskyi_captcha_verified` cookie and the `CAPTCHA_VERIFIED` HTTP-context vary
+key. After deploying v3, run a **full page cache flush** (the vary key / cookie /
+`X-InvisibleCaptcha-Challenge` header were renamed from the old Turnstile names).
+
+## Upgrading from v2.x / TurnstileProtection
+
+Run `setup:upgrade`. The data patch `MigrateLegacyCaptchaConfig` copies your old
+`hryvinskyi_invisible_captcha/*` (reCAPTCHA v3) **and** `hryvinskyi_turnstile/*`
+settings into the new tree (encrypting the legacy plaintext v3 secret). The
+standalone `Hryvinskyi_TurnstileProtection` module is removed — disable it after
+upgrading.
+
+## Migrating from Magento's native Google reCAPTCHA
+
+If the store already uses Magento's built-in Google reCAPTCHA (`Magento_ReCaptcha*`),
+import its configuration into this module with:
+
+```bash
+bin/magento hryvinskyi:invisible-captcha:migrate-recaptcha --dry-run   # preview the change set
+bin/magento hryvinskyi:invisible-captcha:migrate-recaptcha             # apply
 ```
-php bin/magento hryvinskyi:invisible-captcha:disable <area> --website_id=<website_id>
+
+The command reads every `recaptcha_frontend/*` and `recaptcha_backend/*` row from
+`core_config_data` (all scopes) and writes the equivalent
+`hryvinskyi_invisible_captcha/*` settings:
+
+- **Credentials** — v3, v2-checkbox and v2-invisible site/secret keys map to the
+  matching provider under *Provider Credentials*. Secret keys are copied verbatim
+  (both modules encrypt with `Config\Backend\Encrypted`, so the ciphertext stays
+  valid). Frontend keys win when frontend and backend differ.
+- **Per-form selectors** — each `type_for/<form>` that isn't "disabled" turns on the
+  corresponding form under *Form Protection* (the native `place_order` gate enables
+  both checkout **and** in-store pickup here). The v3 section-wide score threshold is
+  fanned out to each enabled v3 form.
+- **Derived** — the active provider (most-used across the enabled forms), the master
+  switch and the form-protection switches are set so protection stays live.
+
+Existing values in the target tree are never overwritten unless you pass `--force`.
+The command flushes the config cache and prints a per-path summary table.
+
+To actually **remove** the native reCAPTCHA modules, require the companion
+metapackage `hryvinskyi/magento2-invisible-captcha-recaptcha-replace`, which
+`replace`s every `magento/module-re-captcha-*` package (Two-Factor Auth and
+`security.txt` from `magento/security-package` are left untouched). This module does
+not replace core modules on its own — the swap is opt-in.
+
+## CLI
+
+```bash
+bin/magento hryvinskyi:invisible-captcha:disable [global|frontend|adminhtml] [--website_id=N]
+bin/magento hryvinskyi:invisible-captcha:migrate-recaptcha [--dry-run] [--force]
 ```
-
-This command will disable invisible captcha for the area and/or website_id.
-
- * area = [global, frontend, adminhtml]
- * website_id = ID Website
-
-# General Settings
-
-[![Configuration](https://raw.githubusercontent.com/hryvinskyi/magento2-invisible-captcha/master/screenshots/admin_configuration.pngs)](https://raw.githubusercontent.com/hryvinskyi/magento2-invisible-captcha/master/screenshots/admin_configuration.png)
-
-
-## LazyLoad Speed Test
-[![LazyLoad Speed](https://raw.githubusercontent.com/hryvinskyi/magento2-invisible-captcha/master/screenshots/lazy_load.jpg)](https://raw.githubusercontent.com/hryvinskyi/magento2-invisible-captcha/master/screenshots/lazy_load.jpg)
-
-
-## License
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhryvinskyi%2Fmagento2-invisible-captcha.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhryvinskyi%2Fmagento2-invisible-captcha?ref=badge_large)

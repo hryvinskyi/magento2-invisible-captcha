@@ -1,0 +1,22 @@
+# Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+# Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+
+type Query {
+    hryvinskyiInvisibleCaptchaConfig(
+        formType: String @doc(description: "Captcha form key, e.g. place_order, customer_login.")
+    ): HryvinskyiInvisibleCaptchaConfig
+    @resolver(class: "Hryvinskyi\\InvisibleCaptcha\\Model\\Resolver\\CaptchaConfig")
+    @doc(description: "Active captcha provider client configuration for a given form type.")
+    @cache(cacheable: false)
+}
+
+type HryvinskyiInvisibleCaptchaConfig {
+    is_enabled: Boolean @doc(description: "Whether captcha is active for the requested form.")
+    provider: String @doc(description: "Active provider code.")
+    site_key: String @doc(description: "Public site key for the active provider.")
+    response_param: String @doc(description: "Native response parameter name emitted by the widget.")
+    script_url: String @doc(description: "Provider browser API script URL.")
+    is_score_based: Boolean @doc(description: "Whether the provider returns a risk score.")
+    action: String @doc(description: "Action name to execute for score-based providers.")
+    score_threshold: Float @doc(description: "Score threshold applied server-side for score-based providers.")
+}

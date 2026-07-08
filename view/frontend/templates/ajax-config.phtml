@@ -1,0 +1,18 @@
+<?php
+/**
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
+ */
+
+/** @var \Hryvinskyi\InvisibleCaptcha\Block\Frontend\AjaxConfig $block */
+/** @var \Magento\Framework\Escaper $escaper */
+
+// The inline config blob MUST execute before ajax-fallback.js, because the JS
+// reads window.hryvinskyiCaptchaAjaxConfig at the very top of its IIFE.
+// Browsers run inline + classic <script src> tags in source order, so we emit
+// the config first and the script tag immediately after.
+$scriptUrl = $block->getViewFileUrl('Hryvinskyi_InvisibleCaptcha::js/ajax-fallback.js');
+?>
+<script>window.hryvinskyiCaptchaAjaxConfig = <?= /* @noEscape */ $block->getConfigJson() ?>;</script>
+<script src="<?= $escaper->escapeUrl($scriptUrl) ?>"></script>

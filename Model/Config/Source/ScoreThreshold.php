@@ -1,10 +1,9 @@
 <?php
 /**
- * Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
- * @author: <mailto:volodymyr@hryvinskyi.com>
- * @github: <https://github.com/hryvinskyi>
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
  */
-
 declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Model\Config\Source;
@@ -12,74 +11,21 @@ namespace Hryvinskyi\InvisibleCaptcha\Model\Config\Source;
 use Magento\Framework\Data\OptionSourceInterface;
 
 /**
- * Class ScoreThreshold
+ * Score threshold options (0.1–0.9) for score-based providers.
  */
 class ScoreThreshold implements OptionSourceInterface
 {
     /**
-     * Options getter
-     *
-     * @return array
+     * @inheritDoc
      */
-    public function toOptionArray()
+    public function toOptionArray(): array
     {
-        return [
-            [
-                'value' => 0.1,
-                'label' => 0.1
-            ],
-            [
-                'value' => 0.2,
-                'label' => 0.2
-            ],
-            [
-                'value' => 0.3,
-                'label' => 0.3
-            ],
-            [
-                'value' => 0.4,
-                'label' => 0.4
-            ],
-            [
-                'value' => 0.5,
-                'label' => 0.5
-            ],
-            [
-                'value' => 0.6,
-                'label' => 0.6
-            ],
-            [
-                'value' => 0.7,
-                'label' => 0.7
-            ],
-            [
-                'value' => 0.8,
-                'label' => 0.8
-            ],
-            [
-                'value' => 0.9,
-                'label' => 0.9
-            ]
-        ];
-    }
+        $options = [];
+        foreach (range(1, 9) as $tenth) {
+            $value = $tenth / 10;
+            $options[] = ['value' => (string)$value, 'label' => (string)$value];
+        }
 
-    /**
-     * Get options in "key-value" format
-     *
-     * @return array
-     */
-    public function toArray()
-    {
-        return [
-            '0.1' => 0.1,
-            '0.2' => 0.2,
-            '0.3' => 0.3,
-            '0.4' => 0.4,
-            '0.5' => 0.5,
-            '0.6' => 0.6,
-            '0.7' => 0.7,
-            '0.8' => 0.8,
-            '0.9' => 0.9,
-        ];
+        return $options;
     }
 }

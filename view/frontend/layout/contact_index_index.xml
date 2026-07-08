@@ -11,7 +11,7 @@
         <referenceContainer name="form.additional.info">
             <block class="Hryvinskyi\InvisibleCaptcha\Block\Captcha" name="invisible.recaptcha" after="-"
                    template="Hryvinskyi_InvisibleCaptcha::captcha.phtml"
-                   ifconfig="hryvinskyi_invisible_captcha/frontend/enabledContact">
+                   ifconfig="hryvinskyi_invisible_captcha/form_protection/frontend/enabled_contact">
                 <arguments>
                     <argument name="jsLayout" xsi:type="array">
                         <item name="components" xsi:type="array">

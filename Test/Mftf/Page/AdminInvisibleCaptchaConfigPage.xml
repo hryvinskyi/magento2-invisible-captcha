@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
+ */
+-->
+<pages xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Page/etc/PageObject.xsd">
+    <page name="AdminInvisibleCaptchaConfigPage"
+          url="admin/system_config/edit/section/hryvinskyi_invisible_captcha"
+          area="admin"
+          module="Hryvinskyi_InvisibleCaptcha">
+        <section name="InvisibleCaptchaConfigSection"/>
+    </page>
+</pages>

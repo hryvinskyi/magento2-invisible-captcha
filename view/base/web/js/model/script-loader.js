@@ -1,10 +1,19 @@
 /**
- * Copyright (c) 2025. MageCloud.  All rights reserved.
- * @author: Volodymyr Hryvinskyi <mailto:volodymyr@hryvinskyi.com>
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
  */
 
 /**
- * Script Loader - Handles reCAPTCHA script loading
+ * Script Loader.
+ *
+ * Coordinates a single load of a provider's API script per page and exposes a
+ * namespaced onload callback. Load state lives in the shared model keyed by
+ * provider, so multiple forms using the same provider share one download, while
+ * different providers stay isolated.
+ *
+ * On load completion a `captcha_api_ready_<provider>` window event is fired;
+ * each form component listens for its own provider's event.
  */
 define([
     'jquery',
@@ -12,53 +21,50 @@ define([
 ], function ($, captchaModel) {
     'use strict';
 
-    const RECAPTCHA_API_URL = 'https://www.google.com/recaptcha/api.js';
+    return function (strategy, config) {
+        const provider = config.provider;
+        const readyEvent = 'captcha_api_ready_' + provider;
 
-    return function (captchaId, siteKey, formManager) {
         return {
             /**
-             * Initialize reCAPTCHA loading
+             * Register the namespaced onload callback. If the provider API is
+             * already loaded (e.g. by another widget), re-fire the ready event.
              */
             initialize: function () {
-                if (captchaModel.isApiLoad()) {
-                    $(window).trigger(`recaptcha_api_ready_${captchaId}`);
+                if (captchaModel.isApiLoaded(provider)) {
+                    $(window).trigger(readyEvent);
                     return;
                 }
 
-                window.onloadCallbackGoogleRecapcha = () => {
-                    captchaModel.isApiLoaded(true);
+                const callbackName = strategy.getOnloadCallbackName();
 
-                    // Process all pending forms
-                    captchaModel.initializeForms().forEach(item => {
-                        if (item.self && item.self.formManager) {
-                            const $container = $(item.element);
-                            const $form = $container.closest('form');
-                            item.self.formManager.activateForm($form, $container);
-                        }
-                    });
-
-                    // Clear the queue
-                    captchaModel.initializeForms.removeAll();
-
-                    $(window).trigger(`recaptcha_api_ready_${captchaId}`);
-                };
-            },
-
-            /**
-             * Load reCAPTCHA script
-             */
-            loadScript: function () {
-                if (!captchaModel.isApiLoaded() && !captchaModel.isApiLoad()) {
-                    captchaModel.isApiLoad(true);
-                    require([`${RECAPTCHA_API_URL}?onload=onloadCallbackGoogleRecapcha&render=${siteKey}`]);
+                // Only the first widget for a provider installs the global callback.
+                if (typeof window[callbackName] !== 'function') {
+                    window[callbackName] = function () {
+                        captchaModel.setApiLoaded(provider, true);
+                        captchaModel.setApiLoading(provider, false);
+                        $(window).trigger(readyEvent);
+                    };
                 }
             },
 
             /**
-             * Check if API is ready
+             * Load the provider API script exactly once per provider.
+             */
+            loadScript: function () {
+                if (captchaModel.isApiLoaded(provider) || captchaModel.isApiLoading(provider)) {
+                    return;
+                }
+
+                captchaModel.setApiLoading(provider, true);
+                strategy.loadScript();
+            },
+
+            /**
+             * Whether the provider API has finished loading.
              */
             isApiReady: function () {
-                return captchaModel.isApiLoaded();
+                return captchaModel.isApiLoaded(provider);
             }
         };
     };

@@ -1,36 +1,42 @@
 <?php
 /**
- * Copyright (c) 2019-2025. Volodymyr Hryvinskyi.  All rights reserved.
- * @author: <mailto:volodymyr@hryvinskyi.com>
- * @github: <https://github.com/hryvinskyi>
- */
-
-/**
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
+ *
  * @var \Hryvinskyi\InvisibleCaptcha\Block\Captcha $block
  * @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
  */
 ?>
-<div class="field-recaptcha" data-hryvinskyi-recaptcha="default"
-     id="<?php echo $block->getWidgetId() ?>" data-bind="scope:'<?php echo $block->getScope() ?>'">
+<div class="field-recaptcha" data-hryvinskyi-captcha="default"
+     id="<?= $block->escapeHtmlAttr($block->getWidgetId()) ?>"
+     data-bind="scope:'<?= $block->escapeHtmlAttr($block->getScope()) ?>'">
     <!-- ko template: getTemplate() --><!-- /ko -->
     <?php if ($block->isHideBadge()): ?>
-    <?= $secureRenderer->renderTag('style', [], '.grecaptcha-badge {display:none;}', false) ?>
-    <div class="hint"><?= $block->getHideBadgeText() ?></div>
+        <?= $secureRenderer->renderTag('style', [], '.grecaptcha-badge {display:none;}', false) ?>
+        <div class="hint"><?= /* @noEscape */ $block->getHideBadgeText() ?></div>
     <?php endif; ?>
 </div>
-<?php if ($block->isLazyLoad()): ?>
+<?php if ($block->isDisabledSubmitForm() || $block->isLazyLoad()): ?>
     <?php
+    /*
+     * Disable the submit button until the captcha client is ready, with CSS + a
+     * tiny parse-time script (no server-side HTML rewriting). The script adds the
+     * `hryvinskyi-captcha-disabled-submit` class to the surrounding form; the CSS
+     * in view/base/web/css/source/_module.less makes the submit button
+     * unclickable while that class is present. form-manager.js removes the class
+     * once the captcha is ready. The marker div is inside the form, so closest()
+     * resolves synchronously at parse time.
+     */
     $scriptContent = <<<JS
 (() => {
     const field = document.getElementById('{$block->getWidgetId()}');
-    const form = field.closest('form');
-
+    const form = field ? field.closest('form') : null;
     if (form !== null) {
-        form.classList.add('hryvinskyi-recaptcha-disabled-submit');
+        form.classList.add('hryvinskyi-captcha-disabled-submit');
     }
 })();
 JS;
-
     echo $secureRenderer->renderTag(
         'script',
         [
@@ -44,8 +50,8 @@ JS;
 <?php endif; ?>
 <script type="text/x-magento-init">
 {
-    "#<?php echo $block->getWidgetId() ?>": {
-        "Magento_Ui/js/core/app": <?php /* @escapeNotVerified */ echo $block->getJsLayout();?>
+    "#<?= $block->escapeHtmlAttr($block->getWidgetId()) ?>": {
+        "Magento_Ui/js/core/app": <?= /* @noEscape */ $block->getJsLayout() ?>
     }
 }
 </script>

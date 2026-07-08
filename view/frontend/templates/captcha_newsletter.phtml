@@ -1,31 +1,29 @@
 <?php
 /**
- * Copyright (c) 2019-2025. Volodymyr Hryvinskyi.  All rights reserved.
- * @author: <mailto:volodymyr@hryvinskyi.com>
- * @github: <https://github.com/hryvinskyi>
- */
-
-/**
- * @var \Hryvinskyi\InvisibleCaptcha\Block\Captcha $block
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
+ *
+ * @var \Hryvinskyi\InvisibleCaptcha\Block\CaptchaNewsletter $block
  * @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer
  */
 
 $scriptContent = <<<JS
-document.getElementById('newsletter-validate-detail')
-        .appendChild(document.getElementById('{$block->getWidgetId()}'));
+(() => {
+    const widget = document.getElementById('{$block->getWidgetId()}');
+    const target = document.getElementById('newsletter-validate-detail');
+    if (widget && target) {
+        target.appendChild(widget);
+    }
+})();
 JS;
-echo $secureRenderer->renderTag(
-    'script',
-    [],
-    $scriptContent,
-    false
-);
+echo $secureRenderer->renderTag('script', [], $scriptContent, false);
 ?>
 <div
     class="field-recaptcha"
-    data-hryvinskyi-recaptcha="target"
-    data-hryvinskyi-recaptcha-target="form#newsletter-validate-detail"
-    id="<?= /* @noEscape */ $block->getWidgetId() ?>"
+    data-hryvinskyi-captcha="target"
+    data-hryvinskyi-captcha-target="form#newsletter-validate-detail"
+    id="<?= $block->escapeHtmlAttr($block->getWidgetId()) ?>"
     data-bind="scope:'invisible-captcha-newsletter'"
     data-form-id="newsletter-validate-detail"
 >
@@ -33,7 +31,7 @@ echo $secureRenderer->renderTag(
 </div>
 <script type="text/x-magento-init">
 {
-    "#<?= /* @noEscape */ $block->getWidgetId() ?>": {
+    "#<?= $block->escapeHtmlAttr($block->getWidgetId()) ?>": {
         "Magento_Ui/js/core/app": <?= /* @noEscape */ $block->getJsLayout() ?>
     }
 }

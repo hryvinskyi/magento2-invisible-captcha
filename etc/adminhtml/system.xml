@@ -1,247 +1,450 @@
 <?xml version="1.0"?>
 <!--
-  ~ Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
-  ~ @author: <mailto:volodymyr@hryvinskyi.com>
-  ~ @github: <https://github.com/hryvinskyi>
+  ~ Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+  ~ Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+  ~ GitHub: https://github.com/hryvinskyi
   -->
-
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="urn:magento:framework:Config/etc/system_file.xsd">
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
     <system>
-        <section id="hryvinskyi_invisible_captcha" translate="label" type="text" sortOrder="10" showInDefault="1"
-                 showInWebsite="1" showInStore="0">
-            <label>Google Invisible Captcha</label>
+        <tab id="hryvinskyi" translate="label" sortOrder="300">
+            <label>Hryvinskyi Extensions</label>
+        </tab>
+        <section id="hryvinskyi_invisible_captcha" translate="label" type="text" sortOrder="100"
+                 showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Invisible Captcha &amp; Bot Protection</label>
             <tab>hryvinskyi</tab>
-            <resource>Hryvinskyi_InvisibleCaptcha::invisible_captcha</resource>
-            <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1">
+            <resource>Hryvinskyi_InvisibleCaptcha::config</resource>
+
+            <!-- ============================== General ============================== -->
+            <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>General Settings</label>
-                <field id="enabledCaptcha" translate="label comment" type="select" sortOrder="20" showInDefault="1"
-                       showInWebsite="1">
-                    <label>Enable invisible captcha</label>
+                <field id="enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Module</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Master switch for captcha protection (form-level and route-level).</comment>
                 </field>
-                <field id="captchaSiteKey" translate="label comment" type="text" sortOrder="30" showInDefault="1"
-                       showInWebsite="1">
-                    <label>Site key</label>
-                    <comment>
-                        <![CDATA[
-                            You can generate site key <a href="https://www.google.com/recaptcha/admin"
-                            target="_blank">here</a>
-                        ]]>
-                    </comment>
-                    <depends>
-                        <field id="enabledCaptcha">1</field>
-                    </depends>
+                <field id="active_provider" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Active Provider</label>
+                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\Provider</source_model>
+                    <comment>The captcha provider used for form-level protection (and route gating unless overridden).</comment>
+                    <depends><field id="enabled">1</field></depends>
                 </field>
-                <field id="captchaSecretKey" translate="label comment" type="password" sortOrder="40" showInDefault="1"
-                       showInWebsite="1">
-                    <label>Secret key</label>
-                    <comment>
-                        <![CDATA[
-                            You can generate secret key <a href="https://www.google.com/recaptcha/admin"
-                                target="_blank">here</a>
-                        ]]>
-                    </comment>
-                    <depends>
-                        <field id="enabledCaptcha">1</field>
-                    </depends>
-                </field>
-                <field id="useLazyLoad" translate="label comment" type="select" sortOrder="50" showInDefault="1"
-                       showInWebsite="1">
-                    <label>Lazy load recaptcha</label>
+                <field id="use_lazy_load" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1">
+                    <label>Lazy Load Provider Script</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <comment>
-                        <![CDATA[
-                            If enable google recptcha load after form elements on focus, blur or change
-                        ]]>
-                    </comment>
+                    <comment>Load the provider API script after first form interaction (focus/blur/change).</comment>
+                    <depends><field id="enabled">1</field></depends>
                 </field>
-                <field id="disableSubmitForm" translate="label comment" type="select" sortOrder="50" showInDefault="1"
-                       showInWebsite="1">
-                    <label>Disable submit form</label>
+                <field id="disable_submit_form" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1">
+                    <label>Disable Submit Until Ready</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <comment>Disable form submit before loading recaptcha</comment>
+                    <comment>Disable form submit until the captcha token is available.</comment>
+                    <depends><field id="enabled">1</field></depends>
                 </field>
-                <field id="hideBadge" translate="label comment" type="select" sortOrder="60" showInDefault="1"
-                       showInWebsite="1">
-                    <label>Hide ReCaptha badge</label>
+                <field id="debug" translate="label comment" type="select" sortOrder="1000" showInDefault="1">
+                    <label>Debug Logging</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <comment>
-                        <![CDATA[You are allowed to hide the badge as long as you include the reCAPTCHA branding visibly in the user flow. We include this following text:<br>
-<code>This site is protected by reCAPTCHA and the Google
-    <a href="https://policies.google.com/privacy">Privacy Policy</a> and
-    <a href="https://policies.google.com/terms">Terms of Service</a> apply.</code><br>
-For example:<br>
-<img src="https://developers.google.com/static/recaptcha/images/text_badge_example.png" alt="reCAPTCHA">
-                        ]]>
-                    </comment>
-                </field>
-                <field id="hideBadgeText" translate="label comment" type="textarea" sortOrder="70" showInDefault="1"
-                       showInWebsite="1">
-                    <label>Hide badge text</label>
-                    <depends>
-                        <field id="hideBadge">1</field>
-                    </depends>
-                </field>
-                <field id="debug" translate="label" type="select" sortOrder="1000" showInDefault="1">
-                    <label>Debugging</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Log verification and challenge events to var/log/invisible_captcha.log.</comment>
                 </field>
             </group>
-            <group id="frontend" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1"
-                   showInStore="1">
-                <label>Frontend</label>
-                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1"
-                       showInStore="0">
-                    <label>Enable invisible captcha in frontend</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                </field>
-                <field id="enabledCustomerLogin" translate="label" type="select" sortOrder="20" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Use in login</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="scoreThresholdCustomerLogin" translate="label" type="select" sortOrder="30" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Login Score Threshold</label>
-                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
-                    <depends>
-                        <field id="enabledCustomerLogin">1</field>
-                    </depends>
-                </field>
-                <field id="enabledCustomerCreate" translate="label" type="select" sortOrder="40" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Use in Create user</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="scoreThresholdCustomerCreate" translate="label" type="select" sortOrder="50" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Create User Score Threshold</label>
-                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
-                    <depends>
-                        <field id="enabledCustomerCreate">1</field>
-                    </depends>
-                </field>
-                <field id="enabledCustomerForgot" translate="label" type="select" sortOrder="60" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Use in Forgot password</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="scoreThresholdCustomerForgot" translate="label" type="select" sortOrder="70" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Forgot Password Score Threshold</label>
-                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
-                    <depends>
-                        <field id="enabledCustomerForgot">1</field>
-                    </depends>
-                </field>
-                <field id="enabledContact" translate="label" type="select" sortOrder="80" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Use in Contact</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="scoreThresholdContact" translate="label" type="select" sortOrder="90" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Contact Score Threshold</label>
-                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
-                    <depends>
-                        <field id="enabledContact">1</field>
-                    </depends>
-                </field>
-                <field id="enabledNewsletter" translate="label" type="select" sortOrder="100" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Use in Newsletter</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="scoreThresholdNewsletter" translate="label" type="select" sortOrder="110" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Newsletter Score Threshold</label>
-                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
-                    <depends>
-                        <field id="enabledNewsletter">1</field>
-                    </depends>
-                </field>
-                <field id="enabledSendFriend" translate="label" type="select" sortOrder="120" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Use in Send To Friend</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="scoreThresholdSendFriend" translate="label" type="select" sortOrder="130" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Send To Friend Score Threshold</label>
-                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
-                    <depends>
-                        <field id="enabledSendFriend">1</field>
-                    </depends>
-                </field>
-                <field id="enabledProductReview" translate="label" type="select" sortOrder="140" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Use in Product Review</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <depends>
-                        <field id="enabled">1</field>
-                    </depends>
-                </field>
-                <field id="scoreThresholdProductReview" translate="label" type="select" sortOrder="150" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Product Review Score Threshold</label>
-                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
-                    <depends>
-                        <field id="enabledProductReview">1</field>
-                    </depends>
-                </field>
+
+            <!-- ========================= Provider Credentials ===================== -->
+            <!--
+                Nested per-provider sub-groups produce the natural config paths
+                hryvinskyi_invisible_captcha/providers/<code>/<field> read by ProviderConfig.
+                (A flat <config_path> can't be used here — the schema restricts it to 3 segments.)
+            -->
+            <group id="providers" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                <label>Provider Credentials</label>
+                <comment>Configure keys for each provider you intend to use. Generate reCAPTCHA keys at google.com/recaptcha/admin and Turnstile keys at dash.cloudflare.com.</comment>
+
+                <group id="recaptcha_v3" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Google reCAPTCHA v3</label>
+                    <field id="site_key" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1">
+                        <label>Site Key</label>
+                    </field>
+                    <field id="secret_key" translate="label" type="obscure" sortOrder="20" showInDefault="1" showInWebsite="1">
+                        <label>Secret Key</label>
+                        <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    </field>
+                    <field id="hide_badge" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1">
+                        <label>Hide Badge</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <comment><![CDATA[You may hide the badge only if you include the reCAPTCHA branding visibly in the user flow (see the badge text below).]]></comment>
+                    </field>
+                    <field id="hide_badge_text" translate="label" type="textarea" sortOrder="40" showInDefault="1" showInWebsite="1">
+                        <label>Badge Text</label>
+                        <depends><field id="hide_badge">1</field></depends>
+                    </field>
+                </group>
+
+                <group id="recaptcha_v2_checkbox" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Google reCAPTCHA v2 (Checkbox)</label>
+                    <field id="site_key" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1">
+                        <label>Site Key</label>
+                    </field>
+                    <field id="secret_key" translate="label" type="obscure" sortOrder="20" showInDefault="1" showInWebsite="1">
+                        <label>Secret Key</label>
+                        <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    </field>
+                    <field id="theme" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1">
+                        <label>Theme</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\Recaptcha\Theme</source_model>
+                    </field>
+                    <field id="size" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1">
+                        <label>Size</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\Recaptcha\V2Size</source_model>
+                    </field>
+                </group>
+
+                <group id="recaptcha_v2_invisible" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Google reCAPTCHA v2 (Invisible)</label>
+                    <field id="site_key" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1">
+                        <label>Site Key</label>
+                    </field>
+                    <field id="secret_key" translate="label" type="obscure" sortOrder="20" showInDefault="1" showInWebsite="1">
+                        <label>Secret Key</label>
+                        <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    </field>
+                </group>
+
+                <group id="recaptcha_enterprise" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Google reCAPTCHA Enterprise</label>
+                    <field id="site_key" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1">
+                        <label>Site Key</label>
+                    </field>
+                    <field id="secret_key" translate="label comment" type="obscure" sortOrder="20" showInDefault="1" showInWebsite="1">
+                        <label>API Key</label>
+                        <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                        <comment>Google Cloud API key with reCAPTCHA Enterprise API access.</comment>
+                    </field>
+                    <field id="project_id" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1">
+                        <label>Project ID</label>
+                        <comment>Google Cloud project ID hosting the Enterprise key.</comment>
+                    </field>
+                </group>
+
+                <group id="turnstile" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Cloudflare Turnstile</label>
+                    <field id="site_key" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1">
+                        <label>Site Key</label>
+                    </field>
+                    <field id="secret_key" translate="label" type="obscure" sortOrder="20" showInDefault="1" showInWebsite="1">
+                        <label>Secret Key</label>
+                        <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    </field>
+                    <field id="widget_size" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1">
+                        <label>Widget Size</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\Turnstile\WidgetSize</source_model>
+                    </field>
+                    <field id="widget_appearance" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1">
+                        <label>Widget Appearance</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\Turnstile\WidgetAppearance</source_model>
+                    </field>
+                </group>
             </group>
-            <group id="backend" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0"
-                   showInStore="0">
-                <label>Backend</label>
-                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0"
-                       showInStore="0">
-                    <label>Enable invisible captcha in backend</label>
+
+            <!-- ========================== Form Protection ========================= -->
+            <group id="form_protection" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
+                <label>Form Protection</label>
+                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1">
+                    <label>Enable Form Protection</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="enabledLogin" translate="label" type="select" sortOrder="20" showInDefault="1"
-                       showInWebsite="1" showInStore="0">
-                    <label>Enable in login page</label>
+                <group id="frontend" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Storefront Forms</label>
+                    <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1">
+                        <label>Enable Storefront Form Protection</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="*/enabled">1</field></depends>
+                    </field>
+                    <field id="enabled_customer_login" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Customer Login</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_customer_login" translate="label comment" type="select" sortOrder="25" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Customer Login — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <comment>Only applies to reCAPTCHA v3 / Enterprise.</comment>
+                        <depends><field id="enabled_customer_login">1</field></depends>
+                    </field>
+                    <field id="enabled_customer_create" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Customer Registration</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_customer_create" translate="label" type="select" sortOrder="35" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Customer Registration — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <depends><field id="enabled_customer_create">1</field></depends>
+                    </field>
+                    <field id="enabled_customer_forgot" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Forgot Password</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_customer_forgot" translate="label" type="select" sortOrder="45" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Forgot Password — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <depends><field id="enabled_customer_forgot">1</field></depends>
+                    </field>
+                    <field id="enabled_contact" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Contact Form</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_contact" translate="label" type="select" sortOrder="55" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Contact Form — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <depends><field id="enabled_contact">1</field></depends>
+                    </field>
+                    <field id="enabled_newsletter" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Newsletter Subscription</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_newsletter" translate="label" type="select" sortOrder="65" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Newsletter — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <depends><field id="enabled_newsletter">1</field></depends>
+                    </field>
+                    <field id="enabled_send_friend" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Send to Friend</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_send_friend" translate="label" type="select" sortOrder="75" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Send to Friend — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <depends><field id="enabled_send_friend">1</field></depends>
+                    </field>
+                    <field id="enabled_product_review" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Product Review</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_product_review" translate="label" type="select" sortOrder="85" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Product Review — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <depends><field id="enabled_product_review">1</field></depends>
+                    </field>
+                    <field id="enabled_customer_edit" translate="label" type="select" sortOrder="90" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Customer Account Edit</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_customer_edit" translate="label" type="select" sortOrder="95" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Customer Account Edit — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <depends><field id="enabled_customer_edit">1</field></depends>
+                    </field>
+                    <field id="enabled_wishlist" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Share Wishlist</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_wishlist" translate="label" type="select" sortOrder="105" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Share Wishlist — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <depends><field id="enabled_wishlist">1</field></depends>
+                    </field>
+                    <field id="enabled_coupon_code" translate="label comment" type="select" sortOrder="110" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Apply Coupon Code</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <comment>Protects both the cart coupon form and the checkout coupon WebAPI.</comment>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_coupon_code" translate="label" type="select" sortOrder="115" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Apply Coupon Code — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <depends><field id="enabled_coupon_code">1</field></depends>
+                    </field>
+                    <field id="enabled_place_order" translate="label comment" type="select" sortOrder="120" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Place Order (checkout)</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <comment>Validates the place-order WebAPI/GraphQL call via the X-Captcha-Token header.</comment>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_place_order" translate="label" type="select" sortOrder="125" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Place Order — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <depends><field id="enabled_place_order">1</field></depends>
+                    </field>
+                    <field id="enabled_store_pickup" translate="label" type="select" sortOrder="130" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Place Order (in-store pickup)</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_store_pickup" translate="label" type="select" sortOrder="135" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>In-store Pickup — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <depends><field id="enabled_store_pickup">1</field></depends>
+                    </field>
+                    <field id="enabled_paypal_payflowpro" translate="label" type="select" sortOrder="140" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>PayPal Payflow Pro</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_paypal_payflowpro" translate="label" type="select" sortOrder="145" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>PayPal Payflow Pro — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <depends><field id="enabled_paypal_payflowpro">1</field></depends>
+                    </field>
+                    <field id="enabled_resend_confirmation_email" translate="label" type="select" sortOrder="150" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Resend Confirmation Email</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_resend_confirmation_email" translate="label" type="select" sortOrder="155" showInDefault="1" showInWebsite="1" canRestore="1">
+                        <label>Resend Confirmation Email — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <depends><field id="enabled_resend_confirmation_email">1</field></depends>
+                    </field>
+                </group>
+                <group id="backend" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Admin Forms</label>
+                    <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1">
+                        <label>Enable Admin Form Protection</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="*/enabled">1</field></depends>
+                    </field>
+                    <field id="enabled_login" translate="label" type="select" sortOrder="20" showInDefault="1" canRestore="1">
+                        <label>Admin Login</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_login" translate="label" type="select" sortOrder="25" showInDefault="1" canRestore="1">
+                        <label>Admin Login — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <depends><field id="enabled_login">1</field></depends>
+                    </field>
+                    <field id="enabled_forgot" translate="label" type="select" sortOrder="30" showInDefault="1" canRestore="1">
+                        <label>Admin Forgot Password</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <depends><field id="enabled">1</field></depends>
+                    </field>
+                    <field id="score_threshold_forgot" translate="label" type="select" sortOrder="35" showInDefault="1" canRestore="1">
+                        <label>Admin Forgot Password — Score Threshold</label>
+                        <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                        <depends><field id="enabled_forgot">1</field></depends>
+                    </field>
+                </group>
+            </group>
+
+            <!-- ========================== Route Protection ======================== -->
+            <group id="route_protection" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Route Protection (site-wide gate)</label>
+                <field id="enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Route Protection</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Show a full-page captcha challenge for requests matching the rules below.</comment>
                 </field>
-                <field id="scoreThresholdLogin" translate="label" type="select" sortOrder="30" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Login Score Threshold</label>
-                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                <field id="provider_override" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Route Gate Provider</label>
+                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ProviderWithDefault</source_model>
+                    <comment>Use a different provider for the challenge page than the active form provider.</comment>
+                    <depends><field id="enabled">1</field></depends>
+                </field>
+                <field id="fallback_enabled" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Fallback Provider</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Reveal a second provider on the challenge page (e.g. reCAPTCHA when Turnstile is unreachable).</comment>
+                    <depends><field id="enabled">1</field></depends>
+                </field>
+                <field id="fallback_provider" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Fallback Provider</label>
+                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\Provider</source_model>
                     <depends>
-                        <field id="enabledLogin">1</field>
+                        <field id="enabled">1</field>
+                        <field id="fallback_enabled">1</field>
                     </depends>
                 </field>
-                <field id="enabledForgot" translate="label" type="select" sortOrder="40" showInDefault="1"
-                       showInWebsite="1" showInStore="0">
-                    <label>Enable in forgot password page</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                </field>
-                <field id="scoreThresholdForgot" translate="label" type="select" sortOrder="50" showInDefault="1"
-                       showInWebsite="1" showInStore="0" canRestore="1">
-                    <label>Forgot Password Score Threshold</label>
-                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\ScoreThreshold</source_model>
+                <field id="fallback_delay" translate="label comment" type="text" sortOrder="50" showInDefault="1" showInWebsite="1">
+                    <label>Fallback Delay (seconds)</label>
+                    <validate>validate-number validate-greater-than-zero</validate>
+                    <comment>How long the challenge waits before revealing the fallback widget. Default: 15</comment>
                     <depends>
-                        <field id="enabledForgot">1</field>
+                        <field id="enabled">1</field>
+                        <field id="fallback_enabled">1</field>
                     </depends>
+                </field>
+                <field id="cookie_lifetime" translate="label comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="1">
+                    <label>Verified Cookie Lifetime (seconds)</label>
+                    <validate>validate-number validate-greater-than-zero</validate>
+                    <comment>How long a verified visitor stays unchallenged. Default: 14400 (4 hours)</comment>
+                    <depends><field id="enabled">1</field></depends>
+                </field>
+                <field id="rules" translate="label comment" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Protection Rules</label>
+                    <frontend_model>Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\ProtectionRules</frontend_model>
+                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <comment><![CDATA[Cloudflare-style filter expression. Each row is one condition — Field / Operator / Value — joined to the previous by AND / OR (AND binds tighter than OR). The challenge fires when the expression is true for the request.]]></comment>
+                    <depends><field id="enabled">1</field></depends>
+                </field>
+                <field id="layered_nav_ignored_params" translate="label comment" type="textarea" sortOrder="80" showInDefault="1" showInWebsite="1">
+                    <label>Ignored Filter Params</label>
+                    <comment>URL params that do NOT count toward "Active Param Count" (one per line).</comment>
+                    <depends><field id="enabled">1</field></depends>
+                </field>
+                <field id="excluded_ips" translate="label comment" type="textarea" sortOrder="90" showInDefault="1" showInWebsite="0">
+                    <label>Excluded IPs</label>
+                    <comment>One IP per line. These bypass the challenge.</comment>
+                    <depends><field id="enabled">1</field></depends>
+                </field>
+                <field id="excluded_user_agents" translate="label comment" type="textarea" sortOrder="100" showInDefault="1" showInWebsite="0">
+                    <label>Excluded User Agents</label>
+                    <comment>One user-agent substring per line (trusted crawlers).</comment>
+                    <depends><field id="enabled">1</field></depends>
+                </field>
+                <field id="ajax_marker_params" translate="label comment" type="textarea" sortOrder="110" showInDefault="1" showInWebsite="1">
+                    <label>AJAX Marker Params</label>
+                    <comment>Params stripped from the post-verify URL (one per line).</comment>
+                    <depends><field id="enabled">1</field></depends>
+                </field>
+                <field id="background_ajax_marker_params" translate="label comment" type="textarea" sortOrder="120" showInDefault="1" showInWebsite="1">
+                    <label>Background AJAX Marker Params</label>
+                    <comment>Params marking a background preload — skip post-verify navigation (one per line).</comment>
+                    <depends><field id="enabled">1</field></depends>
+                </field>
+                <field id="filter_anchor_selector" translate="label comment" type="text" sortOrder="130" showInDefault="1" showInWebsite="1">
+                    <label>Filter Anchor CSS Selector</label>
+                    <comment>CSS selector for the layered-nav link captured before challenge. Leave blank to disable.</comment>
+                    <depends><field id="enabled">1</field></depends>
+                </field>
+                <field id="filter_param_pattern" translate="label comment" type="text" sortOrder="140" showInDefault="1" showInWebsite="1">
+                    <label>Filter Param Regex</label>
+                    <comment>JS regex (no delimiters) matched against AJAX query-param keys; capture group 1 is the attribute name.</comment>
+                    <depends><field id="enabled">1</field></depends>
+                </field>
+
+                <!-- Nested sub-group → paths hryvinskyi_invisible_captcha/route_protection/appearance/<field> -->
+                <group id="appearance" translate="label comment" type="text" sortOrder="150" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Challenge Page Appearance</label>
+                    <comment>Accent palette for the challenge page. Use a hex value (e.g. #2f6bd8) or a CSS color function such as rgba().</comment>
+                    <field id="primary_color" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Primary Color</label>
+                        <comment>Spinner, progress bar, buttons, links and the shield glyph. Default: #2f6bd8</comment>
+                    </field>
+                    <field id="primary_color_deep" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Primary Color (Deep)</label>
+                        <comment>Darker shade used for hover / active states. Default: #2557b6</comment>
+                    </field>
+                    <field id="primary_color_soft" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Primary Color (Soft)</label>
+                        <comment>Translucent tint used for the checkbox pulse/glow. Use an rgba() value. Default: rgba(47,107,216,0.12)</comment>
+                    </field>
+                </group>
+            </group>
+
+            <!-- ============================== Advanced ============================ -->
+            <group id="advanced" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Advanced</label>
+                <field id="http_timeout" translate="label comment" type="text" sortOrder="10" showInDefault="1">
+                    <label>Verification HTTP Timeout (seconds)</label>
+                    <validate>validate-number validate-greater-than-zero</validate>
+                    <comment>Wall-clock budget for an outbound siteverify/assessment request. Default: 2.0</comment>
                 </field>
             </group>
         </section>

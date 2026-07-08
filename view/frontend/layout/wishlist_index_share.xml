@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+  ~ Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+  ~ GitHub: https://github.com/hryvinskyi
+  -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="content">
+            <block class="Hryvinskyi\InvisibleCaptcha\Block\Captcha" name="invisible.captcha.wishlist"
+                   template="Hryvinskyi_InvisibleCaptcha::captcha_targeted.phtml"
+                   ifconfig="hryvinskyi_invisible_captcha/form_protection/frontend/enabled_wishlist">
+                <arguments>
+                    <argument name="target_form" xsi:type="string">#form-validate</argument>
+                    <argument name="jsLayout" xsi:type="array">
+                        <item name="components" xsi:type="array">
+                            <item name="invisible-captcha" xsi:type="array">
+                                <item name="component" xsi:type="string">Hryvinskyi_InvisibleCaptcha/js/invisible-captcha</item>
+                                <item name="action" xsi:type="string">wishlist</item>
+                                <item name="captchaId" xsi:type="string">wishlist</item>
+                            </item>
+                        </item>
+                    </argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+    </body>
+</page>

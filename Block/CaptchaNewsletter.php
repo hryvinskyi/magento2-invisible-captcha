@@ -1,99 +1,35 @@
 <?php
 /**
- * Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
- * @author: <mailto:volodymyr@hryvinskyi.com>
- * @github: <https://github.com/hryvinskyi>
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
  */
-
 declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Block;
 
-use Hryvinskyi\Base\Helper\Json;
-use Hryvinskyi\InvisibleCaptcha\Helper\Config\Frontend;
-use Hryvinskyi\InvisibleCaptcha\Helper\Config\General;
-use Hryvinskyi\InvisibleCaptcha\Model\LayoutSettings;
-use Magento\Framework\View\Element\Template;
-use Magento\Framework\View\Element\Template\Context;
-
+/**
+ * Newsletter form captcha block. Uses a fixed jsLayout component key
+ * ("invisible-captcha-newsletter") so the template can relocate the widget into
+ * the newsletter form without the auto-generated per-instance scope.
+ */
 class CaptchaNewsletter extends Captcha
 {
-    /**
-     * @var General
-     */
-    private $generalConfig;
+    private const COMPONENT_KEY = 'invisible-captcha-newsletter';
 
     /**
-     * @var Frontend
+     * @inheritDoc
      */
-    private $frontendConfig;
-
-    /**
-     * @var LayoutSettings
-     */
-    private $layoutSettings;
-
-    /**
-     * Captcha constructor.
-     *
-     * @param Context $context
-     * @param General $generalConfig
-     * @param Frontend $frontendConfig
-     * @param LayoutSettings $layoutSettings
-     * @param array $data
-     */
-    public function __construct(
-        Context $context,
-        General $generalConfig,
-        Frontend $frontendConfig,
-        LayoutSettings $layoutSettings,
-        array $data = []
-    ) {
-        parent::__construct($context, $generalConfig, $frontendConfig, $layoutSettings, $data);
-
-        $this->generalConfig = $generalConfig;
-        $this->frontendConfig = $frontendConfig;
-        $this->layoutSettings = $layoutSettings;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getJsLayout()
+    public function getJsLayout(): string
     {
-        $layout = $this->jsLayout;
+        $layout = $this->decodeJsLayout();
 
-        if ($this->frontendConfig->hasEnabled() && $this->isModuleOn()) {
-            $layout['components']['invisible-captcha-newsletter']['config'] = $this->layoutSettings->getCaptchaSettings();
+        if ($this->isModuleOn() && isset($layout['components'][self::COMPONENT_KEY])) {
+            $layout['components'][self::COMPONENT_KEY]['config'] = $this->getFormConfig();
+        } elseif (isset($layout['components'][self::COMPONENT_KEY])) {
+            unset($layout['components'][self::COMPONENT_KEY]);
         }
 
-        if (
-            (!$this->frontendConfig->hasEnabled() || !$this->isModuleOn())
-            && isset($layout['components']['invisible-captcha-newsletter'])
-        ) {
-            unset($layout['components']['invisible-captcha-newsletter']);
-        }
-
-        return Json::encode($layout);
-    }
-
-    /**
-     * @return bool
-     */
-    public function isModuleOn(): bool
-    {
-        return $this->generalConfig->hasEnabled() || $this->frontendConfig->hasEnabledNewsletter();
-    }
-
-    /**
-     * @return string
-     */
-    public function toHtml()
-    {
-        if (!$this->isModuleOn()) {
-            return '';
-        }
-
-        return parent::toHtml();
+        return $this->encodeJsLayout($layout);
     }
 }

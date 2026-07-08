@@ -8,10 +8,15 @@
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
+        <referenceBlock name="head.additional">
+            <block class="Hryvinskyi\InvisibleCaptcha\Block\Frontend\AjaxConfig"
+                   name="hryvinskyi.invisible_captcha.ajax.config"
+                   template="Hryvinskyi_InvisibleCaptcha::ajax-config.phtml"/>
+        </referenceBlock>
         <referenceContainer name="footer">
             <block class="Hryvinskyi\InvisibleCaptcha\Block\CaptchaNewsletter" name="invisible.recaptcha.newsletter"
                    after="-" template="Hryvinskyi_InvisibleCaptcha::captcha_newsletter.phtml"
-                   ifconfig="hryvinskyi_invisible_captcha/frontend/enabledNewsletter">
+                   ifconfig="hryvinskyi_invisible_captcha/form_protection/frontend/enabled_newsletter">
                 <arguments>
                     <argument name="jsLayout" xsi:type="array">
                         <item name="components" xsi:type="array">

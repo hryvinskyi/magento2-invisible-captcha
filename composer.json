@@ -1,27 +1,45 @@
 {
     "name": "hryvinskyi/magento2-invisible-captcha",
-    "description": "Magento 2 Google Invisible Captcha (Recaptcha) module",
+    "description": "Magento 2 multi-provider invisible captcha & bot protection (Google reCAPTCHA v2/v3/Enterprise and Cloudflare Turnstile) for form-level and route-level protection",
     "require": {
-        "ext-dom": "*",
-        "php": "~8.0||~8.1||~8.2||~8.3||~8.4||~8.5",
-        "symfony/dom-crawler": "^5.4.52 || ^6.4.40 || ^7.4.12 || ^8.0.12",
-        "voku/simple_html_dom": "^4.8",
+        "php": "~8.1.0||~8.2.0||~8.3.0||~8.4.0||~8.5.0",
+        "symfony/http-client": "^5 || ^6 || ^7 || ^8",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.0",
+        "psr/http-message": "^1.0 || ^2.0",
+        "nyholm/psr7": "^1.5",
         "magento/framework": "*",
         "magento/module-store": "*",
+        "magento/module-config": "*",
         "magento/module-customer": "*",
         "magento/module-checkout": "*",
-        "hryvinskyi/magento2-base": "^2.1"
+        "magento/module-newsletter": "*",
+        "magento/module-contact": "*",
+        "magento/module-review": "*",
+        "magento/module-send-friend": "*",
+        "magento/module-catalog": "*",
+        "magento/module-catalog-search": "*",
+        "magento/module-layered-navigation": "*",
+        "magento/module-wishlist": "*",
+        "magento/module-paypal": "*",
+        "magento/module-sales-rule": "*",
+        "magento/module-quote": "*",
+        "magento/module-webapi": "*",
+        "magento/module-graph-ql": "*",
+        "hryvinskyi/magento2-base": "^2.1",
+        "hryvinskyi/magento2-theme-assets": "^1.0"
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest"
     },
     "type": "magento2-module",
-    "version": "2.5.5",
+    "version": "3.0.0",
     "license": "MIT",
     "authors": [
         {
             "name": "Volodymyr Hryvinskyi",
-            "email": "volodymyr@hryvinskyi.com"
+            "email": "volodymyr@hryvinskyi.com",
+            "homepage": "https://hryvinskyi.com"
         }
     ],
     "autoload": {

@@ -1,73 +1,61 @@
 <?xml version="1.0"?>
 <!--
-  ~ Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
-  ~ @author: <mailto:volodymyr@hryvinskyi.com>
-  ~ @github: <https://github.com/hryvinskyi>
+  ~ Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+  ~ Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+  ~ GitHub: https://github.com/hryvinskyi
   -->
-
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
 
-    <type name="Hryvinskyi\InvisibleCaptcha\Model\Verify\Adminhtml\Login">
-        <arguments>
-            <argument name="area" xsi:type="string">adminhtml</argument>
-        </arguments>
-    </type>
+    <!-- ===================== Enablement gates (adminhtml) ===================== -->
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Enablement\Form\AdminLogin" type="Hryvinskyi\InvisibleCaptcha\Model\Enablement\FormEnablement">
+        <arguments><argument name="area" xsi:type="string">adminhtml</argument><argument name="form" xsi:type="string">admin_login</argument></arguments>
+    </virtualType>
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Enablement\Form\AdminForgot" type="Hryvinskyi\InvisibleCaptcha\Model\Enablement\FormEnablement">
+        <arguments><argument name="area" xsi:type="string">adminhtml</argument><argument name="form" xsi:type="string">admin_forgot</argument></arguments>
+    </virtualType>
 
-    <type name="Hryvinskyi\InvisibleCaptcha\Model\Verify\Adminhtml\ForgotPassword">
-        <arguments>
-            <argument name="area" xsi:type="string">adminhtml</argument>
-        </arguments>
-    </type>
+    <!-- ===================== Score thresholds (adminhtml) ==================== -->
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Form\AdminLogin" type="Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\FormScoreThreshold">
+        <arguments><argument name="form" xsi:type="string">admin_login</argument></arguments>
+    </virtualType>
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Form\AdminForgot" type="Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\FormScoreThreshold">
+        <arguments><argument name="form" xsi:type="string">admin_forgot</argument></arguments>
+    </virtualType>
 
-    <virtualType name="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Backend\Login"
-                 type="Hryvinskyi\InvisibleCaptcha\Observer\Captcha">
+    <!-- ====================== Failure strategy (adminhtml) =================== -->
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Strategy\Failure\Form\AdminForgot"
+                 type="Hryvinskyi\InvisibleCaptcha\Model\Strategy\Failure\Redirect">
         <arguments>
-            <argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Adminhtml\LoginCaptcha</argument>
+            <argument name="redirectUrlProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Strategy\Failure\RedirectUrl\Referer</argument>
         </arguments>
     </virtualType>
 
-    <virtualType name="Hryvinskyi\InvisibleCaptcha\VirtualObserver\Backend\ForgotPassword"
-                 type="Hryvinskyi\InvisibleCaptcha\Observer\Captcha">
-        <arguments>
-            <argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Adminhtml\ForgotPasswordCaptcha</argument>
-        </arguments>
-    </virtualType>
-
-    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\Backend\ForgotPassword"
-                 type="Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\ObserverRedirectFailure">
-        <arguments>
-            <argument name="redirectUrlProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\RedirectUrl\RefererProvider</argument>
-        </arguments>
-    </virtualType>
-
-    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Adminhtml\LoginCaptcha"
-                 type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
+    <!-- ====================== Captcha descriptors (admin) =================== -->
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Captcha\AdminLogin" type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
         <arguments>
             <argument name="action" xsi:type="string">admin_login</argument>
-            <argument name="scoreThreshold"
-                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Backend\Login</argument>
-            <argument name="checkEnabledVerify"
-                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\Adminhtml\Login</argument>
-            <argument name="failureProvider"
-                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\AuthenticationExceptionFailure</argument>
-            <argument name="tokenResponse"
-                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse\General</argument>
+            <argument name="tokenStrategy" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Strategy\Token\RequestParam</argument>
+            <argument name="failureProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Strategy\Failure\AuthenticationException</argument>
+            <argument name="enablement" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Enablement\Form\AdminLogin</argument>
+            <argument name="scoreThreshold" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Form\AdminLogin</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Captcha\AdminForgot" type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
+        <arguments>
+            <argument name="action" xsi:type="string">admin_forgot_password</argument>
+            <argument name="tokenStrategy" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Strategy\Token\RequestParam</argument>
+            <argument name="failureProvider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Strategy\Failure\Form\AdminForgot</argument>
+            <argument name="enablement" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Enablement\Form\AdminForgot</argument>
+            <argument name="scoreThreshold" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Form\AdminForgot</argument>
         </arguments>
     </virtualType>
 
-    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Adminhtml\ForgotPasswordCaptcha"
-                 type="Hryvinskyi\InvisibleCaptcha\Model\Captcha">
-        <arguments>
-            <argument name="action" xsi:type="string">admin_forgot_password</argument>
-            <argument name="scoreThreshold"
-                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ScoreThreshold\Backend\ForgotPassword</argument>
-            <argument name="checkEnabledVerify"
-                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verify\Adminhtml\ForgotPassword</argument>
-            <argument name="failureProvider"
-                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Failure\Backend\ForgotPassword</argument>
-            <argument name="tokenResponse"
-                      xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\TokenResponse\General</argument>
-        </arguments>
+    <!-- ====================== Form verify observers (admin) ================= -->
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Observer\Form\AdminLogin" type="Hryvinskyi\InvisibleCaptcha\Observer\FormVerify">
+        <arguments><argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Captcha\AdminLogin</argument></arguments>
+    </virtualType>
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Observer\Form\AdminForgot" type="Hryvinskyi\InvisibleCaptcha\Observer\FormVerify">
+        <arguments><argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Captcha\AdminForgot</argument></arguments>
     </virtualType>
 </config>

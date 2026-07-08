@@ -1,21 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (c) 2020. Volodymyr Hryvinskyi.  All rights reserved.
-  ~ @author: <mailto:volodymyr@hryvinskyi.com>
-  ~ @github: <https://github.com/hryvinskyi>
+  ~ Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+  ~ Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+  ~ GitHub: https://github.com/hryvinskyi
   -->
 <csp_whitelist xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Csp:etc/csp_whitelist.xsd">
     <policies>
         <policy id="script-src">
             <values>
-                <value id="recaptcha_google" type="host">www.google.com</value>
-                <value id="recaptcha_gstatic" type="host">www.gstatic.com</value>
+                <value id="hryvinskyi_captcha_turnstile_script" type="host">https://challenges.cloudflare.com</value>
+                <value id="hryvinskyi_captcha_recaptcha_google" type="host">https://www.google.com</value>
+                <value id="hryvinskyi_captcha_recaptcha_gstatic" type="host">https://www.gstatic.com</value>
+                <value id="hryvinskyi_captcha_recaptcha_net" type="host">https://recaptcha.net</value>
             </values>
         </policy>
         <policy id="frame-src">
             <values>
-                <value id="recaptcha_google" type="host">www.google.com</value>
+                <value id="hryvinskyi_captcha_turnstile_frame" type="host">https://challenges.cloudflare.com</value>
+                <value id="hryvinskyi_captcha_recaptcha_frame" type="host">https://www.google.com</value>
+            </values>
+        </policy>
+        <policy id="connect-src">
+            <values>
+                <value id="hryvinskyi_captcha_turnstile_connect" type="host">https://challenges.cloudflare.com</value>
+                <value id="hryvinskyi_captcha_recaptcha_connect" type="host">https://www.google.com</value>
+                <value id="hryvinskyi_captcha_enterprise_connect" type="host">https://recaptchaenterprise.googleapis.com</value>
+            </values>
+        </policy>
+        <policy id="form-action">
+            <values>
+                <value id="hryvinskyi_captcha_turnstile_form" type="host">https://challenges.cloudflare.com</value>
+                <value id="hryvinskyi_captcha_recaptcha_form" type="host">https://www.google.com</value>
             </values>
         </policy>
     </policies>

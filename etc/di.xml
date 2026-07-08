@@ -1,125 +1,222 @@
 <?xml version="1.0"?>
 <!--
-  ~ Copyright (c) 2019. Volodymyr Hryvinskyi.  All rights reserved.
-  ~ @author: <mailto:volodymyr@hryvinskyi.com>
-  ~ @github: <https://github.com/hryvinskyi>
+  ~ Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+  ~ Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+  ~ GitHub: https://github.com/hryvinskyi
   -->
-
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
 
-    <preference for="Hryvinskyi\InvisibleCaptcha\Model\CheckEnabledVerifyInterface"
-                type="Hryvinskyi\InvisibleCaptcha\Model\CheckEnabledVerify"/>
-    <preference for="Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\RequestMethodInterface"
-                type="Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\RequestMethod\CurlPost"/>
-    <preference for="Hryvinskyi\InvisibleCaptcha\Model\Area\ConfigListInterface"
-                type="Hryvinskyi\InvisibleCaptcha\Model\Area\ConfigList"/>
+    <!-- ============================== Preferences ============================== -->
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Config"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderConfigInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Provider\ProviderConfig"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Provider\Pool"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Verification\HttpClientInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Verification\Http\HttpClient"/>
 
+    <!-- Route-gating filter engine -->
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\ConditionInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Filter\Condition"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\ExpressionInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Filter\Expression"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\ExpressionParserInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Filter\ExpressionParser"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\ExpressionEvaluatorInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Filter\ExpressionEvaluator"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldProviderInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Filter\FieldProvider"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorProviderInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Filter\OperatorProvider"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Migration\RecaptchaMigratorInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Migration\RecaptchaMigrator"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Migration\CoreConfigGatewayInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Migration\CoreConfigGateway"/>
+
+    <!-- ============================ Sensitive config =========================== -->
     <type name="Magento\Config\Model\Config\TypePool">
         <arguments>
             <argument name="sensitive" xsi:type="array">
-                <item name="hryvinskyi_invisible_captcha/general/captchaSiteKey" xsi:type="string">1</item>
-                <item name="hryvinskyi_invisible_captcha/general/captchaSecretKey" xsi:type="string">1</item>
+                <item name="hryvinskyi_invisible_captcha/providers/recaptcha_v2_checkbox/secret_key" xsi:type="string">1</item>
+                <item name="hryvinskyi_invisible_captcha/providers/recaptcha_v2_invisible/secret_key" xsi:type="string">1</item>
+                <item name="hryvinskyi_invisible_captcha/providers/recaptcha_v3/secret_key" xsi:type="string">1</item>
+                <item name="hryvinskyi_invisible_captcha/providers/recaptcha_enterprise/secret_key" xsi:type="string">1</item>
+                <item name="hryvinskyi_invisible_captcha/providers/turnstile/secret_key" xsi:type="string">1</item>
             </argument>
         </arguments>
     </type>
 
-    <type name="Hryvinskyi\InvisibleCaptcha\Model\Provider\FailureMessages">
-        <arguments>
-            <argument name="errorMessages" xsi:type="array">
-                <item name="invalid-json" xsi:type="string"
-                      translatable="true">Captcha Error: Invalid Json.</item>
-                <item name="connection-failed" xsi:type="string"
-                      translatable="true">Captcha Error: Connection failed.</item>
-                <item name="bad-response" xsi:type="string"
-                      translatable="true">Captcha Error: Bad response.</item>
-                <item name="unknown-error" xsi:type="string"
-                      translatable="true">Captcha Error: Unknown error.</item>
-                <item name="missing-input-response" xsi:type="string"
-                      translatable="true">Captcha Error: The response parameter is missing.</item>
-                <item name="hostname-mismatch" xsi:type="string"
-                      translatable="true">Captcha Error: Hostname mismatch.</item>
-                <item name="action-mismatch" xsi:type="string"
-                      translatable="true">Captcha Error: Action mismatch.</item>
-                <item name="score-threshold-not-met" xsi:type="string"
-                      translatable="true">Captcha Error: Score Threshold not met.</item>
-                <item name="challenge-timeout" xsi:type="string"
-                      translatable="true">Captcha Error: Challenge timeout.</item>
-                <item name="timeout-or-duplicate" xsi:type="string"
-                      translatable="true">Captcha Error: The response is no longer valid: either is too old or has been used previously.</item>
-                <item name="invalid-input-response" xsi:type="string"
-                      translatable="true">Captcha Error: The response parameter is invalid or malformed.</item>
-                <item name="bad-request" xsi:type="string"
-                      translatable="true">Captcha Error: The request is invalid or malformed.</item>
-                <item name="invalid-input-secret" xsi:type="string"
-                      translatable="true">Captcha Error: The secret parameter is invalid or malformed.</item>
-                <item name="missing-input-secret" xsi:type="string"
-                      translatable="true">Captcha Error: The secret parameter is missing.</item>
-                <item name="bad-validator" xsi:type="string"
-                      translatable="true">Captcha Error: Validator must implements
-                    \Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\ValidatorInterface.
-                </item>
-            </argument>
-        </arguments>
-    </type>
-
-    <virtualType name="verifyValidatorList" type="Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\ValidatorList">
-        <arguments>
-            <argument name="entityTypes" xsi:type="array">
-                <item name="host" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\Host</item>
-                <item name="action" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\Action</item>
-                <item name="threshold" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\Threshold</item>
-                <item name="timeoutSeconds" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\Validators\TimeoutSeconds</item>
-            </argument>
-        </arguments>
-    </virtualType>
-
-    <virtualType name="captchaAreaConfigList" type="Hryvinskyi\InvisibleCaptcha\Model\Area\ConfigList">
-        <arguments>
-            <argument name="list" xsi:type="array">
-                <item name="global" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Helper\Config\General</item>
-                <item name="adminhtml" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Helper\Config\Backend</item>
-                <item name="frontend" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Helper\Config\Frontend</item>
-            </argument>
-        </arguments>
-    </virtualType>
-
-    <type name="Hryvinskyi\InvisibleCaptcha\Model\ReCaptcha\VerifyReCaptcha">
-        <arguments>
-            <argument name="verifyValidatorList" xsi:type="object">verifyValidatorList</argument>
-        </arguments>
-    </type>
-
-    <type name="Hryvinskyi\InvisibleCaptcha\Command\Captcha">
-        <arguments>
-            <argument name="areaConfigList" xsi:type="object">captchaAreaConfigList</argument>
-        </arguments>
-    </type>
-
-    <type name="Magento\Framework\Console\CommandList">
-        <arguments>
-            <argument name="commands" xsi:type="array">
-                <item name="hryvinskyi_invisible_captcha" xsi:type="object">\Hryvinskyi\InvisibleCaptcha\Command\Captcha</item>
-            </argument>
-        </arguments>
-    </type>
-
-    <type name="Magento\Framework\Controller\ResultInterface">
-        <plugin name="Hryvinskyi_InvisibleCaptcha::disable_submit"
-                type="Hryvinskyi\InvisibleCaptcha\Plugin\DisableSubmit" sortOrder="10000005" />
-    </type>
-
+    <!-- =============================== Logger ================================== -->
     <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Logger" type="Magento\Framework\Logger\Monolog">
         <arguments>
+            <argument name="name" xsi:type="string">invisible_captcha</argument>
             <argument name="handlers" xsi:type="array">
                 <item name="debug" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Debug</item>
             </argument>
         </arguments>
     </virtualType>
 
-    <type name="Hryvinskyi\InvisibleCaptcha\Plugin\DisableSubmit">
+    <!-- ====================== Verification validator list ====================== -->
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Verification\Validator\VerifyValidatorList"
+                 type="Hryvinskyi\InvisibleCaptcha\Model\Verification\Validator\ValidatorList">
+        <arguments>
+            <argument name="validators" xsi:type="array">
+                <item name="host" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verification\Validator\Host</item>
+                <item name="action" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verification\Validator\Action</item>
+                <item name="threshold" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verification\Validator\Threshold</item>
+                <item name="timeout" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verification\Validator\TimeoutSeconds</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Verification\Verifier\SiteVerifyVerifier">
+        <arguments>
+            <argument name="validatorList" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verification\Validator\VerifyValidatorList</argument>
+            <argument name="logger" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Verification\Verifier\EnterpriseVerifier">
+        <arguments>
+            <argument name="validatorList" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verification\Validator\VerifyValidatorList</argument>
+            <argument name="logger" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <!-- ============================ Provider pool ============================== -->
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Provider\RecaptchaV2Checkbox">
+        <arguments>
+            <argument name="verifier" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verification\Verifier\SiteVerifyVerifier</argument>
+        </arguments>
+    </type>
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Provider\RecaptchaV2Invisible">
+        <arguments>
+            <argument name="verifier" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verification\Verifier\SiteVerifyVerifier</argument>
+        </arguments>
+    </type>
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Provider\RecaptchaV3">
+        <arguments>
+            <argument name="verifier" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verification\Verifier\SiteVerifyVerifier</argument>
+        </arguments>
+    </type>
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Provider\RecaptchaEnterprise">
+        <arguments>
+            <argument name="verifier" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verification\Verifier\EnterpriseVerifier</argument>
+        </arguments>
+    </type>
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Turnstile">
+        <arguments>
+            <argument name="verifier" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Verification\Verifier\SiteVerifyVerifier</argument>
+        </arguments>
+    </type>
+
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Provider\Pool">
+        <arguments>
+            <argument name="providers" xsi:type="array">
+                <item name="recaptcha_v2_checkbox" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\RecaptchaV2Checkbox</item>
+                <item name="recaptcha_v2_invisible" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\RecaptchaV2Invisible</item>
+                <item name="recaptcha_v3" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\RecaptchaV3</item>
+                <item name="recaptcha_enterprise" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\RecaptchaEnterprise</item>
+                <item name="turnstile" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Provider\Turnstile</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!-- ====================== Failure message catalogue ======================= -->
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Strategy\Failure\FailureMessages">
+        <arguments>
+            <argument name="errorMessages" xsi:type="array">
+                <item name="invalid-json" xsi:type="string" translatable="true">Captcha Error: Invalid JSON.</item>
+                <item name="connection-failed" xsi:type="string" translatable="true">Captcha Error: Connection failed.</item>
+                <item name="bad-response" xsi:type="string" translatable="true">Captcha Error: Bad response.</item>
+                <item name="unknown-error" xsi:type="string" translatable="true">Captcha Error: Unknown error.</item>
+                <item name="missing-input-response" xsi:type="string" translatable="true">Captcha Error: The response parameter is missing.</item>
+                <item name="hostname-mismatch" xsi:type="string" translatable="true">Captcha Error: Hostname mismatch.</item>
+                <item name="action-mismatch" xsi:type="string" translatable="true">Captcha Error: Action mismatch.</item>
+                <item name="score-threshold-not-met" xsi:type="string" translatable="true">Captcha Error: Score threshold not met.</item>
+                <item name="challenge-timeout" xsi:type="string" translatable="true">Captcha Error: Challenge timeout.</item>
+                <item name="timeout-or-duplicate" xsi:type="string" translatable="true">Captcha Error: The response is no longer valid: either is too old or has been used previously.</item>
+                <item name="invalid-input-response" xsi:type="string" translatable="true">Captcha Error: The response parameter is invalid or malformed.</item>
+                <item name="bad-request" xsi:type="string" translatable="true">Captcha Error: The request is invalid or malformed.</item>
+                <item name="invalid-input-secret" xsi:type="string" translatable="true">Captcha Error: The secret parameter is invalid or malformed.</item>
+                <item name="missing-input-secret" xsi:type="string" translatable="true">Captcha Error: The secret parameter is missing.</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!-- =================== Route-gating filter registries ===================== -->
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Filter\FieldProvider">
+        <arguments>
+            <argument name="fields" xsi:type="array">
+                <item name="action_name" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\FullActionName</item>
+                <item name="request_uri" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\RequestUri</item>
+                <item name="uri_path" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\UriPath</item>
+                <item name="query_string" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\QueryString</item>
+                <item name="request_method" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\RequestMethod</item>
+                <item name="hostname" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\Hostname</item>
+                <item name="client_ip" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\ClientIp</item>
+                <item name="user_agent" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\UserAgent</item>
+                <item name="referer" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\Referer</item>
+                <item name="active_param_count" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\ActiveParamCount</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Filter\OperatorProvider">
+        <arguments>
+            <argument name="operators" xsi:type="array">
+                <item name="eq" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\Equals</item>
+                <item name="neq" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\NotEquals</item>
+                <item name="contains" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\Contains</item>
+                <item name="not_contains" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\NotContains</item>
+                <item name="starts_with" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\StartsWith</item>
+                <item name="ends_with" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\EndsWith</item>
+                <item name="regex" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\Regex</item>
+                <item name="not_regex" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\NotRegex</item>
+                <item name="in" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\In</item>
+                <item name="not_in" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\NotIn</item>
+                <item name="gt" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\GreaterThan</item>
+                <item name="gte" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\GreaterThanOrEqual</item>
+                <item name="lt" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\LessThan</item>
+                <item name="lte" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\LessThanOrEqual</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\Regex">
         <arguments>
             <argument name="logger" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\NotRegex">
+        <arguments>
+            <argument name="logger" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <!-- ===================== WebAPI endpoint config providers ================= -->
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Webapi\WebapiConfigProviderInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Webapi\CompositeConfigProvider"/>
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Webapi\CompositeConfigProvider">
+        <arguments>
+            <argument name="providers" xsi:type="array">
+                <item name="checkout" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Webapi\ConfigProvider\Checkout</item>
+                <item name="sales_rule" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Webapi\ConfigProvider\SalesRule</item>
+                <item name="store_pickup" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Webapi\ConfigProvider\StorePickup</item>
+                <item name="resend_confirmation_email" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Webapi\ConfigProvider\ResendConfirmationEmail</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!-- =============================== CLI command ============================= -->
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="hryvinskyi_invisible_captcha_disable" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Command\Captcha</item>
+                <item name="hryvinskyi_invisible_captcha_migrate_recaptcha" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Command\MigrateRecaptcha</item>
+            </argument>
         </arguments>
     </type>
 </config>
