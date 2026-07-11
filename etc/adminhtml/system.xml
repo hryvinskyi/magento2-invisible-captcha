@@ -380,12 +380,14 @@
                     <label>Protection Rules</label>
                     <frontend_model>Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\ProtectionRules</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment><![CDATA[Cloudflare-style filter expression. Each row is one condition — Field / Operator / Value — joined to the previous by AND / OR (AND binds tighter than OR). The challenge fires when the expression is true for the request. Regex operators take bare patterns without delimiters or quotes (e.g. <code>^catalog_.*</code>); delimited PCRE with modifiers (e.g. <code>~^/checkout~i</code>) also works.]]></comment>
+                    <comment><![CDATA[Cloudflare-style filter expression. Each row is one condition — Field / Operator / Value — joined to the previous by AND / OR (AND binds tighter than OR). The challenge fires when the expression is true for the request. Regex operators take bare patterns without delimiters or quotes (e.g. <code>^catalog_.*</code>); delimited PCRE with modifiers (e.g. <code>~^/checkout~i</code>) also works. The <code>Blocked by robots.txt</code> field resolves to 1 when the requested URL is disallowed by this website's robots.txt (physical <code>pub/robots.txt</code>, or the Search Engine Robots custom instructions) — so <code>robots_txt_blocked eq 1</code> challenges every client that ignores robots.txt.]]></comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
-                <field id="layered_nav_ignored_params" translate="label comment" type="textarea" sortOrder="80" showInDefault="1" showInWebsite="1">
+                <field id="layered_nav_ignored_params" translate="label comment" type="text" sortOrder="80" showInDefault="1" showInWebsite="1">
                     <label>Ignored Filter Params</label>
-                    <comment>URL params that do NOT count toward "Active Param Count" (one per line).</comment>
+                    <frontend_model>Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\RouteParamsTagList</frontend_model>
+                    <backend_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Backend\RouteParamsTagList</backend_model>
+                    <comment>URL params that do NOT count toward "Active Param Count". Type a param name and press Enter.</comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
                 <field id="excluded_ips" translate="label comment" type="textarea" sortOrder="90" showInDefault="1" showInWebsite="0">
@@ -398,14 +400,18 @@
                     <comment>One user-agent substring per line (trusted crawlers).</comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
-                <field id="ajax_marker_params" translate="label comment" type="textarea" sortOrder="110" showInDefault="1" showInWebsite="1">
+                <field id="ajax_marker_params" translate="label comment" type="text" sortOrder="110" showInDefault="1" showInWebsite="1">
                     <label>AJAX Marker Params</label>
-                    <comment>Params stripped from the post-verify URL (one per line).</comment>
+                    <frontend_model>Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\RouteParamsTagList</frontend_model>
+                    <backend_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Backend\RouteParamsTagList</backend_model>
+                    <comment>Params stripped from the post-verify URL. Type a param name and press Enter.</comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
-                <field id="background_ajax_marker_params" translate="label comment" type="textarea" sortOrder="120" showInDefault="1" showInWebsite="1">
+                <field id="background_ajax_marker_params" translate="label comment" type="text" sortOrder="120" showInDefault="1" showInWebsite="1">
                     <label>Background AJAX Marker Params</label>
-                    <comment>Params marking a background preload — skip post-verify navigation (one per line).</comment>
+                    <frontend_model>Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\RouteParamsTagList</frontend_model>
+                    <backend_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Backend\RouteParamsTagList</backend_model>
+                    <comment>Params marking a background preload — skip post-verify navigation. Type a param name and press Enter.</comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
                 <field id="filter_anchor_selector" translate="label comment" type="text" sortOrder="130" showInDefault="1" showInWebsite="1">

@@ -39,6 +39,25 @@ routes**, using whichever CAPTCHA provider you configure.
   provider** is revealed on the challenge page after a delay. The interstitial is
   a self-contained, system-font page (no external font/CDN requests) whose accent
   color is themeable from the admin.
+- **robots.txt-aware gating** — the rule field **Blocked by robots.txt**
+  (`robots_txt_blocked eq 1`) challenges every request for a URL your
+  robots.txt disallows. The served robots.txt is resolved per website — a
+  physical `pub/robots.txt` wins, otherwise the *Search Engine Robots* custom
+  instructions — and evaluated with RFC 9309 semantics: user-agent group
+  selection with `*` fallback, longest-match precedence, `Allow` winning
+  specificity ties, `*` wildcards and `$` end anchors. Legitimate crawlers
+  never fetch disallowed URLs (and can stay in *Excluded User Agents*), so the
+  rule surfaces exactly the bots that ignore robots.txt. Missing or empty
+  robots.txt never challenges (fail-safe).
+- **Rule tester** — a *Test Rules* panel under the rules editor simulates any
+  storefront request (URL or path, method, User-Agent, client IP, referer,
+  store view) against the rules **as currently edited, before saving**, and
+  reports whether it would pass or be challenged: per-condition ✓/✗ trace with
+  the actual field values, bypass reasons (excluded IP / user agent, verify
+  endpoint), scope context (protection disabled, provider unconfigured) and
+  warnings. The simulation runs under full store emulation; the full action
+  name is auto-resolved through URL rewrites (SEO URLs, one redirect hop) and
+  the front-name → route-id map, and can be overridden manually.
 
 ## Installation
 
@@ -51,7 +70,7 @@ bin/magento setup:static-content:deploy
 ```
 
 Dependencies: `hryvinskyi/magento2-base`, `hryvinskyi/magento2-theme-assets`,
-`symfony/http-client` + PSR-7/17/18.
+`hryvinskyi/magento2-configuration-fields`, `symfony/http-client` + PSR-7/17/18.
 
 ## Configuration
 
@@ -64,6 +83,9 @@ Dependencies: `hryvinskyi/magento2-base`, `hryvinskyi/magento2-theme-assets`,
 - **Form Protection** — per-form toggles and score thresholds (storefront + admin).
 - **Route Protection** — rules editor, route-gate provider override, fallback
   provider, cookie lifetime, IP / user-agent exclusions, AJAX-marker params, etc.
+  The *Ignored Filter Params*, *AJAX Marker Params* and *Background AJAX Marker
+  Params* lists use tag-style inputs (via `hryvinskyi/magento2-configuration-fields`);
+  values are still stored newline-separated, so existing data is untouched.
   Includes a **Challenge Page Appearance** sub-group that themes the interstitial
   accent palette — `primary_color` (#2f6bd8), `primary_color_deep` (#2557b6) and
   `primary_color_soft` (rgba(47,107,216,0.12)) under
@@ -78,7 +100,14 @@ Dependencies: `hryvinskyi/magento2-base`, `hryvinskyi/magento2-theme-assets`,
 - `Api\Verification\VerifierInterface` / `VerificationRequestInterface` /
   `VerificationResultInterface` — provider-agnostic verification.
 - `Api\Filter\FieldProviderInterface` / `OperatorProviderInterface` — extend the
-  route rule engine with custom fields/operators via DI arrays.
+  route rule engine with custom fields/operators via DI arrays. Optionally
+  implement `Api\Filter\OperatorMetadataInterface` (value shape: text /
+  text_required / list / pattern / number) and
+  `Api\Filter\FieldValueHintInterface` (format pattern, message, placeholder)
+  to plug into the editor's dynamic value validation.
+- `Api\RobotsTxt\{SourceInterface, ParserInterface, MatcherInterface}` — swap
+  where robots.txt content comes from, how it is parsed, or how rules are
+  matched (all bound via `di.xml` preferences).
 - `Model\Strategy\{Token,Failure}\*` — pluggable token extraction & failure handling.
 
 ## WebAPI / checkout note

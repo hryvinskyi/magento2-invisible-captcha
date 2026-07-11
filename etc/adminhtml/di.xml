@@ -58,4 +58,25 @@
     <virtualType name="Hryvinskyi\InvisibleCaptcha\Observer\Form\AdminForgot" type="Hryvinskyi\InvisibleCaptcha\Observer\FormVerify">
         <arguments><argument name="provider" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Captcha\AdminForgot</argument></arguments>
     </virtualType>
+
+    <!-- ======================= Route-protection rule tester ================== -->
+    <type name="Hryvinskyi\InvisibleCaptcha\Controller\Adminhtml\Tester\Run">
+        <arguments>
+            <argument name="logger" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <!-- ============= Tag-list editor for route-protection param lists ======== -->
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\RouteParamsTagList"
+                 type="Hryvinskyi\ConfigurationFields\Block\Adminhtml\System\Config\Form\Field\TagList">
+        <arguments>
+            <argument name="tagListConfig" xsi:type="array">
+                <item name="placeholder" xsi:type="string">Type a parameter name and press Enter...</item>
+                <item name="validation" xsi:type="string">^[A-Za-z0-9_.\[\]-]+$</item>
+                <item name="validation_message" xsi:type="string">Only letters, digits and _ . [ ] - are allowed in a parameter name.</item>
+                <item name="uppercase" xsi:type="boolean">false</item>
+                <item name="separator" xsi:type="string">\n</item>
+            </argument>
+        </arguments>
+    </virtualType>
 </config>

@@ -9,10 +9,11 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Field;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldValueHintInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Phrase;
 
-class FullActionName implements FieldInterface
+class FullActionName implements FieldInterface, FieldValueHintInterface
 {
     /**
      * @param RequestInterface $request
@@ -52,5 +53,17 @@ class FullActionName implements FieldInterface
     public function getValue(): string
     {
         return (string)$this->request->getFullActionName();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getValueHint(): array
+    {
+        return [
+            'pattern' => '^[A-Za-z0-9_]+$',
+            'message' => (string)__('Full action names contain only letters, digits and underscores.'),
+            'placeholder' => 'catalog_product_view',
+        ];
     }
 }

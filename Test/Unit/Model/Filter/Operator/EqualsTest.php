@@ -31,6 +31,7 @@ class EqualsTest extends TestCase
     {
         $this->assertTrue($this->operator->supports(FieldInterface::TYPE_STRING));
         $this->assertTrue($this->operator->supports(FieldInterface::TYPE_NUMERIC));
+        $this->assertTrue($this->operator->supports(FieldInterface::TYPE_BOOLEAN));
         $this->assertFalse($this->operator->supports('unknown'));
     }
 

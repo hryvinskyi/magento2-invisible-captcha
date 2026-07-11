@@ -9,10 +9,11 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Field;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldValueHintInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Phrase;
 
-class UserAgent implements FieldInterface
+class UserAgent implements FieldInterface, FieldValueHintInterface
 {
     /**
      * @param RequestInterface $request
@@ -52,5 +53,15 @@ class UserAgent implements FieldInterface
     public function getValue(): string
     {
         return (string)$this->request->getHeader('User-Agent');
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getValueHint(): array
+    {
+        return [
+            'placeholder' => 'Mozilla/5.0 (compatible; SomeBot/1.0)',
+        ];
     }
 }

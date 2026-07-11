@@ -21,6 +21,7 @@ interface FieldInterface
 {
     public const TYPE_STRING = 'string';
     public const TYPE_NUMERIC = 'numeric';
+    public const TYPE_BOOLEAN = 'boolean';
 
     /**
      * Stable machine code used in the admin config to identify the field.

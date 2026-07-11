@@ -17,6 +17,9 @@ use Magento\Framework\App\ObjectManager as AppObjectManager;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
+use Magento\Store\Model\Store;
+use Magento\Store\Model\StoreManagerInterface;
+use Magento\Store\Model\Website;
 use PHPUnit\Framework\TestCase;
 
 class ProtectionRulesTest extends TestCase
@@ -57,10 +60,26 @@ class ProtectionRulesTest extends TestCase
         $json->method('serialize')->willReturnCallback(static fn ($v) => json_encode($v));
         $json->method('unserialize')->willReturnCallback(static fn ($v) => json_decode((string)$v, true));
 
+        $website = $this->createMock(Website::class);
+        $website->method('getName')->willReturn('Main Website');
+
+        $store = $this->createMock(Store::class);
+        $store->method('isActive')->willReturn(true);
+        $store->method('getWebsite')->willReturn($website);
+        $store->method('getId')->willReturn(5);
+        $store->method('getName')->willReturn('Default Store View');
+        $store->method('getCode')->willReturn('default');
+        $store->method('getBaseUrl')->willReturn('https://shop.test/');
+
+        $storeManager = $this->createMock(StoreManagerInterface::class);
+        $storeManager->method('getStores')->willReturn([$store]);
+        $storeManager->method('getDefaultStoreView')->willReturn($store);
+
         $this->block = (new ObjectManager($this))->getObject(ProtectionRules::class, [
             'fieldProvider' => $fieldProvider,
             'operatorProvider' => $operatorProvider,
             'serializer' => $json,
+            'storeManager' => $storeManager,
         ]);
     }
 
@@ -86,10 +105,26 @@ class ProtectionRulesTest extends TestCase
         self::assertSame('string', $decoded['fields'][0]['type']);
         self::assertSame('eq', $decoded['operators'][0]['value']);
         self::assertContains('string', $decoded['operators'][0]['supports']);
+        // Plain interface mocks carry no metadata → default kind, no hint key.
+        self::assertSame('text', $decoded['operators'][0]['valueKind']);
+        self::assertArrayNotHasKey('hint', $decoded['fields'][0]);
         self::assertSame('action_name', $decoded['defaults']['field']);
         self::assertSame('eq', $decoded['defaults']['operator']);
         self::assertSame('or', $decoded['initial'][0]['combinator']);
         self::assertSame('cms_index_index', $decoded['initial'][0]['value']);
         self::assertArrayHasKey('labels', $decoded);
+    }
+
+    public function testGetEditorConfigJsonExposesTheTesterConfig(): void
+    {
+        $decoded = json_decode($this->block->getEditorConfigJson(), true);
+
+        self::assertArrayHasKey('tester', $decoded);
+        self::assertArrayHasKey('endpoint', $decoded['tester']);
+        self::assertSame(5, $decoded['tester']['defaultStoreId']);
+        self::assertSame(
+            [['value' => 5, 'label' => 'Main Website / Default Store View (default)', 'baseUrl' => 'https://shop.test/']],
+            $decoded['tester']['stores']
+        );
     }
 }

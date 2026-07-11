@@ -10,9 +10,10 @@ namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorMetadataInterface;
 use Magento\Framework\Phrase;
 
-class In implements OperatorInterface
+class In implements OperatorInterface, OperatorMetadataInterface
 {
     /**
      * @inheritDoc
@@ -52,5 +53,13 @@ class In implements OperatorInterface
         }
 
         return in_array((string)($fieldValue ?? ''), $items, true);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getValueKind(): string
+    {
+        return self::VALUE_LIST;
     }
 }

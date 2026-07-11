@@ -9,10 +9,11 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Field;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldValueHintInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Phrase;
 
-class UriPath implements FieldInterface
+class UriPath implements FieldInterface, FieldValueHintInterface
 {
     /**
      * @param RequestInterface $request
@@ -55,5 +56,15 @@ class UriPath implements FieldInterface
         $queryStart = strpos($uri, '?');
 
         return $queryStart === false ? $uri : substr($uri, 0, $queryStart);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getValueHint(): array
+    {
+        return [
+            'placeholder' => '/checkout/cart',
+        ];
     }
 }

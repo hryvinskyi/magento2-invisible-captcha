@@ -10,9 +10,10 @@ namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorMetadataInterface;
 use Magento\Framework\Phrase;
 
-class LessThanOrEqual implements OperatorInterface
+class LessThanOrEqual implements OperatorInterface, OperatorMetadataInterface
 {
     /**
      * @inheritDoc
@@ -48,5 +49,13 @@ class LessThanOrEqual implements OperatorInterface
         }
 
         return (float)($fieldValue ?? 0) <= (float)$configValue;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getValueKind(): string
+    {
+        return self::VALUE_NUMBER;
     }
 }

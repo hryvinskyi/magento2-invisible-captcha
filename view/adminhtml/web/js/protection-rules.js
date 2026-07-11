@@ -14,6 +14,7 @@ define([], function () {
 
     var SVG_PLUS = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
     var SVG_CLOSE = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+    var SVG_CHEVRON = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 2.5L8 6l-4 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
     function toGroups(rows) {
         var groups = [];
@@ -154,10 +155,26 @@ define([], function () {
         this.fieldTypeByCode = {};
         this.fieldsByCode = {};
         this.fieldsByLabel = {};
+        this.fieldHintByCode = {};
         this.fields.forEach(function (field) {
             this.fieldTypeByCode[field.value] = field.type;
             this.fieldsByCode[field.value] = field;
             this.fieldsByLabel[field.label] = field;
+            if (field.hint) {
+                var hintRegex = null;
+                if (field.hint.pattern) {
+                    try {
+                        hintRegex = new RegExp(field.hint.pattern);
+                    } catch (e) {
+                        hintRegex = null;
+                    }
+                }
+                this.fieldHintByCode[field.value] = {
+                    regex: hintRegex,
+                    message: field.hint.message || '',
+                    placeholder: field.hint.placeholder || ''
+                };
+            }
         }.bind(this));
         this.operatorsByCode = {};
         this.operatorsByLabel = {};
@@ -240,6 +257,11 @@ define([], function () {
 
         this.previewEl = this.buildPreview();
         this.root.appendChild(this.previewEl);
+
+        if (this.config.tester && this.config.tester.endpoint) {
+            this.testerEl = this.buildTester();
+            this.root.appendChild(this.testerEl);
+        }
     };
 
     ProtectionRulesEditor.prototype.buildModeTabs = function () {
@@ -469,19 +491,29 @@ define([], function () {
 
         var fieldSelect = this.buildFieldSelect(condition, rowKey);
         var operatorSelect = this.buildOperatorSelect(condition, rowKey);
-        var valueInput = createElement('input', {
-            className: 'hryvinskyi-fx-input hryvinskyi-fx-mono',
-            attrs: {
-                type: 'text',
-                name: this.inputName(rowKey, 'value'),
-                value: condition.value || '',
-                placeholder: this.labels.valuePlaceholder || 'Value'
+        var currentValueControl = this.buildValueControl(condition, rowKey);
+        var validationErrorEl = null;
+
+        // Live value validation: red state + message under the Value cell.
+        var applyValidation = function () {
+            var verdict = self.validateConditionValue(condition);
+            currentValueControl.classList.toggle('is-invalid', !verdict.ok);
+            if (!verdict.ok) {
+                if (!validationErrorEl) {
+                    validationErrorEl = createElement('span', {className: 'hryvinskyi-fx-cell-error'});
+                    valCell.appendChild(validationErrorEl);
+                }
+                validationErrorEl.textContent = verdict.message;
+            } else if (validationErrorEl) {
+                valCell.removeChild(validationErrorEl);
+                validationErrorEl = null;
             }
-        });
-        valueInput.addEventListener('input', function () {
-            condition.value = valueInput.value;
-            self.refreshPreview();
-        });
+        };
+        var bindValueValidation = function (control) {
+            control.addEventListener('input', applyValidation);
+            control.addEventListener('change', applyValidation);
+        };
+        bindValueValidation(currentValueControl);
 
         var combinatorInput = createElement('input', {
             attrs: {type: 'hidden', name: this.inputName(rowKey, 'combinator'), value: combinator}
@@ -513,7 +545,7 @@ define([], function () {
             className: 'hryvinskyi-fx-cell-cap',
             text: this.labels.valuePlaceholder || 'Value'
         }));
-        valCell.appendChild(valueInput);
+        valCell.appendChild(currentValueControl);
 
         row.appendChild(fieldCell);
         row.appendChild(opCell);
@@ -521,17 +553,306 @@ define([], function () {
         row.appendChild(removeBtn);
         row.appendChild(combinatorInput);
 
+        // The value control's shape depends on the field type and operator
+        // (boolean fields use a Yes/No select, list operators a tag input) —
+        // rebuild it in place whenever either changes.
+        var swapValueControl = function () {
+            var freshValueControl = self.buildValueControl(condition, rowKey);
+            valCell.replaceChild(freshValueControl, currentValueControl);
+            currentValueControl = freshValueControl;
+            bindValueValidation(freshValueControl);
+        };
+
         fieldSelect.addEventListener('change', function () {
             condition.field = fieldSelect.value;
             self.repopulateOperator(operatorSelect, condition);
+            swapValueControl();
+            applyValidation();
             self.refreshPreview();
         });
         operatorSelect.addEventListener('change', function () {
             condition.operator = operatorSelect.value;
+            swapValueControl();
+            applyValidation();
             self.refreshPreview();
         });
 
+        applyValidation();
+
         return row;
+    };
+
+    /**
+     * Validate a condition's value against the operator's value kind and the
+     * field's type/hint. Advisory only — the server evaluates fail-safe — but
+     * it catches values that would silently never match.
+     */
+    ProtectionRulesEditor.prototype.validateConditionValue = function (condition) {
+        var valid = {ok: true, message: ''};
+        var type = this.fieldTypeByCode[condition.field];
+        if (type === 'boolean') {
+            return valid;
+        }
+
+        var operator = this.operatorsByCode[condition.operator];
+        var kind = (operator && operator.valueKind) || 'text';
+        var value = condition.value == null ? '' : String(condition.value);
+        var trimmed = value.trim();
+        var hint = this.fieldHintByCode[condition.field] || null;
+        var numberRe = /^-?\d+(\.\d+)?$/;
+
+        if (kind === 'number') {
+            if (!numberRe.test(trimmed)) {
+                return {ok: false, message: this.labels.valErrNumber || 'Enter a number.'};
+            }
+            return valid;
+        }
+
+        if (kind === 'pattern') {
+            if (trimmed === '') {
+                return {ok: false, message: this.labels.valErrRegexEmpty || 'Enter a regular expression.'};
+            }
+            if (!this.isValidPattern(value)) {
+                return {ok: false, message: this.labels.valErrRegexInvalid || 'This is not a valid regular expression.'};
+            }
+            return valid;
+        }
+
+        if (kind === 'list') {
+            var items = trimmed.split(/[\s,]+/).filter(Boolean);
+            if (!items.length) {
+                return {ok: false, message: this.labels.valErrListEmpty || 'Enter one or more values, separated by commas.'};
+            }
+            for (var i = 0; i < items.length; i++) {
+                var itemError = this.listItemError(condition, items[i]);
+                if (itemError !== null) {
+                    return {ok: false, message: itemError};
+                }
+            }
+            return valid;
+        }
+
+        if (kind === 'text_required' && value === '') {
+            return {ok: false, message: this.labels.valErrEmptyNeverMatches || 'Enter a value — an empty one never matches.'};
+        }
+
+        if (type === 'numeric') {
+            if (!numberRe.test(trimmed)) {
+                return {ok: false, message: this.labels.valErrNumber || 'Enter a number.'};
+            }
+            return valid;
+        }
+
+        // Exact-match text against the field's own format hint. Substring and
+        // regex operators legitimately take fragments, so only `text` applies.
+        if (kind === 'text' && value !== '' && hint && hint.regex && !hint.regex.test(value)) {
+            return {
+                ok: false,
+                message: hint.message || this.labels.valErrInvalidValue || 'This value looks invalid for the selected field.'
+            };
+        }
+
+        return valid;
+    };
+
+    /**
+     * Validate one list item against the condition's field: numeric fields
+     * require numbers, hinted fields their format pattern. Returns the error
+     * message, or null when the item is fine.
+     */
+    ProtectionRulesEditor.prototype.listItemError = function (condition, item) {
+        var type = this.fieldTypeByCode[condition.field];
+        if (type === 'numeric') {
+            if (!/^-?\d+(\.\d+)?$/.test(item)) {
+                return this.labels.valErrListNumber || 'Every list item must be a number.';
+            }
+            return null;
+        }
+
+        var hint = this.fieldHintByCode[condition.field] || null;
+        if (hint && hint.regex && !hint.regex.test(item)) {
+            return hint.message || this.labels.valErrInvalidValue || 'This value looks invalid for the selected field.';
+        }
+
+        return null;
+    };
+
+    /**
+     * Tag-style value control for list operators: each item is a removable
+     * chip; Enter, comma, space, paste and blur commit the typed text. The
+     * canonical comma-separated string lives in a hidden input carrying the
+     * row's form name, so persistence and the parser see the same format a
+     * plain text input would produce.
+     */
+    ProtectionRulesEditor.prototype.buildTagValueControl = function (condition, rowKey) {
+        var self = this;
+        var tags = String(condition.value == null ? '' : condition.value).split(/[\s,]+/).filter(Boolean);
+
+        var wrap = createElement('div', {className: 'hryvinskyi-fx-tags'});
+        var entry = createElement('input', {
+            className: 'hryvinskyi-fx-tags-entry',
+            attrs: {
+                type: 'text',
+                placeholder: this.labels.tagsPlaceholder || 'Add value…'
+            }
+        });
+        var hidden = createElement('input', {
+            attrs: {type: 'hidden', name: this.inputName(rowKey, 'value'), value: tags.join(', ')}
+        });
+
+        var sync = function () {
+            condition.value = tags.join(', ');
+            hidden.value = condition.value;
+            self.refreshPreview();
+            // Bubbles to the row's validation listener bound on the wrapper.
+            wrap.dispatchEvent(new Event('change'));
+        };
+
+        var renderTags = function () {
+            wrap.querySelectorAll('.hryvinskyi-fx-tag').forEach(function (chip) {
+                wrap.removeChild(chip);
+            });
+            tags.forEach(function (tag, index) {
+                var chip = createElement('span', {className: 'hryvinskyi-fx-tag'});
+                if (self.listItemError(condition, tag) !== null) {
+                    chip.classList.add('is-bad');
+                }
+                chip.appendChild(createElement('span', {className: 'hryvinskyi-fx-tag-text', text: tag}));
+                var remove = createElement('button', {
+                    className: 'hryvinskyi-fx-tag-remove',
+                    attrs: {type: 'button', title: self.labels.tagsRemove || 'Remove value'},
+                    html: '&times;'
+                });
+                remove.addEventListener('click', function () {
+                    tags.splice(index, 1);
+                    renderTags();
+                    sync();
+                });
+                chip.appendChild(remove);
+                wrap.insertBefore(chip, entry);
+            });
+        };
+
+        var commitEntry = function () {
+            var pieces = entry.value.split(/[\s,]+/).filter(Boolean);
+            pieces.forEach(function (piece) {
+                if (tags.indexOf(piece) === -1) {
+                    tags.push(piece);
+                }
+            });
+            entry.value = '';
+            if (pieces.length) {
+                renderTags();
+                sync();
+            }
+        };
+
+        entry.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
+                e.preventDefault();
+                commitEntry();
+            } else if (e.key === 'Backspace' && entry.value === '' && tags.length) {
+                tags.pop();
+                renderTags();
+                sync();
+            }
+        });
+        entry.addEventListener('blur', commitEntry);
+        entry.addEventListener('paste', function () {
+            window.setTimeout(commitEntry, 0);
+        });
+        wrap.addEventListener('click', function (e) {
+            if (e.target === wrap) {
+                entry.focus();
+            }
+        });
+
+        wrap.appendChild(entry);
+        wrap.appendChild(hidden);
+        renderTags();
+
+        return wrap;
+    };
+
+    /**
+     * Approximate regex validation: accepts a bare pattern the way the server
+     * auto-wraps it, or a delimited PCRE like `~^/checkout~i` (the delimited
+     * body is compiled without its PCRE-only flags).
+     */
+    ProtectionRulesEditor.prototype.isValidPattern = function (pattern) {
+        try {
+            new RegExp(pattern);
+            return true;
+        } catch (e) {
+            // fall through to the delimited-PCRE attempt
+        }
+
+        var delimited = pattern.match(/^(.)([\s\S]*)\1([imsuxADSUXJ]*)$/);
+        if (delimited && /[^A-Za-z0-9\s\\]/.test(delimited[1])) {
+            try {
+                new RegExp(delimited[2]);
+                return true;
+            } catch (e2) {
+                return false;
+            }
+        }
+
+        return false;
+    };
+
+    /**
+     * Build the Value control for a condition: boolean fields get a strict
+     * Yes/No select (persisted as "1"/"0"), list operators a tag input
+     * (persisted comma-separated), everything else a free text input.
+     */
+    ProtectionRulesEditor.prototype.buildValueControl = function (condition, rowKey) {
+        var self = this;
+        var operator = this.operatorsByCode[condition.operator];
+
+        if ((operator && operator.valueKind) === 'list' && this.fieldTypeByCode[condition.field] !== 'boolean') {
+            return this.buildTagValueControl(condition, rowKey);
+        }
+
+        if (this.fieldTypeByCode[condition.field] === 'boolean') {
+            if (condition.value !== '0' && condition.value !== '1') {
+                condition.value = '1';
+            }
+            var select = createElement('select', {
+                className: 'hryvinskyi-fx-select',
+                attrs: {name: this.inputName(rowKey, 'value')}
+            });
+            [
+                ['1', this.labels.valueYes || 'Yes'],
+                ['0', this.labels.valueNo || 'No']
+            ].forEach(function (entry) {
+                var option = createElement('option', {text: entry[1], attrs: {value: entry[0]}});
+                if (entry[0] === condition.value) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+            select.addEventListener('change', function () {
+                condition.value = select.value;
+                self.refreshPreview();
+            });
+            return select;
+        }
+
+        var hint = this.fieldHintByCode[condition.field] || null;
+        var input = createElement('input', {
+            className: 'hryvinskyi-fx-input hryvinskyi-fx-mono',
+            attrs: {
+                type: 'text',
+                name: this.inputName(rowKey, 'value'),
+                value: condition.value || '',
+                placeholder: (hint && hint.placeholder) || this.labels.valuePlaceholder || 'Value'
+            }
+        });
+        input.addEventListener('input', function () {
+            condition.value = input.value;
+            self.refreshPreview();
+        });
+        return input;
     };
 
     ProtectionRulesEditor.prototype.buildFieldSelect = function (condition, rowKey) {
@@ -1187,7 +1508,8 @@ define([], function () {
             var combinator = row.querySelector('input[type="hidden"]');
             var field = row.querySelector('select[name$="[field]"]');
             var operator = row.querySelector('select[name$="[operator]"]');
-            var value = row.querySelector('input[name$="[value]"]');
+            // The value control is a text input or, for boolean fields, a select.
+            var value = row.querySelector('input[name$="[value]"], select[name$="[value]"]');
             flat.push({
                 combinator: combinator ? combinator.value : COMBINATOR_AND,
                 field: field ? field.value : '',
@@ -1198,6 +1520,352 @@ define([], function () {
         if (flat.length) {
             this.groups = toGroups(flat);
         }
+    };
+
+    // ── Rule tester panel ────────────────────────────────────────────────
+    ProtectionRulesEditor.prototype.buildTester = function () {
+        var self = this;
+        var wrap = createElement('div', {className: 'hryvinskyi-fx-tester'});
+        this.testerWrapEl = wrap;
+
+        // Collapsed by default — the whole header is the toggle.
+        var head = createElement('button', {
+            className: 'hryvinskyi-fx-tester-head',
+            attrs: {type: 'button', 'aria-expanded': 'false'}
+        });
+        head.appendChild(createElement('span', {
+            className: 'hryvinskyi-fx-tester-chevron',
+            html: SVG_CHEVRON
+        }));
+        head.appendChild(createElement('span', {
+            className: 'hryvinskyi-fx-tester-title',
+            text: this.labels.testerTitle || 'Test Rules'
+        }));
+        head.appendChild(createElement('span', {
+            className: 'hryvinskyi-fx-tester-hint',
+            text: this.labels.testerHint || ''
+        }));
+        head.addEventListener('click', function () {
+            self.toggleTester();
+        });
+        this.testerHeadEl = head;
+        wrap.appendChild(head);
+
+        this.testerBodyEl = createElement('div', {className: 'hryvinskyi-fx-tester-body'});
+        this.testerBodyEl.hidden = true;
+        wrap.appendChild(this.testerBodyEl);
+
+        var grid = createElement('div', {className: 'hryvinskyi-fx-tester-grid'});
+
+        this.testerUrlInput = createElement('input', {
+            className: 'hryvinskyi-fx-tester-input hryvinskyi-fx-mono',
+            attrs: {type: 'text', placeholder: this.labels.testerUrlPlaceholder || '/checkout/cart'}
+        });
+        grid.appendChild(this.buildTesterField(this.labels.testerUrl || 'URL or path', this.testerUrlInput, 'wide'));
+
+        this.testerStoreSelect = createElement('select', {className: 'hryvinskyi-fx-tester-input'});
+        (this.config.tester.stores || []).forEach(function (store) {
+            var option = createElement('option', {text: store.label, attrs: {value: String(store.value)}});
+            if (String(store.value) === String(self.config.tester.defaultStoreId)) {
+                option.selected = true;
+            }
+            self.testerStoreSelect.appendChild(option);
+        });
+        grid.appendChild(this.buildTesterField(this.labels.testerStore || 'Store View', this.testerStoreSelect));
+
+        this.testerMethodSelect = createElement('select', {className: 'hryvinskyi-fx-tester-input'});
+        ['GET', 'POST', 'HEAD', 'PUT', 'DELETE'].forEach(function (method) {
+            self.testerMethodSelect.appendChild(createElement('option', {text: method, attrs: {value: method}}));
+        });
+        grid.appendChild(this.buildTesterField(this.labels.testerMethod || 'Method', this.testerMethodSelect));
+
+        this.testerUaInput = createElement('input', {
+            className: 'hryvinskyi-fx-tester-input',
+            attrs: {type: 'text', placeholder: 'Mozilla/5.0 (compatible; SomeBot/1.0)'}
+        });
+        grid.appendChild(this.buildTesterField(this.labels.testerUserAgent || 'User-Agent', this.testerUaInput, 'wide'));
+
+        this.testerIpInput = createElement('input', {
+            className: 'hryvinskyi-fx-tester-input hryvinskyi-fx-mono',
+            attrs: {type: 'text', placeholder: '203.0.113.10'}
+        });
+        grid.appendChild(this.buildTesterField(this.labels.testerClientIp || 'Client IP', this.testerIpInput));
+
+        this.testerRefererInput = createElement('input', {
+            className: 'hryvinskyi-fx-tester-input hryvinskyi-fx-mono',
+            attrs: {type: 'text', placeholder: 'https://www.google.com/'}
+        });
+        grid.appendChild(this.buildTesterField(this.labels.testerReferer || 'Referer', this.testerRefererInput));
+
+        this.testerActionInput = createElement('input', {
+            className: 'hryvinskyi-fx-tester-input hryvinskyi-fx-mono',
+            attrs: {type: 'text', placeholder: this.labels.testerActionNameHint || 'auto-detected'}
+        });
+        grid.appendChild(this.buildTesterField(this.labels.testerActionName || 'Full Action Name', this.testerActionInput));
+
+        this.testerBodyEl.appendChild(grid);
+
+        var actions = createElement('div', {className: 'hryvinskyi-fx-tester-actions'});
+        this.testerRunBtn = createElement('button', {
+            className: 'hryvinskyi-fx-btn hryvinskyi-fx-btn-primary',
+            attrs: {type: 'button'},
+            text: this.labels.testerRun || 'Run Test'
+        });
+        this.testerRunBtn.addEventListener('click', function () {
+            self.runRuleTest();
+        });
+        actions.appendChild(this.testerRunBtn);
+        this.testerStatusEl = createElement('span', {className: 'hryvinskyi-fx-tester-status'});
+        actions.appendChild(this.testerStatusEl);
+        this.testerBodyEl.appendChild(actions);
+
+        this.testerResultEl = createElement('div', {className: 'hryvinskyi-fx-tester-result'});
+        this.testerResultEl.hidden = true;
+        this.testerBodyEl.appendChild(this.testerResultEl);
+
+        this.testerUrlInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                self.runRuleTest();
+            }
+        });
+
+        return wrap;
+    };
+
+    ProtectionRulesEditor.prototype.toggleTester = function () {
+        var open = this.testerBodyEl.hidden;
+        this.testerBodyEl.hidden = !open;
+        this.testerWrapEl.classList.toggle('is-open', open);
+        this.testerHeadEl.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) {
+            this.testerUrlInput.focus();
+        }
+    };
+
+    ProtectionRulesEditor.prototype.buildTesterField = function (labelText, input, modifier) {
+        var field = createElement('label', {
+            className: 'hryvinskyi-fx-tester-field' + (modifier ? ' hryvinskyi-fx-tester-field-' + modifier : '')
+        });
+        field.appendChild(createElement('span', {className: 'hryvinskyi-fx-tester-label', text: labelText}));
+        field.appendChild(input);
+        return field;
+    };
+
+    /**
+     * Flatten the editor state back into the persisted row list so the
+     * tester evaluates exactly what the admin sees (unsaved included).
+     */
+    ProtectionRulesEditor.prototype.serializeDraftRows = function () {
+        if (this.mode === MODE_BUILDER) {
+            this.captureLiveValues();
+        }
+        var rows = [];
+        this.groups.forEach(function (group, groupIndex) {
+            group.forEach(function (cond, condIndex) {
+                rows.push({
+                    combinator: groupIndex > 0 && condIndex === 0 ? COMBINATOR_OR : COMBINATOR_AND,
+                    field: cond.field || '',
+                    operator: cond.operator || '',
+                    value: cond.value || ''
+                });
+            });
+        });
+        return rows;
+    };
+
+    ProtectionRulesEditor.prototype.runRuleTest = function () {
+        var self = this;
+        var url = (this.testerUrlInput.value || '').trim();
+        this.testerStatusEl.textContent = '';
+
+        if (url === '') {
+            this.testerUrlInput.focus();
+            return;
+        }
+
+        var body = new URLSearchParams();
+        body.append('form_key', window.FORM_KEY || '');
+        body.append('url', url);
+        body.append('store_id', this.testerStoreSelect.value || '');
+        body.append('method', this.testerMethodSelect.value || 'GET');
+        body.append('user_agent', this.testerUaInput.value || '');
+        body.append('client_ip', (this.testerIpInput.value || '').trim());
+        body.append('referer', (this.testerRefererInput.value || '').trim());
+        body.append('action_name', (this.testerActionInput.value || '').trim());
+        body.append('rules', JSON.stringify(this.serializeDraftRows()));
+
+        this.testerRunBtn.disabled = true;
+        this.testerRunBtn.textContent = this.labels.testerRunning || 'Testing…';
+
+        window.fetch(this.config.tester.endpoint, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
+            body: body
+        }).then(function (response) {
+            return response.json();
+        }).then(function (data) {
+            if (data && data.ok) {
+                self.renderTestResult(data);
+            } else {
+                self.testerResultEl.hidden = true;
+                self.testerStatusEl.textContent = (data && data.message) || self.labels.testerError || 'Request failed.';
+            }
+        }).catch(function () {
+            self.testerResultEl.hidden = true;
+            self.testerStatusEl.textContent = self.labels.testerError || 'Request failed.';
+        }).then(function () {
+            self.testerRunBtn.disabled = false;
+            self.testerRunBtn.textContent = self.labels.testerRun || 'Run Test';
+        });
+    };
+
+    ProtectionRulesEditor.prototype.renderTestResult = function (data) {
+        var self = this;
+        this.testerResultEl.innerHTML = '';
+        this.testerResultEl.hidden = false;
+
+        var verdictClass = 'pass';
+        var verdictText = this.labels.verdictPass || 'PASS';
+        if (data.wouldChallenge) {
+            verdictClass = 'challenge';
+            verdictText = this.labels.verdictChallenge || 'CHALLENGE';
+        } else if (data.matched) {
+            verdictClass = 'idle';
+            verdictText = this.labels.verdictMatchedIdle || 'MATCHED — inactive';
+        }
+
+        var banner = createElement('div', {className: 'hryvinskyi-fx-tester-verdict hryvinskyi-fx-tester-verdict-' + verdictClass});
+        banner.appendChild(createElement('strong', {text: verdictText}));
+
+        var reasons = this.collectIdleReasons(data);
+        if (data.matched && !data.wouldChallenge && reasons.length) {
+            banner.appendChild(createElement('span', {
+                className: 'hryvinskyi-fx-tester-reasons',
+                text: reasons.join('; ')
+            }));
+        }
+        this.testerResultEl.appendChild(banner);
+
+        var context = data.context || {};
+        var fields = data.fields || {};
+        var metaBits = [];
+        if (context.store) {
+            metaBits.push((this.labels.testerStore || 'Store View') + ': ' + context.store);
+        }
+        if (context.requestUri) {
+            metaBits.push(context.requestUri);
+        }
+        if (fields.action_name) {
+            metaBits.push('action: ' + fields.action_name + (context.actionNameSource ? ' (' + context.actionNameSource + ')' : ''));
+        }
+        if (metaBits.length) {
+            this.testerResultEl.appendChild(createElement('div', {
+                className: 'hryvinskyi-fx-tester-meta hryvinskyi-fx-mono',
+                text: metaBits.join('  ·  ')
+            }));
+        }
+
+        (data.warnings || []).forEach(function (warning) {
+            self.testerResultEl.appendChild(createElement('div', {
+                className: 'hryvinskyi-fx-tester-warning',
+                text: warning
+            }));
+        });
+
+        (data.groups || []).forEach(function (group, index) {
+            self.testerResultEl.appendChild(self.renderTestGroup(group, index));
+        });
+
+        this.testerResultEl.appendChild(this.renderTestFields(fields));
+    };
+
+    ProtectionRulesEditor.prototype.collectIdleReasons = function (data) {
+        var reasons = [];
+        var bypass = data.bypass || {};
+        var context = data.context || {};
+        if (bypass.excludedIp) {
+            reasons.push(this.labels.reasonExcludedIp || 'excluded IP');
+        }
+        if (bypass.excludedUserAgent) {
+            reasons.push(this.labels.reasonExcludedUa || 'excluded user agent');
+        }
+        if (bypass.verifyEndpoint) {
+            reasons.push(this.labels.reasonVerifyEndpoint || 'verify endpoint');
+        }
+        if (!context.routeProtectionEnabled) {
+            reasons.push(this.labels.reasonDisabled || 'route protection disabled');
+        }
+        if (!context.providerConfigured) {
+            reasons.push(this.labels.reasonNotConfigured || 'provider not configured');
+        }
+        return reasons;
+    };
+
+    ProtectionRulesEditor.prototype.renderTestGroup = function (group, index) {
+        var groupEl = createElement('div', {className: 'hryvinskyi-fx-tester-group'});
+        var head = createElement('div', {className: 'hryvinskyi-fx-tester-group-head'});
+        head.appendChild(createElement('span', {
+            text: (this.labels.testerGroup || 'Group') + ' ' + (index + 1)
+        }));
+        head.appendChild(createElement('span', {
+            className: 'hryvinskyi-fx-tester-badge ' + (group.matched ? 'is-hit' : 'is-miss'),
+            text: group.matched
+                ? (this.labels.testerMatched || 'matched')
+                : (this.labels.testerNotMatched || 'not matched')
+        }));
+        groupEl.appendChild(head);
+
+        var self = this;
+        (group.conditions || []).forEach(function (condition) {
+            var row = createElement('div', {className: 'hryvinskyi-fx-tester-row'});
+            row.appendChild(createElement('span', {
+                className: 'hryvinskyi-fx-tester-badge ' + (condition.matched ? 'is-hit' : 'is-miss'),
+                text: condition.matched ? '✓' : '✗'
+            }));
+            row.appendChild(createElement('code', {
+                className: 'hryvinskyi-fx-mono',
+                text: condition.field + ' ' + condition.operator + ' ' + JSON.stringify(String(condition.value))
+            }));
+            row.appendChild(createElement('span', {
+                className: 'hryvinskyi-fx-tester-actual hryvinskyi-fx-mono',
+                text: (self.labels.testerActual || 'actual') + ': ' + self.formatFieldValue(condition.fieldValue)
+            }));
+            groupEl.appendChild(row);
+        });
+
+        return groupEl;
+    };
+
+    ProtectionRulesEditor.prototype.renderTestFields = function (fields) {
+        var details = createElement('details', {className: 'hryvinskyi-fx-tester-fields'});
+        details.appendChild(createElement('summary', {
+            text: this.labels.testerFieldsTitle || 'Resolved field values'
+        }));
+        var list = createElement('div', {className: 'hryvinskyi-fx-tester-fields-list'});
+        var self = this;
+        Object.keys(fields).forEach(function (code) {
+            var row = createElement('div', {className: 'hryvinskyi-fx-tester-fields-row'});
+            row.appendChild(createElement('span', {className: 'hryvinskyi-fx-mono', text: code}));
+            row.appendChild(createElement('span', {
+                className: 'hryvinskyi-fx-mono',
+                text: self.formatFieldValue(fields[code])
+            }));
+            list.appendChild(row);
+        });
+        details.appendChild(list);
+        return details;
+    };
+
+    ProtectionRulesEditor.prototype.formatFieldValue = function (value) {
+        if (value === null || value === undefined) {
+            return '—';
+        }
+        if (typeof value === 'string') {
+            return JSON.stringify(value);
+        }
+        return String(value);
     };
 
     return function (config, element) {

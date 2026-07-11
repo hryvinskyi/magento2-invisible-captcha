@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Model;
 
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\ExclusionPolicyInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionEvaluatorInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionParserInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface;
@@ -28,6 +29,7 @@ class RequestChecker
      * @param ExpressionParserInterface $expressionParser
      * @param ExpressionEvaluatorInterface $expressionEvaluator
      * @param ClientIp $clientIp
+     * @param ExclusionPolicyInterface $exclusionPolicy
      * @param RequestInterface $request
      */
     public function __construct(
@@ -36,6 +38,7 @@ class RequestChecker
         private readonly ExpressionParserInterface $expressionParser,
         private readonly ExpressionEvaluatorInterface $expressionEvaluator,
         private readonly ClientIp $clientIp,
+        private readonly ExclusionPolicyInterface $exclusionPolicy,
         private readonly RequestInterface $request
     ) {
     }
@@ -103,12 +106,7 @@ class RequestChecker
      */
     private function isExcludedIp(): bool
     {
-        $excludedIps = $this->config->getExcludedIps();
-        if ($excludedIps === []) {
-            return false;
-        }
-
-        return in_array($this->getClientIp(), $excludedIps, true);
+        return $this->exclusionPolicy->isIpExcluded($this->getClientIp());
     }
 
     /**
@@ -116,22 +114,6 @@ class RequestChecker
      */
     private function isExcludedUserAgent(): bool
     {
-        $excludedUserAgents = $this->config->getExcludedUserAgents();
-        if ($excludedUserAgents === []) {
-            return false;
-        }
-
-        $userAgent = (string)$this->request->getHeader('User-Agent');
-        if ($userAgent === '') {
-            return false;
-        }
-
-        foreach ($excludedUserAgents as $excluded) {
-            if (stripos($userAgent, $excluded) !== false) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->exclusionPolicy->isUserAgentExcluded((string)$this->request->getHeader('User-Agent'));
     }
 }

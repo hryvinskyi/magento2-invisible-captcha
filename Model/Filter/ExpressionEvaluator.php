@@ -11,10 +11,11 @@ namespace Hryvinskyi\InvisibleCaptcha\Model\Filter;
 use Hryvinskyi\InvisibleCaptcha\Api\ConditionInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionEvaluatorInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\ExpressionTracerInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldProviderInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorProviderInterface;
 
-class ExpressionEvaluator implements ExpressionEvaluatorInterface
+class ExpressionEvaluator implements ExpressionEvaluatorInterface, ExpressionTracerInterface
 {
     /**
      * @param FieldProviderInterface $fieldProvider
@@ -49,6 +50,68 @@ class ExpressionEvaluator implements ExpressionEvaluatorInterface
         }
 
         return false;
+    }
+
+    /**
+     * @inheritDoc
+     *
+     * Unlike {@see evaluate()}, nothing short-circuits: every condition of
+     * every group is resolved so the caller can display the full picture.
+     */
+    public function trace(ExpressionInterface $expression, ?FieldProviderInterface $fieldProvider = null): array
+    {
+        $fieldProvider ??= $this->fieldProvider;
+
+        $matched = false;
+        $groups = [];
+        foreach ($this->splitIntoAndGroups($expression->getConditions()) as $group) {
+            $groupMatched = true;
+            $conditions = [];
+            foreach ($group as $condition) {
+                $conditionTrace = $this->traceCondition($condition, $fieldProvider);
+                $groupMatched = $groupMatched && $conditionTrace['matched'];
+                $conditions[] = $conditionTrace;
+            }
+
+            $matched = $matched || $groupMatched;
+            $groups[] = ['matched' => $groupMatched, 'conditions' => $conditions];
+        }
+
+        return ['matched' => $groups !== [] && $matched, 'groups' => $groups];
+    }
+
+    /**
+     * Resolve one condition with full diagnostics: the field's actual value,
+     * whether field and operator codes were resolvable, and the outcome.
+     *
+     * @param ConditionInterface $condition
+     * @param FieldProviderInterface $fieldProvider
+     * @return array{
+     *     combinator: string,
+     *     field: string,
+     *     operator: string,
+     *     value: string,
+     *     fieldValue: string|int|float|null,
+     *     known: bool,
+     *     matched: bool
+     * }
+     */
+    private function traceCondition(ConditionInterface $condition, FieldProviderInterface $fieldProvider): array
+    {
+        $field = $fieldProvider->get($condition->getFieldCode());
+        $operator = $this->operatorProvider->get($condition->getOperatorCode());
+        $known = $field !== null && $operator !== null;
+        $fieldValue = $field?->getValue();
+
+        return [
+            'combinator' => $condition->getCombinator(),
+            'field' => $condition->getFieldCode(),
+            'operator' => $condition->getOperatorCode(),
+            'value' => $condition->getValue(),
+            'fieldValue' => $fieldValue,
+            'known' => $known,
+            'matched' => $known && $operator->evaluate($fieldValue, $condition->getValue()),
+        ];
     }
 
     /**

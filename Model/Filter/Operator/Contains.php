@@ -10,9 +10,10 @@ namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorMetadataInterface;
 use Magento\Framework\Phrase;
 
-class Contains implements OperatorInterface
+class Contains implements OperatorInterface, OperatorMetadataInterface
 {
     /**
      * @inheritDoc
@@ -48,5 +49,13 @@ class Contains implements OperatorInterface
         }
 
         return str_contains((string)($fieldValue ?? ''), $configValue);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getValueKind(): string
+    {
+        return self::VALUE_TEXT_REQUIRED;
     }
 }

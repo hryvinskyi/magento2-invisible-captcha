@@ -26,14 +26,17 @@
         "magento/module-quote": "*",
         "magento/module-webapi": "*",
         "magento/module-graph-ql": "*",
+        "magento/module-backend": "*",
+        "magento/module-url-rewrite": "*",
         "hryvinskyi/magento2-base": "^2.1",
-        "hryvinskyi/magento2-theme-assets": "^1.0"
+        "hryvinskyi/magento2-theme-assets": "^1.0",
+        "hryvinskyi/magento2-configuration-fields": "^1.0.11"
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest"
     },
     "type": "magento2-module",
-    "version": "3.0.4",
+    "version": "3.1.0",
     "license": "MIT",
     "authors": [
         {

@@ -10,6 +10,7 @@ namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorMetadataInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -21,7 +22,7 @@ use Psr\Log\LoggerInterface;
  * working, e.g. `~^/checkout~i`), and on a PCRE parse error retried wrapped in
  * `~...~`. Only when both forms fail is the pattern reported invalid.
  */
-abstract class AbstractRegex implements OperatorInterface
+abstract class AbstractRegex implements OperatorInterface, OperatorMetadataInterface
 {
     /**
      * @param LoggerInterface $logger
@@ -70,5 +71,13 @@ abstract class AbstractRegex implements OperatorInterface
         ));
 
         return null;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getValueKind(): string
+    {
+        return self::VALUE_PATTERN;
     }
 }

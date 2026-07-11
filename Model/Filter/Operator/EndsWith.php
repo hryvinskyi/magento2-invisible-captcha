@@ -10,9 +10,10 @@ namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorMetadataInterface;
 use Magento\Framework\Phrase;
 
-class EndsWith implements OperatorInterface
+class EndsWith implements OperatorInterface, OperatorMetadataInterface
 {
     /**
      * @inheritDoc
@@ -48,5 +49,13 @@ class EndsWith implements OperatorInterface
         }
 
         return str_ends_with((string)($fieldValue ?? ''), $configValue);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getValueKind(): string
+    {
+        return self::VALUE_TEXT_REQUIRED;
     }
 }

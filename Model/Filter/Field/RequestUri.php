@@ -9,10 +9,11 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Field;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldValueHintInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Phrase;
 
-class RequestUri implements FieldInterface
+class RequestUri implements FieldInterface, FieldValueHintInterface
 {
     /**
      * @param RequestInterface $request
@@ -52,5 +53,15 @@ class RequestUri implements FieldInterface
     public function getValue(): string
     {
         return (string)$this->request->getRequestUri();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getValueHint(): array
+    {
+        return [
+            'placeholder' => '/lamps?price=10-20',
+        ];
     }
 }

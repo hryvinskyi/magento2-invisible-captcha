@@ -10,9 +10,10 @@ namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorMetadataInterface;
 use Magento\Framework\Phrase;
 
-class StartsWith implements OperatorInterface
+class StartsWith implements OperatorInterface, OperatorMetadataInterface
 {
     /**
      * @inheritDoc
@@ -48,5 +49,13 @@ class StartsWith implements OperatorInterface
         }
 
         return str_starts_with((string)($fieldValue ?? ''), $configValue);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getValueKind(): string
+    {
+        return self::VALUE_TEXT_REQUIRED;
     }
 }

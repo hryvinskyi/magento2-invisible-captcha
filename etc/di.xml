@@ -26,12 +26,36 @@
                 type="Hryvinskyi\InvisibleCaptcha\Model\Filter\ExpressionParser"/>
     <preference for="Hryvinskyi\InvisibleCaptcha\Api\ExpressionEvaluatorInterface"
                 type="Hryvinskyi\InvisibleCaptcha\Model\Filter\ExpressionEvaluator"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\ExpressionTracerInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Filter\ExpressionEvaluator"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\ExclusionPolicyInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\ExclusionPolicy"/>
+
+    <!-- Route-protection rule tester -->
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Tester\SimulationInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Tester\Simulation"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Tester\ActionNameResolverInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Tester\ActionNameResolver"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Tester\RouteRuleTesterInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Tester\RouteRuleTester"/>
     <preference for="Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldProviderInterface"
                 type="Hryvinskyi\InvisibleCaptcha\Model\Filter\FieldProvider"/>
     <preference for="Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorProviderInterface"
                 type="Hryvinskyi\InvisibleCaptcha\Model\Filter\OperatorProvider"/>
     <preference for="Hryvinskyi\InvisibleCaptcha\Api\Migration\RecaptchaMigratorInterface"
                 type="Hryvinskyi\InvisibleCaptcha\Model\Migration\RecaptchaMigrator"/>
+
+    <!-- robots.txt rule support -->
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\RobotsTxt\RuleInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\RobotsTxt\Rule"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\RobotsTxt\GroupInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\RobotsTxt\Group"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\RobotsTxt\ParserInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\RobotsTxt\Parser"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\RobotsTxt\SourceInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\RobotsTxt\Source"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\RobotsTxt\MatcherInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\RobotsTxt\Matcher"/>
     <preference for="Hryvinskyi\InvisibleCaptcha\Api\Migration\CoreConfigGatewayInterface"
                 type="Hryvinskyi\InvisibleCaptcha\Model\Migration\CoreConfigGateway"/>
 
@@ -160,6 +184,7 @@
                 <item name="user_agent" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\UserAgent</item>
                 <item name="referer" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\Referer</item>
                 <item name="active_param_count" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\ActiveParamCount</item>
+                <item name="robots_txt_blocked" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\RobotsTxtBlocked</item>
             </argument>
         </arguments>
     </type>
@@ -209,6 +234,19 @@
             </argument>
         </arguments>
     </type>
+
+    <!-- ============= Tag-list backend for route-protection param lists ======== -->
+    <!-- Newline separator keeps the stored format identical to the former
+         textareas, so Config::parseList() and saved values stay compatible. -->
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Model\Config\Backend\RouteParamsTagList"
+                 type="Hryvinskyi\ConfigurationFields\Model\Config\Backend\TagList">
+        <arguments>
+            <argument name="tagListConfig" xsi:type="array">
+                <item name="separator" xsi:type="string">\n</item>
+                <item name="save_type" xsi:type="string">separator</item>
+            </argument>
+        </arguments>
+    </virtualType>
 
     <!-- =============================== CLI command ============================= -->
     <type name="Magento\Framework\Console\CommandList">

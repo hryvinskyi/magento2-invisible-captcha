@@ -115,6 +115,76 @@ class ExpressionEvaluatorTest extends TestCase
         $this->assertFalse($evaluator->evaluate($expression));
     }
 
+    public function testTraceReportsPerConditionAndPerGroupOutcomes(): void
+    {
+        $trace = $this->evaluator->trace($this->expressionFromSequence('T and F or T'));
+
+        $this->assertTrue($trace['matched']);
+        $this->assertCount(2, $trace['groups']);
+
+        $this->assertFalse($trace['groups'][0]['matched']);
+        $this->assertTrue($trace['groups'][0]['conditions'][0]['matched']);
+        $this->assertFalse($trace['groups'][0]['conditions'][1]['matched']);
+        $this->assertTrue($trace['groups'][1]['matched']);
+        $this->assertTrue($trace['groups'][1]['conditions'][0]['matched']);
+
+        $first = $trace['groups'][0]['conditions'][0];
+        $this->assertSame('field', $first['field']);
+        $this->assertSame('op', $first['operator']);
+        $this->assertSame('true', $first['value']);
+        $this->assertSame('whatever', $first['fieldValue']);
+        $this->assertTrue($first['known']);
+    }
+
+    public function testTraceMatchesEvaluateOnEveryPrecedenceCase(): void
+    {
+        foreach (self::precedenceProvider() as $name => [$sequence, $expected]) {
+            $expression = $this->expressionFromSequence($sequence);
+            $this->assertSame(
+                $expected,
+                $this->evaluator->trace($expression)['matched'],
+                (string)$name
+            );
+        }
+    }
+
+    public function testTraceOfEmptyExpression(): void
+    {
+        $trace = $this->evaluator->trace(new Expression());
+
+        $this->assertFalse($trace['matched']);
+        $this->assertSame([], $trace['groups']);
+    }
+
+    public function testTraceMarksUnknownFieldOrOperator(): void
+    {
+        $fieldProvider = $this->createMock(FieldProviderInterface::class);
+        $operatorProvider = $this->createMock(OperatorProviderInterface::class);
+        $fieldProvider->method('get')->willReturn(null);
+        $operatorProvider->method('get')->willReturn(null);
+
+        $evaluator = new ExpressionEvaluator($fieldProvider, $operatorProvider);
+        $trace = $evaluator->trace(new Expression([new Condition('and', 'x', 'y', 'true')]));
+
+        $this->assertFalse($trace['matched']);
+        $condition = $trace['groups'][0]['conditions'][0];
+        $this->assertFalse($condition['known']);
+        $this->assertFalse($condition['matched']);
+        $this->assertNull($condition['fieldValue']);
+    }
+
+    public function testTraceUsesTheProvidedFieldProviderOverride(): void
+    {
+        $overrideField = $this->createMock(FieldInterface::class);
+        $overrideField->method('getValue')->willReturn('simulated-value');
+        $overrideProvider = $this->createMock(FieldProviderInterface::class);
+        $overrideProvider->method('get')->willReturn($overrideField);
+
+        $trace = $this->evaluator->trace($this->expressionOf(['T']), $overrideProvider);
+
+        $this->assertSame('simulated-value', $trace['groups'][0]['conditions'][0]['fieldValue']);
+    }
+
     /**
      * Build an expression from a sequence like "T and F or T".
      */

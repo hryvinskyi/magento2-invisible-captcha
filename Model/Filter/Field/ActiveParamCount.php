@@ -10,10 +10,11 @@ namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Field;
 
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldValueHintInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Phrase;
 
-class ActiveParamCount implements FieldInterface
+class ActiveParamCount implements FieldInterface, FieldValueHintInterface
 {
     /**
      * @param RequestInterface $request
@@ -72,5 +73,15 @@ class ActiveParamCount implements FieldInterface
         }
 
         return $count;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getValueHint(): array
+    {
+        return [
+            'placeholder' => '3',
+        ];
     }
 }

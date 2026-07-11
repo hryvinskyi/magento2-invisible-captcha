@@ -9,10 +9,11 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Field;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldValueHintInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Phrase;
 
-class ClientIp implements FieldInterface
+class ClientIp implements FieldInterface, FieldValueHintInterface
 {
     /**
      * Server headers checked when resolving the client IP, in priority order.
@@ -78,5 +79,17 @@ class ClientIp implements FieldInterface
         }
 
         return '';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getValueHint(): array
+    {
+        return [
+            'pattern' => '^(\\d{1,3}(\\.\\d{1,3}){3}|[0-9A-Fa-f:]*:[0-9A-Fa-f:]*)$',
+            'message' => (string)__('Enter a valid IPv4 or IPv6 address.'),
+            'placeholder' => '203.0.113.10',
+        ];
     }
 }

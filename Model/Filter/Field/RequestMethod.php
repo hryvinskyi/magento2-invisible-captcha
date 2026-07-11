@@ -9,10 +9,11 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Field;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldValueHintInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Phrase;
 
-class RequestMethod implements FieldInterface
+class RequestMethod implements FieldInterface, FieldValueHintInterface
 {
     /**
      * @param RequestInterface $request
@@ -52,5 +53,17 @@ class RequestMethod implements FieldInterface
     public function getValue(): string
     {
         return strtoupper((string)$this->request->getMethod());
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getValueHint(): array
+    {
+        return [
+            'pattern' => '^[A-Za-z]+$',
+            'message' => (string)__('Enter an HTTP method name, e.g. GET or POST.'),
+            'placeholder' => 'POST',
+        ];
     }
 }

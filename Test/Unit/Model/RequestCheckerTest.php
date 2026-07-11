@@ -14,6 +14,7 @@ use Hryvinskyi\InvisibleCaptcha\Api\ExpressionInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionParserInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface;
+use Hryvinskyi\InvisibleCaptcha\Model\ExclusionPolicy;
 use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\ClientIp;
 use Hryvinskyi\InvisibleCaptcha\Model\RequestChecker;
 use Magento\Framework\App\Request\Http as HttpRequest;
@@ -58,6 +59,7 @@ class RequestCheckerTest extends TestCase
             $this->parser,
             $this->evaluator,
             $this->clientIp,
+            new ExclusionPolicy($this->config),
             $this->request
         );
     }
@@ -85,6 +87,7 @@ class RequestCheckerTest extends TestCase
             $this->parser,
             $this->evaluator,
             $this->clientIp,
+            new ExclusionPolicy($config),
             $this->request
         );
 

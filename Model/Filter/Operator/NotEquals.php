@@ -10,9 +10,10 @@ namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Filter\OperatorMetadataInterface;
 use Magento\Framework\Phrase;
 
-class NotEquals implements OperatorInterface
+class NotEquals implements OperatorInterface, OperatorMetadataInterface
 {
     /**
      * @inheritDoc
@@ -35,7 +36,11 @@ class NotEquals implements OperatorInterface
      */
     public function supports(string $fieldType): bool
     {
-        return in_array($fieldType, [FieldInterface::TYPE_STRING, FieldInterface::TYPE_NUMERIC], true);
+        return in_array(
+            $fieldType,
+            [FieldInterface::TYPE_STRING, FieldInterface::TYPE_NUMERIC, FieldInterface::TYPE_BOOLEAN],
+            true
+        );
     }
 
     /**
@@ -44,5 +49,13 @@ class NotEquals implements OperatorInterface
     public function evaluate(string|int|float|null $fieldValue, string $configValue): bool
     {
         return (string)($fieldValue ?? '') !== $configValue;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getValueKind(): string
+    {
+        return self::VALUE_TEXT;
     }
 }

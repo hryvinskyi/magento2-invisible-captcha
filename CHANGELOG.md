@@ -5,6 +5,96 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-07-11
+
+### Added
+
+- **`Blocked by robots.txt` route-protection rule field.** The Protection Rules
+  editor gains a numeric field `robots_txt_blocked` that resolves to 1 when the
+  requested URL is disallowed by the website's robots.txt — so the single rule
+  `robots_txt_blocked eq 1` challenges every client that ignores robots.txt,
+  while legitimate crawlers (which never fetch disallowed URLs, and typically
+  sit in *Excluded User Agents* anyway) are unaffected. The served robots.txt
+  is resolved per website: a physical `pub/robots.txt` wins (the web server
+  delivers it directly), otherwise the *Search Engine Robots* custom
+  instructions — the same website-scoped config `Magento_Robots` renders at
+  `/robots.txt`. Evaluation follows RFC 9309 / Google semantics: stacked
+  `User-agent` groups with the most specific agent token winning and `*` as
+  fallback, tied groups merging, longest-path-match precedence with `Allow`
+  winning specificity ties, `*` wildcards and `$` end anchors, comment/BOM
+  stripping, and lenient relative-path normalization. Content and parsed rules
+  are memoized per request; missing, empty or unreadable robots.txt never
+  challenges (fail-safe). The field introduces a first-class **boolean** rule
+  type: in the builder the operator list narrows to equals / does not equal
+  and the Value cell renders as a strict Yes/No select (persisted as `1`/`0`,
+  so the raw-expression form stays `robots_txt_blocked eq 1`). Extensible via
+  the new `Api\RobotsTxt`
+  `SourceInterface` / `ParserInterface` / `MatcherInterface` preferences.
+  Covered by unit tests (parser, matcher, source, field) and a
+  `RouteProtection\RobotsTxtRuleTest` integration scenario.
+- **Tag-style editors for the route-protection parameter lists.** *Ignored
+  Filter Params*, *AJAX Marker Params* and *Background AJAX Marker Params* are
+  now tag inputs (type a name, press Enter) rendered by the TagList field from
+  the new `hryvinskyi/magento2-configuration-fields` dependency, wired as
+  `RouteParamsTagList` virtual types. Values are still stored
+  newline-separated, so existing configuration keeps working unchanged.
+- **"Test Rules" panel — simulate a request against the Protection Rules.**
+  The rules editor gains a collapsible tester (collapsed by default, the
+  header toggles it) that answers "would this page/request pass or hit the
+  rules?" without leaving the admin: enter a URL (absolute or path), pick the
+  store view and method, optionally set User-Agent, client IP and referer,
+  and run. The verdict distinguishes **CHALLENGE** (expression
+  matched and the gate would fire), **MATCHED — but no challenge** (with the
+  reasons: excluded IP/user agent, verify endpoint, protection disabled,
+  provider unconfigured) and **PASS**, and shows a per-condition ✓/✗ trace
+  with each field's actual resolved value plus a full field-value snapshot.
+  The tester evaluates the **draft rules currently in the editor** (unsaved
+  changes included; falls back to the saved config), runs server-side under
+  full store emulation (`Magento\Store\Model\App\Emulation`) so store-scoped
+  rules, exclusion lists, credentials and robots.txt resolve exactly as on
+  the live storefront, and rebuilds the real field pool around a synthetic
+  request — the same field implementations the gate uses, no duplicated
+  value logic. The full action name is resolved best-effort through URL
+  rewrites (SEO URLs, one redirect hop honored) and the front-name →
+  route-id map, with a manual override and an explicit warning when
+  `action_name` conditions couldn't be grounded. Under the hood this release
+  also extracts the exclusion checks into `Api\ExclusionPolicyInterface`
+  (shared by the live gate and the tester) and adds
+  `Api\ExpressionTracerInterface` — a no-short-circuit diagnostic twin of the
+  evaluator. New admin POST endpoint `hryvinskyi_invisible_captcha/tester/run`
+  (ACL `Hryvinskyi_InvisibleCaptcha::config`); new dependencies
+  `magento/module-backend` and `magento/module-url-rewrite`.
+- **Dynamic value validation and per-field placeholders in the rules editor.**
+  Every operator now declares the shape of value it consumes via the new
+  optional `Api\Filter\OperatorMetadataInterface` — `text` (equals; empty is
+  legal), `text_required` (contains / starts with / ends with — empty never
+  matches, so it's flagged), `list` (is in list — one or more comma/space
+  separated items), `pattern` (regex operators) and `number` (relational
+  operators) — and fields can expose a format hint via the new optional
+  `Api\Filter\FieldValueHintInterface` (anchored pattern + message +
+  placeholder). The Value cell validates live as you type: numbers for
+  numeric comparisons, per-item checks for lists, regex compilation for
+  pattern operators (bare and `~…~i`-delimited forms), and full-value format
+  checks for exact-match operators on hinted fields — Client IP requires a
+  valid IPv4/IPv6 literal, HTTP Method a method token, Full Action Name a
+  `catalog_product_view`-style identifier. Fragment-taking operators
+  (contains, regex, …) deliberately skip format hints. Invalid values get a
+  red state plus an inline message; validation is advisory (the evaluator
+  stays fail-safe) but catches conditions that would silently never match.
+  All eleven built-in fields now ship example placeholders instead of the
+  generic "Value". Third-party operators/fields without the new optional
+  interfaces keep working unchanged (default: free text, no hint).
+- **Tag input for the list operators.** With *is in list* / *is not in list*
+  selected, the Value cell renders each item as a removable chip: Enter,
+  comma, space, paste or blur commits the typed text (pasted content is
+  split on commas/whitespace, duplicates are skipped), Backspace on an empty
+  input pops the last chip, and items failing the field's format hint (e.g.
+  a malformed IP on *Client IP*) are highlighted individually. The canonical
+  comma-separated string lives in a hidden input with the row's form name,
+  so persistence, the parser's `/[\s,]+/` split, raw-expression mode and the
+  rule tester all see exactly what a plain text input would have produced.
+  Switching between list and scalar operators swaps the control in place.
+
 ## [3.0.4] - 2026-07-08
 
 ### Fixed
