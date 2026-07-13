@@ -30,13 +30,13 @@
                     <comment>The captcha provider used for form-level protection (and route gating unless overridden).</comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
-                <field id="use_lazy_load" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1">
+                <field id="use_lazy_load" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Lazy Load Provider Script</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>Load the provider API script after first form interaction (focus/blur/change).</comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
-                <field id="disable_submit_form" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1">
+                <field id="disable_submit_form" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Disable Submit Until Ready</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>Disable form submit until the captcha token is available.</comment>
@@ -146,15 +146,15 @@
             </group>
 
             <!-- ========================== Form Protection ========================= -->
-            <group id="form_protection" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
+            <group id="form_protection" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Form Protection</label>
-                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1">
+                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable Form Protection</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <group id="frontend" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                <group id="frontend" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Storefront Forms</label>
-                    <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1">
+                    <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Enable Storefront Form Protection</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                         <depends><field id="*/enabled">1</field></depends>
@@ -361,7 +361,7 @@
                         <field id="fallback_enabled">1</field>
                     </depends>
                 </field>
-                <field id="fallback_delay" translate="label comment" type="text" sortOrder="50" showInDefault="1" showInWebsite="1">
+                <field id="fallback_delay" translate="label comment" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Fallback Delay (seconds)</label>
                     <validate>validate-number validate-greater-than-zero</validate>
                     <comment>How long the challenge waits before revealing the fallback widget. Default: 15</comment>
@@ -370,7 +370,7 @@
                         <field id="fallback_enabled">1</field>
                     </depends>
                 </field>
-                <field id="cookie_lifetime" translate="label comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="1">
+                <field id="cookie_lifetime" translate="label comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Verified Cookie Lifetime (seconds)</label>
                     <validate>validate-number validate-greater-than-zero</validate>
                     <comment>How long a verified visitor stays unchallenged. Default: 14400 (4 hours)</comment>
@@ -380,46 +380,57 @@
                     <label>Protection Rules</label>
                     <frontend_model>Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\ProtectionRules</frontend_model>
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
-                    <comment><![CDATA[Cloudflare-style filter expression. Each row is one condition — Field / Operator / Value — joined to the previous by AND / OR (AND binds tighter than OR). The challenge fires when the expression is true for the request. Regex operators take bare patterns without delimiters or quotes (e.g. <code>^catalog_.*</code>); delimited PCRE with modifiers (e.g. <code>~^/checkout~i</code>) also works. The <code>Blocked by robots.txt</code> field resolves to 1 when the requested URL is disallowed by this website's robots.txt (physical <code>pub/robots.txt</code>, or the Search Engine Robots custom instructions) — so <code>robots_txt_blocked eq 1</code> challenges every client that ignores robots.txt.]]></comment>
+                    <comment><![CDATA[Cloudflare-style filter expression. Each row is one condition — Field / Operator / Value — joined to the previous by AND / OR (AND binds tighter than OR). The challenge fires when the expression is true for the request. Regex operators take bare patterns without delimiters or quotes (e.g. <code>^catalog_.*</code>); delimited PCRE with modifiers (e.g. <code>~^/checkout~i</code>) also works. The <code>Blocked by robots.txt</code> field resolves to 1 when the requested URL is disallowed by this website's robots.txt (physical <code>pub/robots.txt</code>, or the Search Engine Robots custom instructions). Combine it with <code>Is AJAX Request</code> so background calls (customer sections, minicart, add-to-cart) stay unchallenged — e.g. <code>robots_txt_blocked eq 1 and is_ajax eq 0</code> — and use <code>Is 404 (No-Route) Page</code> to challenge URL-probing bots.]]></comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
-                <field id="layered_nav_ignored_params" translate="label comment" type="text" sortOrder="80" showInDefault="1" showInWebsite="1">
+                <field id="layered_nav_ignored_params" translate="label comment" type="text" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Ignored Filter Params</label>
                     <frontend_model>Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\RouteParamsTagList</frontend_model>
                     <backend_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Backend\RouteParamsTagList</backend_model>
                     <comment>URL params that do NOT count toward "Active Param Count". Type a param name and press Enter.</comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
-                <field id="excluded_ips" translate="label comment" type="textarea" sortOrder="90" showInDefault="1" showInWebsite="0">
+                <field id="excluded_ips" translate="label comment" type="text" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Excluded IPs</label>
-                    <comment>One IP per line. These bypass the challenge.</comment>
+                    <frontend_model>Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\ExcludedIpsTagList</frontend_model>
+                    <backend_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Backend\RouteParamsTagList</backend_model>
+                    <comment>Client IPs that bypass the challenge. Type an IP and press Enter.</comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
-                <field id="excluded_user_agents" translate="label comment" type="textarea" sortOrder="100" showInDefault="1" showInWebsite="0">
+                <field id="excluded_user_agents" translate="label comment" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Excluded User Agents</label>
-                    <comment>One user-agent substring per line (trusted crawlers).</comment>
+                    <frontend_model>Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\ExcludedUserAgentsTagList</frontend_model>
+                    <backend_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Backend\RouteParamsTagList</backend_model>
+                    <comment>User-agent substrings (trusted crawlers) that bypass the challenge. Type a substring and press Enter.</comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
-                <field id="ajax_marker_params" translate="label comment" type="text" sortOrder="110" showInDefault="1" showInWebsite="1">
+                <field id="excluded_paths" translate="label comment" type="text" sortOrder="105" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Excluded Paths (Never Challenged)</label>
+                    <frontend_model>Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\RoutePathsTagList</frontend_model>
+                    <backend_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Backend\RouteParamsTagList</backend_model>
+                    <comment><![CDATA[Requests whose path matches any pattern bypass the challenge regardless of the rules — robots.txt-style patterns (prefix match, <code>*</code> wildcard, trailing <code>$</code> anchor). Pre-filled with Magento's background endpoints (customer sections, minicart, add-to-cart, …) so broad rules such as <code>robots_txt_blocked eq 1</code> cannot break them. Type a path and press Enter.]]></comment>
+                    <depends><field id="enabled">1</field></depends>
+                </field>
+                <field id="ajax_marker_params" translate="label comment" type="text" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>AJAX Marker Params</label>
                     <frontend_model>Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\RouteParamsTagList</frontend_model>
                     <backend_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Backend\RouteParamsTagList</backend_model>
                     <comment>Params stripped from the post-verify URL. Type a param name and press Enter.</comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
-                <field id="background_ajax_marker_params" translate="label comment" type="text" sortOrder="120" showInDefault="1" showInWebsite="1">
+                <field id="background_ajax_marker_params" translate="label comment" type="text" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Background AJAX Marker Params</label>
                     <frontend_model>Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\RouteParamsTagList</frontend_model>
                     <backend_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Backend\RouteParamsTagList</backend_model>
                     <comment>Params marking a background preload — skip post-verify navigation. Type a param name and press Enter.</comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
-                <field id="filter_anchor_selector" translate="label comment" type="text" sortOrder="130" showInDefault="1" showInWebsite="1">
+                <field id="filter_anchor_selector" translate="label comment" type="text" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Filter Anchor CSS Selector</label>
                     <comment>CSS selector for the layered-nav link captured before challenge. Leave blank to disable.</comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
-                <field id="filter_param_pattern" translate="label comment" type="text" sortOrder="140" showInDefault="1" showInWebsite="1">
+                <field id="filter_param_pattern" translate="label comment" type="text" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Filter Param Regex</label>
                     <comment>JS regex (no delimiters) matched against AJAX query-param keys; capture group 1 is the attribute name.</comment>
                     <depends><field id="enabled">1</field></depends>

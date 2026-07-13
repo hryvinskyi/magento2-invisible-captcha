@@ -43,6 +43,7 @@ class Config implements ConfigInterface
     private const XML_ROUTE_LAYERED_IGNORED = 'hryvinskyi_invisible_captcha/route_protection/layered_nav_ignored_params';
     private const XML_ROUTE_EXCLUDED_IPS = 'hryvinskyi_invisible_captcha/route_protection/excluded_ips';
     private const XML_ROUTE_EXCLUDED_UA = 'hryvinskyi_invisible_captcha/route_protection/excluded_user_agents';
+    private const XML_ROUTE_EXCLUDED_PATHS = 'hryvinskyi_invisible_captcha/route_protection/excluded_paths';
     private const XML_ROUTE_AJAX_MARKERS = 'hryvinskyi_invisible_captcha/route_protection/ajax_marker_params';
     private const XML_ROUTE_BG_AJAX_MARKERS = 'hryvinskyi_invisible_captcha/route_protection/background_ajax_marker_params';
     private const XML_ROUTE_FILTER_ANCHOR = 'hryvinskyi_invisible_captcha/route_protection/filter_anchor_selector';
@@ -227,6 +228,11 @@ class Config implements ConfigInterface
     public function getExcludedUserAgents(?string $scopeCode = null): array
     {
         return $this->parseList($this->value(self::XML_ROUTE_EXCLUDED_UA, $scopeCode));
+    }
+
+    public function getExcludedPaths(?string $scopeCode = null): array
+    {
+        return $this->parseList($this->value(self::XML_ROUTE_EXCLUDED_PATHS, $scopeCode));
     }
 
     public function getAjaxMarkerParams(?string $scopeCode = null): array

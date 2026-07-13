@@ -86,6 +86,7 @@
                 <layered_nav_ignored_params>id&#10;stock&#10;store&#10;is_scroll&#10;form_key&#10;__store&#10;p&#10;product_list_limit&#10;product_list_order&#10;product_list_dir&#10;product_list_mode</layered_nav_ignored_params>
                 <excluded_ips></excluded_ips>
                 <excluded_user_agents>Googlebot&#10;bingbot&#10;Applebot&#10;YandexBot&#10;DuckDuckBot</excluded_user_agents>
+                <excluded_paths>customer/section/load&#10;customer/ajax/login&#10;customer/ajax/logout&#10;checkout/cart/add&#10;checkout/cart/updateItemQty&#10;checkout/sidebar/updateItemQty&#10;checkout/sidebar/removeItem&#10;wishlist/index/add&#10;catalog/product_compare/add&#10;review/product/post&#10;newsletter/subscriber/new&#10;search/ajax/suggest&#10;page_cache/block/render&#10;page_cache/block/esi</excluded_paths>
                 <ajax_marker_params>isAjax&#10;ajax&#10;_&#10;form_key&#10;uenc</ajax_marker_params>
                 <background_ajax_marker_params></background_ajax_marker_params>
                 <filter_anchor_selector></filter_anchor_selector>

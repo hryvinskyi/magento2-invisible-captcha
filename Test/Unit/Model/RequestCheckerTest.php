@@ -16,6 +16,7 @@ use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\ExclusionPolicy;
 use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\ClientIp;
+use Hryvinskyi\InvisibleCaptcha\Model\PathPatternMatcher;
 use Hryvinskyi\InvisibleCaptcha\Model\RequestChecker;
 use Magento\Framework\App\Request\Http as HttpRequest;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -59,7 +60,7 @@ class RequestCheckerTest extends TestCase
             $this->parser,
             $this->evaluator,
             $this->clientIp,
-            new ExclusionPolicy($this->config),
+            new ExclusionPolicy($this->config, new PathPatternMatcher()),
             $this->request
         );
     }
@@ -87,7 +88,7 @@ class RequestCheckerTest extends TestCase
             $this->parser,
             $this->evaluator,
             $this->clientIp,
-            new ExclusionPolicy($config),
+            new ExclusionPolicy($config, new PathPatternMatcher()),
             $this->request
         );
 
@@ -133,6 +134,18 @@ class RequestCheckerTest extends TestCase
         $this->config->method('getExcludedUserAgents')->willReturn(['Googlebot']);
         $this->request->method('getHeader')->with('User-Agent')->willReturn('Mozilla/5.0 (compatible; Googlebot/2.1)');
         $this->evaluator->expects($this->never())->method('evaluate');
+        $this->assertFalse($this->checker->needsChallenge());
+    }
+
+    public function testReturnsFalseForExcludedPath(): void
+    {
+        $this->config->method('isRouteProtectionEnabled')->willReturn(true);
+        $this->config->method('getExcludedIps')->willReturn([]);
+        $this->config->method('getExcludedUserAgents')->willReturn([]);
+        $this->config->method('getExcludedPaths')->willReturn(['customer/section/load']);
+        $this->request->method('getPathInfo')->willReturn('/customer/section/load/');
+        $this->evaluator->expects($this->never())->method('evaluate');
+
         $this->assertFalse($this->checker->needsChallenge());
     }
 

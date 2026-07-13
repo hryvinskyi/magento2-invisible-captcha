@@ -16,6 +16,7 @@ use Hryvinskyi\InvisibleCaptcha\Api\ExpressionParserInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionTracerInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldProviderInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\NoRouteActionInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Tester\ActionNameResolverInterface;
@@ -49,6 +50,8 @@ class RouteRuleTesterTest extends TestCase
     private ExpressionTracerInterface $expressionTracer;
     /** @var ActionNameResolverInterface&MockObject */
     private ActionNameResolverInterface $actionNameResolver;
+    /** @var NoRouteActionInterface&MockObject */
+    private NoRouteActionInterface $noRouteAction;
     /** @var SyntheticRequestFactory&MockObject */
     private SyntheticRequestFactory $syntheticRequestFactory;
     /** @var SimulatedFieldPoolFactory&MockObject */
@@ -81,6 +84,12 @@ class RouteRuleTesterTest extends TestCase
         $this->expressionParser = $this->createMock(ExpressionParserInterface::class);
         $this->expressionTracer = $this->createMock(ExpressionTracerInterface::class);
         $this->actionNameResolver = $this->createMock(ActionNameResolverInterface::class);
+        $this->noRouteAction = $this->createMock(NoRouteActionInterface::class);
+        $this->noRouteAction->method('getRouteParts')->willReturn([
+            'route' => 'cms',
+            'controller' => 'noroute',
+            'action' => 'index',
+        ]);
         $this->syntheticRequestFactory = $this->getMockBuilder(SyntheticRequestFactory::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['create'])
@@ -172,9 +181,26 @@ class RouteRuleTesterTest extends TestCase
             $this->expressionParser,
             $this->expressionTracer,
             $this->actionNameResolver,
+            $this->noRouteAction,
             $this->syntheticRequestFactory,
             $this->simulatedFieldPoolFactory
         );
+    }
+
+    /**
+     * Route parts every unresolvable URL falls back to.
+     *
+     * @return array{route: string, controller: string, action: string, params: array<string, string>, source: string}
+     */
+    private static function noRouteParts(): array
+    {
+        return [
+            'route' => 'cms',
+            'controller' => 'noroute',
+            'action' => 'index',
+            'params' => [],
+            'source' => 'no_route',
+        ];
     }
 
     public function testMatchedRequestWouldBeChallenged(): void
@@ -196,7 +222,7 @@ class RouteRuleTesterTest extends TestCase
         $this->assertTrue($result['matched']);
         $this->assertTrue($result['wouldChallenge']);
         $this->assertSame(
-            ['excludedIp' => false, 'excludedUserAgent' => false, 'verifyEndpoint' => false],
+            ['excludedIp' => false, 'excludedUserAgent' => false, 'excludedPath' => false, 'verifyEndpoint' => false],
             $result['bypass']
         );
         $this->assertSame('turnstile', $result['context']['provider']);
@@ -251,6 +277,18 @@ class RouteRuleTesterTest extends TestCase
         $this->assertFalse($result['context']['routeProtectionEnabled']);
     }
 
+    public function testUnresolvableUrlSimulatesTheNoRouteAction(): void
+    {
+        $this->resolvedRouteParts = null;
+
+        $result = $this->tester->test(new Simulation('/definitely-missing-page'));
+
+        $this->assertSame(self::noRouteParts(), $this->syntheticCreateArgs[7]);
+        $this->assertSame('no_route', $result['context']['actionNameSource']);
+        $this->assertNotEmpty($result['warnings']);
+        $this->assertStringContainsString('no-route', strtolower((string)$result['warnings'][0]));
+    }
+
     public function testVerifyEndpointIsAlwaysBypassed(): void
     {
         $result = $this->tester->test(new Simulation('/invisiblecaptcha/verify'));
@@ -259,12 +297,46 @@ class RouteRuleTesterTest extends TestCase
         $this->assertFalse($result['wouldChallenge']);
     }
 
+    public function testExcludedPathBypassesTheChallenge(): void
+    {
+        $checkedPath = null;
+        $exclusionPolicy = $this->createMock(ExclusionPolicyInterface::class);
+        $exclusionPolicy->method('isPathExcluded')->willReturnCallback(
+            static function (string $path) use (&$checkedPath): bool {
+                $checkedPath = $path;
+
+                return true;
+            }
+        );
+
+        $tester = new RouteRuleTester(
+            $this->storeManager,
+            $this->emulation,
+            $this->config,
+            $this->providerPool,
+            $exclusionPolicy,
+            $this->expressionParser,
+            $this->expressionTracer,
+            $this->actionNameResolver,
+            $this->noRouteAction,
+            $this->syntheticRequestFactory,
+            $this->simulatedFieldPoolFactory
+        );
+
+        $result = $tester->test(new Simulation('/customer/section/load?sections=cart'));
+
+        $this->assertSame('/customer/section/load', $checkedPath);
+        $this->assertTrue($result['matched']);
+        $this->assertTrue($result['bypass']['excludedPath']);
+        $this->assertFalse($result['wouldChallenge']);
+    }
+
     public function testAbsoluteUrlPartsReachTheSyntheticRequest(): void
     {
         $this->tester->test(new Simulation('https://other.test:8080/x?y=1'));
 
         $this->assertSame(
-            ['/x', 'y=1', 'other.test:8080', 'GET', '', '', '', null],
+            ['/x', 'y=1', 'other.test:8080', 'GET', '', '', '', self::noRouteParts()],
             $this->syntheticCreateArgs
         );
     }
@@ -274,7 +346,7 @@ class RouteRuleTesterTest extends TestCase
         $this->tester->test(new Simulation('/lamps?p=2'));
 
         $this->assertSame(
-            ['/lamps', 'p=2', 'shop.test', 'GET', '', '', '', null],
+            ['/lamps', 'p=2', 'shop.test', 'GET', '', '', '', self::noRouteParts()],
             $this->syntheticCreateArgs
         );
     }
@@ -298,23 +370,20 @@ class RouteRuleTesterTest extends TestCase
         $this->assertSame('manual', $result['context']['actionNameSource']);
     }
 
-    public function testUnresolvedActionNameWarnsWhenRulesUseIt(): void
+    public function testResolvedUrlProducesNoFallbackWarning(): void
     {
-        $this->expressionFieldCodes = ['action_name'];
+        $this->resolvedRouteParts = [
+            'route' => 'catalog',
+            'controller' => 'product',
+            'action' => 'view',
+            'params' => ['id' => '5'],
+            'source' => 'rewrite',
+        ];
 
-        $result = $this->tester->test(new Simulation('/mystery-url'));
-
-        $this->assertNotEmpty($result['warnings']);
-        $this->assertStringContainsString('action name', strtolower((string)$result['warnings'][0]));
-    }
-
-    public function testNoActionNameWarningWhenRulesDoNotUseIt(): void
-    {
-        $this->expressionFieldCodes = ['uri_path'];
-
-        $result = $this->tester->test(new Simulation('/mystery-url'));
+        $result = $this->tester->test(new Simulation('/some-product.html'));
 
         $this->assertSame([], $result['warnings']);
+        $this->assertSame('rewrite', $result['context']['actionNameSource']);
     }
 
     /**

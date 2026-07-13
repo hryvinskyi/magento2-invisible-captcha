@@ -30,6 +30,12 @@
                 type="Hryvinskyi\InvisibleCaptcha\Model\Filter\ExpressionEvaluator"/>
     <preference for="Hryvinskyi\InvisibleCaptcha\Api\ExclusionPolicyInterface"
                 type="Hryvinskyi\InvisibleCaptcha\Model\ExclusionPolicy"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\AjaxRequestDetectorInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\AjaxRequestDetector"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\PathPatternMatcherInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\PathPatternMatcher"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\NoRouteActionInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\NoRouteAction"/>
 
     <!-- Route-protection rule tester -->
     <preference for="Hryvinskyi\InvisibleCaptcha\Api\Tester\SimulationInterface"
@@ -185,6 +191,8 @@
                 <item name="referer" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\Referer</item>
                 <item name="active_param_count" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\ActiveParamCount</item>
                 <item name="robots_txt_blocked" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\RobotsTxtBlocked</item>
+                <item name="is_ajax" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\IsAjax</item>
+                <item name="is_404" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\NoRoute</item>
             </argument>
         </arguments>
     </type>

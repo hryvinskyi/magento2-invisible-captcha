@@ -49,6 +49,18 @@ routes**, using whichever CAPTCHA provider you configure.
   never fetch disallowed URLs (and can stay in *Excluded User Agents*), so the
   rule surfaces exactly the bots that ignore robots.txt. Missing or empty
   robots.txt never challenges (fail-safe).
+- **Request-nature fields** — **Is AJAX Request** (`is_ajax`) marks XHR /
+  background calls so broad rules can spare the endpoints every page fires
+  (`customer/section/load`, minicart, add-to-cart, login popup):
+  `robots_txt_blocked eq 1 and is_ajax eq 0` is the recommended robots rule.
+  **Is 404 (No-Route) Page** (`is_404`) matches requests dispatched to the
+  configured no-route action — add `or is_404 eq 1` to challenge URL-probing
+  bots.
+- **Excluded Paths** — a hard bypass list of robots.txt-style path patterns
+  that are never challenged whatever the rules say, pre-filled with Magento's
+  background endpoints (customer sections, minicart, add-to-cart, compare,
+  review/newsletter posts, search suggest, private-content rendering) so a
+  broad rule can't break the storefront.
 - **Rule tester** — a *Test Rules* panel under the rules editor simulates any
   storefront request (URL or path, method, User-Agent, client IP, referer,
   store view) against the rules **as currently edited, before saving**, and

@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Observer;
 
+use Hryvinskyi\InvisibleCaptcha\Api\AjaxRequestDetectorInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\ChallengeRenderer;
 use Hryvinskyi\InvisibleCaptcha\Model\CookieManager;
@@ -40,6 +41,7 @@ class RouteGate implements ObserverInterface
      * @param ActionFlag $actionFlag
      * @param HttpResponse $response
      * @param RequestInterface $request
+     * @param AjaxRequestDetectorInterface $ajaxRequestDetector
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -51,6 +53,7 @@ class RouteGate implements ObserverInterface
         private readonly ActionFlag $actionFlag,
         private readonly HttpResponse $response,
         private readonly RequestInterface $request,
+        private readonly AjaxRequestDetectorInterface $ajaxRequestDetector,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -72,30 +75,9 @@ class RouteGate implements ObserverInterface
         $this->actionFlag->set('', ActionInterface::FLAG_NO_DISPATCH, true);
 
         $refId = $this->refIdGenerator->generate();
-        $mode = $this->isAjaxRequest() ? 'ajax' : 'inline';
+        $mode = $this->ajaxRequestDetector->isAjax($this->request) ? 'ajax' : 'inline';
         $this->logIssued($refId, $mode);
         $this->emitInlineChallenge($refId, $mode === 'ajax');
-    }
-
-    /**
-     * Detect XHR / API requests that must not receive an HTML challenge body.
-     */
-    private function isAjaxRequest(): bool
-    {
-        if (method_exists($this->request, 'isXmlHttpRequest') && $this->request->isXmlHttpRequest()) {
-            return true;
-        }
-
-        if (method_exists($this->request, 'isAjax') && $this->request->isAjax()) {
-            return true;
-        }
-
-        $accept = (string)$this->request->getHeader('Accept');
-        if ($accept !== '' && str_contains($accept, 'application/json')) {
-            return true;
-        }
-
-        return strcasecmp((string)$this->request->getHeader('X-Requested-With'), 'XMLHttpRequest') === 0;
     }
 
     /**

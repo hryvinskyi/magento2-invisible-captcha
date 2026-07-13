@@ -34,4 +34,14 @@ interface ExclusionPolicyInterface
      * @return bool
      */
     public function isUserAgentExcluded(string $userAgent, ?string $scopeCode = null): bool;
+
+    /**
+     * Whether the request path matches any "Excluded Paths" pattern
+     * (robots.txt-style: prefix match, `*` wildcard, trailing `$` anchor).
+     *
+     * @param string $path URI path without query string; leading slash optional
+     * @param string|null $scopeCode Store scope to read the list from (null = current)
+     * @return bool
+     */
+    public function isPathExcluded(string $path, ?string $scopeCode = null): bool;
 }

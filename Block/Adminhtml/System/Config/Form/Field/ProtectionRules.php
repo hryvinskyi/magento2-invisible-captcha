@@ -147,6 +147,7 @@ class ProtectionRules extends Field
                 'testerError'          => (string)__('The test request failed. Check the logs and try again.'),
                 'reasonExcludedIp'     => (string)__('the client IP is on the Excluded IPs list'),
                 'reasonExcludedUa'     => (string)__('the user agent is on the Excluded User Agents list'),
+                'reasonExcludedPath'   => (string)__('the path is on the Excluded Paths list'),
                 'reasonVerifyEndpoint' => (string)__('the verify endpoint is never gated'),
                 'reasonDisabled'       => (string)__('route protection is disabled in this scope'),
                 'reasonNotConfigured'  => (string)__('the route-gate provider is not configured'),

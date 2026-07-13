@@ -11,6 +11,7 @@ namespace Hryvinskyi\InvisibleCaptcha\Test\Unit\Model\RobotsTxt;
 use Hryvinskyi\InvisibleCaptcha\Api\RobotsTxt\ParserInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\RobotsTxt\SourceInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\RobotsTxt\Group;
+use Hryvinskyi\InvisibleCaptcha\Model\PathPatternMatcher;
 use Hryvinskyi\InvisibleCaptcha\Model\RobotsTxt\Matcher;
 use Hryvinskyi\InvisibleCaptcha\Model\RobotsTxt\Rule;
 use PHPUnit\Framework\TestCase;
@@ -26,7 +27,7 @@ class MatcherTest extends TestCase
         $parser = $this->createMock(ParserInterface::class);
         $parser->expects($this->never())->method('parse');
 
-        $matcher = new Matcher($source, $parser);
+        $matcher = new Matcher($source, $parser, new PathPatternMatcher());
 
         $this->assertFalse($matcher->isDisallowed('/checkout', self::UA_BROWSER));
     }
@@ -181,7 +182,7 @@ class MatcherTest extends TestCase
         $parser = $this->createMock(ParserInterface::class);
         $parser->method('parse')->willReturn($groups);
 
-        return new Matcher($source, $parser);
+        return new Matcher($source, $parser, new PathPatternMatcher());
     }
 
     private function allow(string $path): Rule

@@ -10,6 +10,7 @@ namespace Hryvinskyi\InvisibleCaptcha\Test\Unit\Model;
 
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\ExclusionPolicy;
+use Hryvinskyi\InvisibleCaptcha\Model\PathPatternMatcher;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -22,7 +23,7 @@ class ExclusionPolicyTest extends TestCase
     protected function setUp(): void
     {
         $this->config = $this->createMock(ConfigInterface::class);
-        $this->policy = new ExclusionPolicy($this->config);
+        $this->policy = new ExclusionPolicy($this->config, new PathPatternMatcher());
     }
 
     public function testEmptyIpIsNeverExcluded(): void
@@ -71,8 +72,50 @@ class ExclusionPolicyTest extends TestCase
             ->method('getExcludedUserAgents')
             ->with('store_two')
             ->willReturn([]);
+        $this->config->expects($this->once())
+            ->method('getExcludedPaths')
+            ->with('store_two')
+            ->willReturn([]);
 
         $this->policy->isIpExcluded('1.2.3.4', 'store_two');
         $this->policy->isUserAgentExcluded('SomeBot', 'store_two');
+        $this->policy->isPathExcluded('/x', 'store_two');
+    }
+
+    public function testPathNotExcludedWhenListEmpty(): void
+    {
+        $this->config->method('getExcludedPaths')->willReturn([]);
+
+        $this->assertFalse($this->policy->isPathExcluded('/customer/section/load'));
+    }
+
+    /**
+     * @dataProvider excludedPathProvider
+     */
+    public function testPathExclusionUsesRobotsStylePatterns(string $path, bool $expected): void
+    {
+        // Relative entries (the shipped defaults) and anchored patterns both work.
+        $this->config->method('getExcludedPaths')->willReturn([
+            'customer/section/load',
+            '/checkout/sidebar/',
+            '*/ajax/suggest',
+        ]);
+
+        $this->assertSame($expected, $this->policy->isPathExcluded($path));
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: bool}>
+     */
+    public static function excludedPathProvider(): array
+    {
+        return [
+            'relative default, leading slash' => ['/customer/section/load', true],
+            'path without leading slash' => ['customer/section/load/', true],
+            'anchored prefix' => ['/checkout/sidebar/removeItem', true],
+            'wildcard entry' => ['/search/ajax/suggest', true],
+            'unrelated page' => ['/customer/account/login', false],
+            'partial segment is still a prefix match' => ['/customer/section/loadAll', true],
+        ];
     }
 }

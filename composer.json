@@ -28,6 +28,7 @@
         "magento/module-graph-ql": "*",
         "magento/module-backend": "*",
         "magento/module-url-rewrite": "*",
+        "magento/module-cms": "*",
         "hryvinskyi/magento2-base": "^2.1",
         "hryvinskyi/magento2-theme-assets": "^1.0",
         "hryvinskyi/magento2-configuration-fields": "^1.0.11"
@@ -36,7 +37,7 @@
         "roave/security-advisories": "dev-latest"
     },
     "type": "magento2-module",
-    "version": "3.1.0",
+    "version": "3.2.0",
     "license": "MIT",
     "authors": [
         {

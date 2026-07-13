@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Test\Unit\Observer;
 
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
+use Hryvinskyi\InvisibleCaptcha\Model\AjaxRequestDetector;
 use Hryvinskyi\InvisibleCaptcha\Model\ChallengeRenderer;
 use Hryvinskyi\InvisibleCaptcha\Model\CookieManager;
 use Hryvinskyi\InvisibleCaptcha\Model\RefIdGenerator;
@@ -59,6 +60,8 @@ class RouteGateTest extends TestCase
         $this->request = $this->createMock(HttpRequest::class);
         $this->logger = $this->createMock(LoggerInterface::class);
 
+        // The real detector keeps the request-mock-driven AJAX expectations
+        // in the tests below meaningful.
         $this->observer = new RouteGate(
             $this->config,
             $this->cookieManager,
@@ -68,6 +71,7 @@ class RouteGateTest extends TestCase
             $this->actionFlag,
             $this->response,
             $this->request,
+            new AjaxRequestDetector(),
             $this->logger
         );
     }

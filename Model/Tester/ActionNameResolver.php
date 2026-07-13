@@ -9,8 +9,10 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Model\Tester;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Tester\ActionNameResolverInterface;
+use Magento\Cms\Api\GetPageByIdentifierInterface;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\Route\ConfigInterface as RouteConfigInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\UrlRewrite\Model\UrlFinderInterface;
 use Magento\UrlRewrite\Service\V1\Data\UrlRewrite;
 
@@ -19,14 +21,17 @@ class ActionNameResolver implements ActionNameResolverInterface
     private const SOURCE_HOME = 'home';
     private const SOURCE_REWRITE = 'rewrite';
     private const SOURCE_ROUTE = 'route';
+    private const SOURCE_CMS_PAGE = 'cms_page';
 
     /**
      * @param UrlFinderInterface $urlFinder
      * @param RouteConfigInterface $routeConfig
+     * @param GetPageByIdentifierInterface $getPageByIdentifier
      */
     public function __construct(
         private readonly UrlFinderInterface $urlFinder,
-        private readonly RouteConfigInterface $routeConfig
+        private readonly RouteConfigInterface $routeConfig,
+        private readonly GetPageByIdentifierInterface $getPageByIdentifier
     ) {
     }
 
@@ -50,7 +55,32 @@ class ActionNameResolver implements ActionNameResolverInterface
             return $routeId === '' ? null : $this->buildParts($routeId, $segments, self::SOURCE_REWRITE);
         }
 
-        return $this->resolveFromFrontName($path);
+        return $this->resolveFromFrontName($path) ?? $this->resolveCmsPage($path, $storeId);
+    }
+
+    /**
+     * CMS pages without a rewrite entry dispatch through the CMS router by
+     * their identifier — mirror that as the last resolution step.
+     *
+     * @param string $path
+     * @param int $storeId
+     * @return array{route: string, controller: string, action: string, params: array<string, string>, source: string}|null
+     */
+    private function resolveCmsPage(string $path, int $storeId): ?array
+    {
+        try {
+            $page = $this->getPageByIdentifier->execute($path, $storeId);
+        } catch (NoSuchEntityException $e) {
+            return null;
+        }
+
+        return [
+            'route' => 'cms',
+            'controller' => 'page',
+            'action' => 'view',
+            'params' => ['page_id' => (string)$page->getId()],
+            'source' => self::SOURCE_CMS_PAGE,
+        ];
     }
 
     /**

@@ -5,6 +5,72 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-07-11
+
+### Added
+
+- **`Is AJAX Request` rule field (`is_ajax`).** Boolean field that resolves to
+  1 for XHR / background calls (XMLHttpRequest, Magento ajax markers, JSON
+  Accept header — the same detection the gate itself uses to shape the
+  challenge response, now extracted into the shared
+  `Api\AjaxRequestDetectorInterface`). Its purpose is composing broad rules
+  without breaking the background endpoints every page fires: robots.txt
+  files routinely disallow `/customer/`, `/checkout/`, `/wishlist/`,
+  `/catalog/product_compare/` — which also cover `customer/section/load`
+  (fired on every page), `customer/ajax/login`, `checkout/cart/add`,
+  `checkout/sidebar/*`, `wishlist/index/add`, `catalog/product_compare/add`
+  and friends, so a bare `robots_txt_blocked eq 1` rule challenged AJAX calls
+  site-wide. Write `robots_txt_blocked eq 1 and is_ajax eq 0` instead —
+  page navigations to disallowed URLs are still challenged, background calls
+  pass. (Note: non-AJAX form POSTs to disallowed paths, e.g.
+  `newsletter/subscriber/new` or `review/product/post`, still match — add
+  `and request_method eq GET` if you want navigations only.)
+- **`Is 404 (No-Route) Page` rule field (`is_404`).** Boolean field that
+  resolves to 1 when the request dispatched to the configured no-route action
+  (`web/default/no_route`, `cms_noroute_index` by default, resolved through
+  the new `Api\NoRouteActionInterface` mirroring Magento's NoRouteHandler
+  fallbacks). Real visitors rarely hit 404s; path-probing bots hit them
+  constantly — `is_404 eq 1` (as its own OR group) challenges them wherever
+  they scan.
+- **Rule tester understands CMS pages and 404s.** The action-name resolver now
+  also resolves CMS page identifiers (the CMS router path, for pages without a
+  rewrite entry), and a URL that matches no rewrite, route or CMS page is
+  simulated as the 404 no-route action — exactly what the storefront would
+  dispatch — with an explanatory note instead of the old "could not resolve"
+  warning. New dependency: `magento/module-cms`.
+- **Excluded Paths (never challenged).** A new tag-list setting under Route
+  Protection lists robots.txt-style path patterns (prefix match, `*` wildcard,
+  trailing `$` anchor) that bypass the challenge regardless of the configured
+  rules — the hard safety net for background/service endpoints that
+  `is_ajax`-composed rules cannot fully cover (non-AJAX form POSTs, custom
+  themes calling endpoints without XHR markers). Ships pre-filled with
+  Magento's background endpoints: `customer/section/load`,
+  `customer/ajax/login`, `customer/ajax/logout`, `checkout/cart/add`,
+  `checkout/cart/updateItemQty`, `checkout/sidebar/updateItemQty`,
+  `checkout/sidebar/removeItem`, `wishlist/index/add`,
+  `catalog/product_compare/add`, `review/product/post`,
+  `newsletter/subscriber/new`, `search/ajax/suggest`,
+  `page_cache/block/render` and `page_cache/block/esi`. Matched against the
+  store-code-stripped path info; exposed through the new
+  `ExclusionPolicyInterface::isPathExcluded()` and reported by the rule tester
+  as its own bypass reason. The robots.txt pattern engine was extracted into
+  the reusable `Api\PathPatternMatcherInterface` so the rule field and this
+  bypass share one implementation.
+
+### Changed
+
+- **Consistent config scopes.** All General, Form Protection (storefront) and
+  Route Protection settings — including *Excluded IPs*, *Excluded User
+  Agents*, the AJAX marker/param lists, cookie lifetime and fallback delay —
+  are now editable at website and store-view scope with standard parent
+  inheritance, matching how the module has always read them (store scope with
+  default → website → store fallback). Provider credentials stay
+  website-scoped, admin-form protection and the Advanced HTTP timeout stay
+  global.
+- **Tag editors everywhere.** *Excluded IPs* (per-item IPv4/IPv6 validation)
+  and *Excluded User Agents* (free substrings, spaces allowed) now use the
+  same tag-style inputs as the param lists; storage stays newline-separated.
+
 ## [3.1.0] - 2026-07-11
 
 ### Added

@@ -66,6 +66,47 @@
         </arguments>
     </type>
 
+    <!-- ============== Tag-list editors for route-protection bypasses ========= -->
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\ExcludedIpsTagList"
+                 type="Hryvinskyi\ConfigurationFields\Block\Adminhtml\System\Config\Form\Field\TagList">
+        <arguments>
+            <argument name="tagListConfig" xsi:type="array">
+                <item name="placeholder" xsi:type="string">203.0.113.10</item>
+                <item name="validation" xsi:type="string">^(\d{1,3}(\.\d{1,3}){3}|[0-9A-Fa-f:]*:[0-9A-Fa-f:]*)$</item>
+                <item name="validation_message" xsi:type="string">Enter a valid IPv4 or IPv6 address.</item>
+                <item name="uppercase" xsi:type="boolean">false</item>
+                <item name="separator" xsi:type="string">\n</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\ExcludedUserAgentsTagList"
+                 type="Hryvinskyi\ConfigurationFields\Block\Adminhtml\System\Config\Form\Field\TagList">
+        <arguments>
+            <argument name="tagListConfig" xsi:type="array">
+                <item name="placeholder" xsi:type="string">Googlebot</item>
+                <!-- UA substrings may legitimately contain spaces, slashes and
+                     punctuation — anything short of the newline separator. -->
+                <item name="validation" xsi:type="string">^.+$</item>
+                <item name="uppercase" xsi:type="boolean">false</item>
+                <item name="separator" xsi:type="string">\n</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- ============= Tag-list editor for route-protection path lists ========= -->
+    <virtualType name="Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\RoutePathsTagList"
+                 type="Hryvinskyi\ConfigurationFields\Block\Adminhtml\System\Config\Form\Field\TagList">
+        <arguments>
+            <argument name="tagListConfig" xsi:type="array">
+                <item name="placeholder" xsi:type="string">customer/section/load</item>
+                <item name="validation" xsi:type="string">^[^\s,]+$</item>
+                <item name="validation_message" xsi:type="string">Path patterns cannot contain spaces or commas.</item>
+                <item name="uppercase" xsi:type="boolean">false</item>
+                <item name="separator" xsi:type="string">\n</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
     <!-- ============= Tag-list editor for route-protection param lists ======== -->
     <virtualType name="Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\RouteParamsTagList"
                  type="Hryvinskyi\ConfigurationFields\Block\Adminhtml\System\Config\Form\Field\TagList">

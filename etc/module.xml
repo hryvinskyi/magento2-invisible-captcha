@@ -30,6 +30,7 @@
             <module name="Magento_GraphQl"/>
             <module name="Magento_Backend"/>
             <module name="Magento_UrlRewrite"/>
+            <module name="Magento_Cms"/>
         </sequence>
     </module>
 </config>

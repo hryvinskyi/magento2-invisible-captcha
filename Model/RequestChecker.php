@@ -71,7 +71,7 @@ class RequestChecker
             return false;
         }
 
-        if ($this->isExcludedIp() || $this->isExcludedUserAgent()) {
+        if ($this->isExcludedIp() || $this->isExcludedUserAgent() || $this->isExcludedPath()) {
             return false;
         }
 
@@ -115,5 +115,19 @@ class RequestChecker
     private function isExcludedUserAgent(): bool
     {
         return $this->exclusionPolicy->isUserAgentExcluded((string)$this->request->getHeader('User-Agent'));
+    }
+
+    /**
+     * Whether the request path is on the "Excluded Paths" bypass list —
+     * matched against the store-code-stripped path info, so background
+     * endpoints stay unchallenged whatever the rules say.
+     */
+    private function isExcludedPath(): bool
+    {
+        if (!$this->request instanceof HttpRequest) {
+            return false;
+        }
+
+        return $this->exclusionPolicy->isPathExcluded((string)$this->request->getPathInfo());
     }
 }

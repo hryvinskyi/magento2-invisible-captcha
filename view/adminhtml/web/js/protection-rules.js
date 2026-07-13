@@ -1791,6 +1791,9 @@ define([], function () {
         if (bypass.excludedUserAgent) {
             reasons.push(this.labels.reasonExcludedUa || 'excluded user agent');
         }
+        if (bypass.excludedPath) {
+            reasons.push(this.labels.reasonExcludedPath || 'excluded path');
+        }
         if (bypass.verifyEndpoint) {
             reasons.push(this.labels.reasonVerifyEndpoint || 'verify endpoint');
         }

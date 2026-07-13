@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Model\RobotsTxt;
 
+use Hryvinskyi\InvisibleCaptcha\Api\PathPatternMatcherInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\RobotsTxt\GroupInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\RobotsTxt\MatcherInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\RobotsTxt\ParserInterface;
@@ -21,16 +22,15 @@ class Matcher implements MatcherInterface
     /** @var array<string, GroupInterface[]> Parsed groups keyed by content hash. */
     private array $groupsByContent = [];
 
-    /** @var array<string, string> Compiled regex per rule path pattern. */
-    private array $compiledPatterns = [];
-
     /**
      * @param SourceInterface $source
      * @param ParserInterface $parser
+     * @param PathPatternMatcherInterface $pathPatternMatcher
      */
     public function __construct(
         private readonly SourceInterface $source,
-        private readonly ParserInterface $parser
+        private readonly ParserInterface $parser,
+        private readonly PathPatternMatcherInterface $pathPatternMatcher
     ) {
     }
 
@@ -54,7 +54,7 @@ class Matcher implements MatcherInterface
         $longestDisallow = -1;
 
         foreach ($rules as $rule) {
-            if (!$this->patternMatches($rule->getPath(), $target)) {
+            if (!$this->pathPatternMatcher->matches($rule->getPath(), $target)) {
                 continue;
             }
 
@@ -158,38 +158,5 @@ class Matcher implements MatcherInterface
         }
 
         return $uri;
-    }
-
-    /**
-     * Prefix-match a robots.txt pattern against the target: `*` matches any
-     * character sequence, a trailing `$` anchors the pattern to the end.
-     *
-     * @param string $pattern
-     * @param string $target
-     * @return bool
-     */
-    private function patternMatches(string $pattern, string $target): bool
-    {
-        $regex = $this->compiledPatterns[$pattern] ??= $this->compilePattern($pattern);
-
-        return preg_match($regex, $target) === 1;
-    }
-
-    /**
-     * Compile a robots.txt path pattern into an anchored PCRE.
-     *
-     * @param string $pattern
-     * @return string
-     */
-    private function compilePattern(string $pattern): string
-    {
-        $anchored = str_ends_with($pattern, '$');
-        if ($anchored) {
-            $pattern = substr($pattern, 0, -1);
-        }
-
-        $body = str_replace('\*', '.*', preg_quote($pattern, '~'));
-
-        return '~^' . $body . ($anchored ? '$' : '') . '~';
     }
 }

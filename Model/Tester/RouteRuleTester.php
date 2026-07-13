@@ -13,6 +13,7 @@ use Hryvinskyi\InvisibleCaptcha\Api\ExclusionPolicyInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionParserInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionTracerInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\NoRouteActionInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldProviderInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Tester\ActionNameResolverInterface;
@@ -36,6 +37,7 @@ class RouteRuleTester implements RouteRuleTesterInterface
      * @param ExpressionParserInterface $expressionParser
      * @param ExpressionTracerInterface $expressionTracer
      * @param ActionNameResolverInterface $actionNameResolver
+     * @param NoRouteActionInterface $noRouteAction
      * @param SyntheticRequestFactory $syntheticRequestFactory
      * @param SimulatedFieldPoolFactory $simulatedFieldPoolFactory
      */
@@ -48,6 +50,7 @@ class RouteRuleTester implements RouteRuleTesterInterface
         private readonly ExpressionParserInterface $expressionParser,
         private readonly ExpressionTracerInterface $expressionTracer,
         private readonly ActionNameResolverInterface $actionNameResolver,
+        private readonly NoRouteActionInterface $noRouteAction,
         private readonly SyntheticRequestFactory $syntheticRequestFactory,
         private readonly SimulatedFieldPoolFactory $simulatedFieldPoolFactory
     ) {
@@ -85,7 +88,7 @@ class RouteRuleTester implements RouteRuleTesterInterface
         $warnings = [];
 
         [$host, $path, $query] = $this->parseUrl($simulation->getUrl());
-        $routeParts = $this->resolveRouteParts($simulation, $path, $storeId);
+        $routeParts = $this->resolveRouteParts($simulation, $path, $storeId, $warnings);
 
         $request = $this->syntheticRequestFactory->create(
             $path,
@@ -101,7 +104,7 @@ class RouteRuleTester implements RouteRuleTesterInterface
 
         $rows = $simulation->getDraftRules() ?? $this->config->getProtectionRulesConfig();
         $expression = $this->expressionParser->parse($rows);
-        $this->collectRuleWarnings($rows, $expression, $routeParts, $warnings);
+        $this->collectRuleWarnings($rows, $expression, $warnings);
 
         $trace = $this->expressionTracer->trace($expression, $fieldPool);
         $fields = $this->snapshotFieldValues($fieldPool);
@@ -110,6 +113,7 @@ class RouteRuleTester implements RouteRuleTesterInterface
         $bypass = [
             'excludedIp' => $this->exclusionPolicy->isIpExcluded($clientIp),
             'excludedUserAgent' => $this->exclusionPolicy->isUserAgentExcluded($simulation->getUserAgent()),
+            'excludedPath' => $this->exclusionPolicy->isPathExcluded($path),
             'verifyEndpoint' => trim($path, '/') === VerificationRouter::VERIFY_PATH,
         ];
 
@@ -122,6 +126,7 @@ class RouteRuleTester implements RouteRuleTesterInterface
             && $providerConfigured
             && !$bypass['excludedIp']
             && !$bypass['excludedUserAgent']
+            && !$bypass['excludedPath']
             && !$bypass['verifyEndpoint'];
 
         return [
@@ -179,21 +184,37 @@ class RouteRuleTester implements RouteRuleTesterInterface
 
     /**
      * Determine the dispatched route parts: a manual action name wins,
-     * otherwise the URL is resolved via rewrites / route config.
+     * otherwise the URL is resolved via rewrites / route config / CMS pages;
+     * anything unresolvable is what the storefront would 404 — the configured
+     * no-route action.
      *
      * @param SimulationInterface $simulation
      * @param string $path
      * @param int $storeId
-     * @return array{route: string, controller: string, action: string, params: array<string, string>, source: string}|null
+     * @param array<int, string> $warnings Modified in place
+     * @return array{route: string, controller: string, action: string, params: array<string, string>, source: string}
      */
-    private function resolveRouteParts(SimulationInterface $simulation, string $path, int $storeId): ?array
-    {
+    private function resolveRouteParts(
+        SimulationInterface $simulation,
+        string $path,
+        int $storeId,
+        array &$warnings
+    ): array {
         $manual = trim((string)$simulation->getActionName());
         if ($manual !== '') {
             return $this->splitManualActionName($manual);
         }
 
-        return $this->actionNameResolver->resolve($path, $storeId);
+        $resolved = $this->actionNameResolver->resolve($path, $storeId);
+        if ($resolved !== null) {
+            return $resolved;
+        }
+
+        $warnings[] = (string)__(
+            'The URL did not match a rewrite, route or CMS page — simulated as the 404 no-route action.'
+        );
+
+        return $this->noRouteAction->getRouteParts() + ['params' => [], 'source' => 'no_route'];
     }
 
     /**
@@ -221,19 +242,16 @@ class RouteRuleTester implements RouteRuleTesterInterface
     }
 
     /**
-     * Add advisory warnings: unparsable rule rows, an empty expression, and
-     * action_name conditions evaluated without a resolved action name.
+     * Add advisory warnings: unparsable rule rows and an empty expression.
      *
      * @param array<int, mixed> $rows
      * @param ExpressionInterface $expression
-     * @param array<string, mixed>|null $routeParts
      * @param array<int, string> $warnings Modified in place
      * @return void
      */
     private function collectRuleWarnings(
         array $rows,
         ExpressionInterface $expression,
-        ?array $routeParts,
         array &$warnings
     ): void {
         $skipped = count($rows) - count($expression->getConditions());
@@ -243,19 +261,6 @@ class RouteRuleTester implements RouteRuleTesterInterface
 
         if ($expression->isEmpty()) {
             $warnings[] = (string)__('The rule expression is empty — the challenge never fires.');
-            return;
-        }
-
-        if ($routeParts !== null) {
-            return;
-        }
-        foreach ($expression->getConditions() as $condition) {
-            if ($condition->getFieldCode() === 'action_name') {
-                $warnings[] = (string)__(
-                    'The full action name could not be resolved for this URL, so "Full Action Name" conditions were evaluated against an empty value. Enter it manually for exact results.'
-                );
-                return;
-            }
         }
     }
 

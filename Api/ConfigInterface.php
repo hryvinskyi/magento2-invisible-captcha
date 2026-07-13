@@ -154,6 +154,15 @@ interface ConfigInterface
     public function getExcludedUserAgents(?string $scopeCode = null): array;
 
     /**
+     * Robots.txt-style path patterns that are never challenged — the safety
+     * net for background/service endpoints (customer sections, minicart,
+     * add-to-cart) that pages call regardless of the configured rules.
+     *
+     * @return string[]
+     */
+    public function getExcludedPaths(?string $scopeCode = null): array;
+
+    /**
      * Param names stripped from the post-verify navigation URL.
      *
      * @return string[]

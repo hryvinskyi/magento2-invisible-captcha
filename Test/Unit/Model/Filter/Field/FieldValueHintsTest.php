@@ -8,13 +8,17 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Test\Unit\Model\Filter\Field;
 
+use Hryvinskyi\InvisibleCaptcha\Api\AjaxRequestDetectorInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldValueHintInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\NoRouteActionInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\RobotsTxt\MatcherInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\ActiveParamCount;
 use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\ClientIp;
 use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\FullActionName;
 use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\Hostname;
+use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\IsAjax;
+use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\NoRoute;
 use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\QueryString;
 use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\Referer;
 use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\RequestMethod;
@@ -106,14 +110,18 @@ class FieldValueHintsTest extends TestCase
         $this->assertSame(0, preg_match($pattern, 'GET POST'));
     }
 
-    public function testBooleanFieldExposesNoHint(): void
+    public function testBooleanFieldsExposeNoHint(): void
     {
-        $field = new RobotsTxtBlocked(
-            $this->createMock(MatcherInterface::class),
-            $this->createMock(HttpRequest::class)
-        );
+        $request = $this->createMock(HttpRequest::class);
+        $booleanFields = [
+            new RobotsTxtBlocked($this->createMock(MatcherInterface::class), $request),
+            new IsAjax($this->createMock(AjaxRequestDetectorInterface::class), $request),
+            new NoRoute($this->createMock(NoRouteActionInterface::class), $request),
+        ];
 
-        $this->assertNotInstanceOf(FieldValueHintInterface::class, $field);
+        foreach ($booleanFields as $field) {
+            $this->assertNotInstanceOf(FieldValueHintInterface::class, $field, $field->getCode());
+        }
     }
 
     /**

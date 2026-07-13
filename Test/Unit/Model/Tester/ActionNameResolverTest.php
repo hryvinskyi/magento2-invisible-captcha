@@ -9,7 +9,11 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Test\Unit\Model\Tester;
 
 use Hryvinskyi\InvisibleCaptcha\Model\Tester\ActionNameResolver;
+use Magento\Cms\Api\Data\PageInterface;
+use Magento\Cms\Api\GetPageByIdentifierInterface;
 use Magento\Framework\App\Route\ConfigInterface as RouteConfigInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Phrase;
 use Magento\UrlRewrite\Model\UrlFinderInterface;
 use Magento\UrlRewrite\Service\V1\Data\UrlRewrite;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -21,13 +25,23 @@ class ActionNameResolverTest extends TestCase
     private UrlFinderInterface $urlFinder;
     /** @var RouteConfigInterface&MockObject */
     private RouteConfigInterface $routeConfig;
+    /** @var GetPageByIdentifierInterface&MockObject */
+    private GetPageByIdentifierInterface $getPageByIdentifier;
     private ActionNameResolver $resolver;
 
     protected function setUp(): void
     {
         $this->urlFinder = $this->createMock(UrlFinderInterface::class);
         $this->routeConfig = $this->createMock(RouteConfigInterface::class);
-        $this->resolver = new ActionNameResolver($this->urlFinder, $this->routeConfig);
+        $this->getPageByIdentifier = $this->createMock(GetPageByIdentifierInterface::class);
+        // No CMS page by default; individual tests override.
+        $this->getPageByIdentifier->method('execute')
+            ->willThrowException(new NoSuchEntityException(new Phrase('no page')));
+        $this->resolver = new ActionNameResolver(
+            $this->urlFinder,
+            $this->routeConfig,
+            $this->getPageByIdentifier
+        );
     }
 
     public function testRootPathResolvesToCmsHome(): void
@@ -139,6 +153,27 @@ class ActionNameResolverTest extends TestCase
         $this->routeConfig->method('getRouteByFrontName')->willReturn(false);
 
         $this->assertNull($this->resolver->resolve('/no-such-page', 1));
+    }
+
+    public function testCmsPageIdentifierResolvesThroughTheCmsRouter(): void
+    {
+        $this->urlFinder->method('findOneByData')->willReturn(null);
+        $this->routeConfig->method('getRouteByFrontName')->willReturn(false);
+
+        $page = $this->createMock(PageInterface::class);
+        $page->method('getId')->willReturn(7);
+        $getPageByIdentifier = $this->createMock(GetPageByIdentifierInterface::class);
+        $getPageByIdentifier->method('execute')->with('about-us', 2)->willReturn($page);
+
+        $resolver = new ActionNameResolver($this->urlFinder, $this->routeConfig, $getPageByIdentifier);
+        $parts = $resolver->resolve('/about-us', 2);
+
+        $this->assertNotNull($parts);
+        $this->assertSame('cms', $parts['route']);
+        $this->assertSame('page', $parts['controller']);
+        $this->assertSame('view', $parts['action']);
+        $this->assertSame(['page_id' => '7'], $parts['params']);
+        $this->assertSame('cms_page', $parts['source']);
     }
 
     public function testOddParamTailGetsEmptyValue(): void
