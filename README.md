@@ -127,18 +127,21 @@ sources ship:
   lookups accurate. The server's PHP upload limits (`upload_max_filesize`,
   `post_max_size`) must accommodate the file — GeoLite2-City is ≈ 70 MB. Prefer
   the smaller **GeoLite2-Country** database over City when you only need country
-  rules. Replacing the file, or ticking the **Delete current file** checkbox on
+  rules. Replacing the file, or ticking the **Delete this file** checkbox on
   the field, removes the previous database from
-  `pub/media/hryvinskyi_invisible_captcha/geoip/` automatically.
+  `var/hryvinskyi_invisible_captcha/geoip/` automatically. The upload field also
+  shows whether the optional PECL `maxminddb` extension is active.
 
 Country values are uppercase ISO 3166-1 alpha-2 (`UA`, `DE`); `T1` denotes Tor
 (Cloudflare only). An unknown country resolves to an **empty value**, so negative
 operators (`does not equal` / `not in list`) match traffic whose country could
 not be determined.
 
-**Known limitation:** the MaxMind source reads the `.mmdb` file directly from a
-locally readable `pub/media`; remote-storage (e.g. S3) media backends are not
-supported for the database file.
+**Deployment note:** the database is stored in the node-local `var/` directory
+(`var/hryvinskyi_invisible_captcha/geoip/`), so it is not web-accessible. On
+multi-node deployments the file must be present on every node — sync
+`var/hryvinskyi_invisible_captcha/geoip/` across nodes, or upload it once per
+node.
 
 **Performance (MaxMind).** The `maxmind-db/reader` library automatically detects
 the optional PECL `maxminddb` C extension and, when present, switches to an

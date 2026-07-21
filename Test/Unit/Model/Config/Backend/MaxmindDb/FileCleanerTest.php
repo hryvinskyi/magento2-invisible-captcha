@@ -35,7 +35,7 @@ class FileCleanerTest extends TestCase
     public function testDeletesExistingFile(): void
     {
         $this->filesystem->method('getDirectoryWrite')
-            ->with(DirectoryList::MEDIA)
+            ->with(DirectoryList::VAR_DIR)
             ->willReturn($this->write);
         $this->write->method('isFile')->with(self::DIR . '/GeoLite2.mmdb')->willReturn(true);
         $this->write->expects($this->once())->method('delete')->with(self::DIR . '/GeoLite2.mmdb');

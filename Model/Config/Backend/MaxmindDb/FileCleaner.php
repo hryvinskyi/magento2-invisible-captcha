@@ -22,8 +22,8 @@ use Magento\Framework\Filesystem;
 final class FileCleaner
 {
     /**
-     * Media-relative directory the MaxMind databases are uploaded into. Kept in
-     * sync (by string) with the `upload_dir` declared in system.xml.
+     * Var-relative directory the MaxMind databases are uploaded into. Kept in
+     * sync (by string) with {@see \Hryvinskyi\InvisibleCaptcha\Model\Config\Backend\MaxmindDb::UPLOAD_DIR}.
      */
     private const UPLOAD_DIR = 'hryvinskyi_invisible_captcha/geoip';
 
@@ -52,7 +52,7 @@ final class FileCleaner
         }
 
         try {
-            $write = $this->filesystem->getDirectoryWrite(DirectoryList::MEDIA);
+            $write = $this->filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
             $path = self::UPLOAD_DIR . '/' . $name;
             if ($write->isFile($path)) {
                 $write->delete($path);

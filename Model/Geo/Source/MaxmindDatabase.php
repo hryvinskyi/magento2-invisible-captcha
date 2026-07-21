@@ -36,7 +36,7 @@ use Psr\Log\LoggerInterface;
 class MaxmindDatabase implements CountrySourceInterface, ResetAfterRequestInterface
 {
     /**
-     * Media-relative directory the upload backend stores the `.mmdb` file in.
+     * Var-relative directory the upload backend stores the `.mmdb` file in.
      * The admin-config task references the same location.
      */
     public const UPLOAD_DIR = 'hryvinskyi_invisible_captcha/geoip';
@@ -99,7 +99,7 @@ class MaxmindDatabase implements CountrySourceInterface, ResetAfterRequestInterf
 
         try {
             return $this->filesystem
-                ->getDirectoryRead(DirectoryList::MEDIA)
+                ->getDirectoryRead(DirectoryList::VAR_DIR)
                 ->isFile($this->relativePath($fileName));
         } catch (\Throwable $e) {
             return false;
@@ -125,9 +125,9 @@ class MaxmindDatabase implements CountrySourceInterface, ResetAfterRequestInterf
 
         try {
             if ($this->reader === null) {
-                $mediaDir = $this->filesystem->getDirectoryRead(DirectoryList::MEDIA);
+                $varDir = $this->filesystem->getDirectoryRead(DirectoryList::VAR_DIR);
                 $this->reader = $this->readerFactory->create(
-                    $mediaDir->getAbsolutePath($this->relativePath($this->config->getMaxmindDbFile()))
+                    $varDir->getAbsolutePath($this->relativePath($this->config->getMaxmindDbFile()))
                 );
             }
 
@@ -175,7 +175,7 @@ class MaxmindDatabase implements CountrySourceInterface, ResetAfterRequestInterf
     }
 
     /**
-     * Compose the media-relative path for the stored filename, defending against
+     * Compose the var-relative path for the stored filename, defending against
      * traversal by reducing the value to its basename first.
      *
      * @param string $fileName

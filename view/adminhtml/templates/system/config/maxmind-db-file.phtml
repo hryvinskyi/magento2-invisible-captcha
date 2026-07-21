@@ -1,0 +1,127 @@
+<?php
+/**
+ * Copyright (c) 2026. Volodymyr Hryvinskyi. All rights reserved.
+ * Author: Volodymyr Hryvinskyi <volodymyr@hryvinskyi.com>
+ * GitHub: https://github.com/hryvinskyi
+ */
+
+/** @var \Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\MaxmindDbFile $block */
+/** @var \Magento\Framework\Escaper $escaper */
+
+$inputName = $block->getInputName();
+$inputId = $block->getInputId();
+$currentFile = $block->getCurrentFile();
+$disabled = $block->isDisabled();
+$extensionLoaded = $block->isMaxmindExtensionLoaded();
+?>
+<div class="hic-mmdb">
+    <style>
+        .hic-mmdb { max-width: 640px; font-size: 1.3rem; }
+        .hic-mmdb-input { display: block; }
+        .hic-mmdb-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding: 1rem 1.2rem;
+            border: 1px solid #d6d6d6;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+        .hic-mmdb-glyph {
+            flex: 0 0 auto;
+            width: 28px;
+            height: 28px;
+            color: #6f6f6f;
+        }
+        .hic-mmdb-glyph svg { display: block; width: 100%; height: 100%; }
+        .hic-mmdb-name { flex: 1 1 auto; min-width: 0; color: #303030; word-break: break-all; }
+        .hic-mmdb-name strong { font-weight: 600; }
+        .hic-mmdb-delete {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            color: #514943;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .hic-mmdb-delete input[type="checkbox"] { margin: 0; }
+        .hic-mmdb-delete.disabled { color: #a3a3a3; cursor: default; }
+        .hic-mmdb-status {
+            display: flex;
+            align-items: baseline;
+            gap: .6rem;
+            margin-top: 1rem;
+            padding: .8rem 1.1rem;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            font-size: 1.2rem;
+            line-height: 1.5;
+        }
+        .hic-mmdb-status.is-ok { border-color: #cfe8cf; background: #eef7ee; color: #35633f; }
+        .hic-mmdb-status.is-warn { border-color: #f0e0b6; background: #fdf6e3; color: #7a5b12; }
+        .hic-mmdb-status .hic-mmdb-dot {
+            flex: 0 0 auto;
+            width: 8px;
+            height: 8px;
+            margin-top: .5rem;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .hic-mmdb-status code {
+            padding: .1rem .5rem;
+            border-radius: 3px;
+            background: rgba(0, 0, 0, .06);
+            font-size: 1.15rem;
+        }
+    </style>
+
+    <input type="file"
+           class="hic-mmdb-input"
+           name="<?= $escaper->escapeHtmlAttr($inputName) ?>"
+           id="<?= $escaper->escapeHtmlAttr($inputId) ?>"<?= $disabled ? ' disabled="disabled"' : '' ?> />
+
+    <?php if ($currentFile !== ''): ?>
+        <div class="hic-mmdb-card">
+            <span class="hic-mmdb-glyph" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5L13.5 3Z"
+                          stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                    <path d="M13.5 3v5.5H19" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                </svg>
+            </span>
+            <span class="hic-mmdb-name">
+                <?= $escaper->escapeHtml($currentFile) ?>
+            </span>
+            <label class="hic-mmdb-delete<?= $disabled ? ' disabled' : '' ?>"
+                   for="<?= $escaper->escapeHtmlAttr($inputId) ?>_delete">
+                <input type="checkbox"
+                       id="<?= $escaper->escapeHtmlAttr($inputId) ?>_delete"
+                       name="<?= $escaper->escapeHtmlAttr($inputName) ?>[delete]"
+                       value="1"<?= $disabled ? ' disabled="disabled"' : '' ?> />
+                <?= $escaper->escapeHtml(__('Delete this file')) ?>
+            </label>
+            <input type="hidden"
+                   name="<?= $escaper->escapeHtmlAttr($inputName) ?>[value]"
+                   value="<?= $escaper->escapeHtmlAttr($currentFile) ?>" />
+        </div>
+    <?php endif; ?>
+
+    <?php if ($extensionLoaded): ?>
+        <div class="hic-mmdb-status is-ok">
+            <span class="hic-mmdb-dot" aria-hidden="true"></span>
+            <span><?= $escaper->escapeHtml(__('PECL maxminddb extension detected — fast mmap reader in use.')) ?></span>
+        </div>
+    <?php else: ?>
+        <div class="hic-mmdb-status is-warn">
+            <span class="hic-mmdb-dot" aria-hidden="true"></span>
+            <span>
+                <?= $escaper->escapeHtml(
+                    __('PECL maxminddb extension not installed — using the slower pure-PHP reader. Recommended:')
+                ) ?>
+                <code><?= $escaper->escapeHtml('pecl install maxminddb') ?></code>
+            </span>
+        </div>
+    <?php endif; ?>
+</div>

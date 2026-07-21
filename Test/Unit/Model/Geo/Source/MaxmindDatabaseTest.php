@@ -32,7 +32,7 @@ class MaxmindDatabaseTest extends TestCase
     private Filesystem $filesystem;
 
     /** @var ReadInterface&MockObject */
-    private ReadInterface $mediaDir;
+    private ReadInterface $varDir;
 
     /** @var ReaderFactory&MockObject */
     private ReaderFactory $readerFactory;
@@ -50,13 +50,13 @@ class MaxmindDatabaseTest extends TestCase
 
         $this->config = $this->createMock(ConfigInterface::class);
         $this->filesystem = $this->createMock(Filesystem::class);
-        $this->mediaDir = $this->createMock(ReadInterface::class);
+        $this->varDir = $this->createMock(ReadInterface::class);
         $this->readerFactory = $this->createMock(ReaderFactory::class);
         $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->filesystem->method('getDirectoryRead')
-            ->with(DirectoryList::MEDIA)
-            ->willReturn($this->mediaDir);
+            ->with(DirectoryList::VAR_DIR)
+            ->willReturn($this->varDir);
 
         $this->source = new MaxmindDatabase(
             $this->config,
@@ -76,7 +76,7 @@ class MaxmindDatabaseTest extends TestCase
     public function testNotConfiguredWhenFilenameEmpty(): void
     {
         $this->config->method('getMaxmindDbFile')->willReturn('');
-        $this->mediaDir->expects($this->never())->method('isFile');
+        $this->varDir->expects($this->never())->method('isFile');
 
         $this->assertFalse($this->source->isConfigured());
     }
@@ -84,7 +84,7 @@ class MaxmindDatabaseTest extends TestCase
     public function testNotConfiguredWhenFileMissing(): void
     {
         $this->config->method('getMaxmindDbFile')->willReturn('GeoLite2-Country.mmdb');
-        $this->mediaDir->method('isFile')->with(self::RELATIVE)->willReturn(false);
+        $this->varDir->method('isFile')->with(self::RELATIVE)->willReturn(false);
 
         $this->assertFalse($this->source->isConfigured());
     }
@@ -92,7 +92,7 @@ class MaxmindDatabaseTest extends TestCase
     public function testConfiguredWhenFilePresent(): void
     {
         $this->config->method('getMaxmindDbFile')->willReturn('GeoLite2-Country.mmdb');
-        $this->mediaDir->method('isFile')->with(self::RELATIVE)->willReturn(true);
+        $this->varDir->method('isFile')->with(self::RELATIVE)->willReturn(true);
 
         $this->assertTrue($this->source->isConfigured());
     }
@@ -100,7 +100,7 @@ class MaxmindDatabaseTest extends TestCase
     public function testResolveReturnsUppercaseIsoCode(): void
     {
         $this->config->method('getMaxmindDbFile')->willReturn('GeoLite2-Country.mmdb');
-        $this->mediaDir->method('getAbsolutePath')->with(self::RELATIVE)->willReturn('/media/geoip.mmdb');
+        $this->varDir->method('getAbsolutePath')->with(self::RELATIVE)->willReturn('/media/geoip.mmdb');
 
         $reader = $this->createMock(Reader::class);
         $reader->method('get')->with('203.0.113.7')->willReturn(['country' => ['iso_code' => 'ua']]);
@@ -112,7 +112,7 @@ class MaxmindDatabaseTest extends TestCase
     public function testResolveReturnsNullWhenRecordHasNoIsoCode(): void
     {
         $this->config->method('getMaxmindDbFile')->willReturn('GeoLite2-Country.mmdb');
-        $this->mediaDir->method('getAbsolutePath')->willReturn('/media/geoip.mmdb');
+        $this->varDir->method('getAbsolutePath')->willReturn('/media/geoip.mmdb');
 
         $reader = $this->createMock(Reader::class);
         $reader->method('get')->willReturn(['country' => []]);
@@ -124,7 +124,7 @@ class MaxmindDatabaseTest extends TestCase
     public function testResolveReturnsNullWhenRecordIsNull(): void
     {
         $this->config->method('getMaxmindDbFile')->willReturn('GeoLite2-Country.mmdb');
-        $this->mediaDir->method('getAbsolutePath')->willReturn('/media/geoip.mmdb');
+        $this->varDir->method('getAbsolutePath')->willReturn('/media/geoip.mmdb');
 
         $reader = $this->createMock(Reader::class);
         $reader->method('get')->willReturn(null);
@@ -158,7 +158,7 @@ class MaxmindDatabaseTest extends TestCase
     public function testCorruptDatabaseIsFlaggedBrokenAfterFirstFailure(): void
     {
         $this->config->method('getMaxmindDbFile')->willReturn('GeoLite2-Country.mmdb');
-        $this->mediaDir->method('getAbsolutePath')->willReturn('/media/geoip.mmdb');
+        $this->varDir->method('getAbsolutePath')->willReturn('/media/geoip.mmdb');
 
         $this->readerFactory->expects($this->once())
             ->method('create')
@@ -172,7 +172,7 @@ class MaxmindDatabaseTest extends TestCase
     public function testReaderIsOpenedOnceAcrossResolves(): void
     {
         $this->config->method('getMaxmindDbFile')->willReturn('GeoLite2-Country.mmdb');
-        $this->mediaDir->method('getAbsolutePath')->willReturn('/media/geoip.mmdb');
+        $this->varDir->method('getAbsolutePath')->willReturn('/media/geoip.mmdb');
 
         $reader = $this->createMock(Reader::class);
         $reader->method('get')->willReturn(['country' => ['iso_code' => 'de']]);
@@ -185,7 +185,7 @@ class MaxmindDatabaseTest extends TestCase
     public function testResolveAppliesBasenameToStoredFilename(): void
     {
         $this->config->method('getMaxmindDbFile')->willReturn('../evil.mmdb');
-        $this->mediaDir->expects($this->once())
+        $this->varDir->expects($this->once())
             ->method('getAbsolutePath')
             ->with('hryvinskyi_invisible_captcha/geoip/evil.mmdb')
             ->willReturn('/media/geoip/evil.mmdb');
@@ -200,7 +200,7 @@ class MaxmindDatabaseTest extends TestCase
     public function testIsConfiguredAppliesBasenameToStoredFilename(): void
     {
         $this->config->method('getMaxmindDbFile')->willReturn('../evil.mmdb');
-        $this->mediaDir->expects($this->once())
+        $this->varDir->expects($this->once())
             ->method('isFile')
             ->with('hryvinskyi_invisible_captcha/geoip/evil.mmdb')
             ->willReturn(true);
@@ -211,7 +211,7 @@ class MaxmindDatabaseTest extends TestCase
     public function testIsConfiguredSwallowsFilesystemException(): void
     {
         $this->config->method('getMaxmindDbFile')->willReturn('GeoLite2-Country.mmdb');
-        $this->mediaDir->method('isFile')
+        $this->varDir->method('isFile')
             ->willThrowException(new \Magento\Framework\Exception\ValidatorException(__('traversal rejected')));
 
         $this->assertFalse($this->source->isConfigured());

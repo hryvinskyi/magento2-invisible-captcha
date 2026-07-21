@@ -14,6 +14,7 @@ use Magento\Config\Model\Config\Backend\File;
 use Magento\Config\Model\Config\Backend\File\RequestData\RequestDataInterface;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Filesystem;
@@ -31,12 +32,20 @@ use Magento\MediaStorage\Model\File\UploaderFactory;
  *    silently leave the previous value in place while the admin believes the
  *    upload succeeded;
  *  - rejects a file that is not structurally a MaxMind database before it is
- *    moved into the media directory;
- *  - removes the previously stored file when it is replaced or deleted, so
- *    uploads do not accumulate under pub/media.
+ *    moved into the upload directory;
+ *  - stores the database under the node-local `var/` directory (not the
+ *    web-accessible `pub/media`) and removes the previously stored file when it
+ *    is replaced or deleted, so uploads do not accumulate.
  */
 class MaxmindDb extends File
 {
+    /**
+     * Var-relative directory the `.mmdb` database is uploaded into. Kept in sync
+     * (by string) with {@see \Hryvinskyi\InvisibleCaptcha\Model\Config\Backend\MaxmindDb\FileCleaner}
+     * and {@see \Hryvinskyi\InvisibleCaptcha\Model\Geo\Source\MaxmindDatabase}.
+     */
+    private const UPLOAD_DIR = 'hryvinskyi_invisible_captcha/geoip';
+
     /**
      * Filename recorded from the persisted config before the current save, used
      * by {@see afterSave()} to remove the file being replaced or deleted.
@@ -85,6 +94,12 @@ class MaxmindDb extends File
             $resourceCollection,
             $data
         );
+
+        // Storage lives under var/, not the web-accessible pub/media. The parent
+        // binds `_mediaDirectory` to media and reuses it in its (private)
+        // save-without-reupload validation; rebinding it to var keeps that check
+        // consistent with the var-based _getUploadDir() below.
+        $this->_mediaDirectory = $filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
     }
 
     /**
@@ -95,6 +110,23 @@ class MaxmindDb extends File
     protected function _getAllowedExtensions(): array
     {
         return ['mmdb'];
+    }
+
+    /**
+     * Absolute path of the var-relative upload directory, created on demand.
+     *
+     * Overriding this fully decouples the field from the system.xml `upload_dir`
+     * node (removed) and moves storage from pub/media into the node-local var/
+     * directory so the database is not web-accessible.
+     *
+     * @return string
+     */
+    protected function _getUploadDir(): string
+    {
+        $write = $this->_filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
+        $write->create(self::UPLOAD_DIR);
+
+        return $write->getAbsolutePath(self::UPLOAD_DIR);
     }
 
     /**

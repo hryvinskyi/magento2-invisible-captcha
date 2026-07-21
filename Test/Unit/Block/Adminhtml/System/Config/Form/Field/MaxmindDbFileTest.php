@@ -9,87 +9,89 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Test\Unit\Block\Adminhtml\System\Config\Form\Field;
 
 use Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\MaxmindDbFile;
-use Magento\Framework\App\ObjectManager as AppObjectManager;
 use Magento\Framework\Data\Form\Element\AbstractElement;
-use Magento\Framework\Escaper;
-use Magento\Framework\ObjectManagerInterface;
-use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class MaxmindDbFileTest extends TestCase
 {
     private const ELEMENT_NAME = 'groups[geolocation][fields][maxmind_db][value]';
+    private const ELEMENT_ID = 'geolocation_maxmind_db';
+    private const TEMPLATE_OUTPUT = '<div class="hic-mmdb">rendered</div>';
 
+    /** @var MaxmindDbFile&MockObject */
     private MaxmindDbFile $block;
 
     protected function setUp(): void
     {
-        // The Backend\Template base constructor resolves helper dependencies
-        // through the global ObjectManager unconditionally — seed it with an
-        // auto-mocking stub so the block can be constructed in a unit test.
-        $objectManager = $this->createMock(ObjectManagerInterface::class);
-        $mockFactory = function (string $type): object {
-            /** @var class-string<object> $type */
-            return $this->createMock($type);
-        };
-        $objectManager->method('get')->willReturnCallback($mockFactory);
-        $objectManager->method('create')->willReturnCallback($mockFactory);
-        AppObjectManager::setInstance($objectManager);
-
-        $block = (new ObjectManager($this))->getObject(MaxmindDbFile::class);
-        self::assertInstanceOf(MaxmindDbFile::class, $block);
-        $this->block = $block;
-
-        // Replace the auto-mocked escaper with a deterministic pass-through so
-        // the rendered markup is assertable.
-        $escaper = $this->createMock(Escaper::class);
-        $escaper->method('escapeHtml')->willReturnCallback(static fn ($value): string => (string)$value);
-        $escaper->method('escapeHtmlAttr')->willReturnCallback(static fn ($value): string => (string)$value);
-        $property = new \ReflectionProperty(\Magento\Framework\View\Element\AbstractBlock::class, '_escaper');
-        $property->setValue($this->block, $escaper);
+        // The block renders through a template; stub _toHtml() so the test never
+        // needs a template engine and can assert the element data is copied onto
+        // the block and the template output is returned verbatim.
+        $this->block = $this->getMockBuilder(MaxmindDbFile::class)
+            ->onlyMethods(['_toHtml'])
+            ->disableOriginalConstructor()
+            ->getMock();
+        $this->block->method('_toHtml')->willReturn(self::TEMPLATE_OUTPUT);
     }
 
-    protected function tearDown(): void
+    public function testCopiesElementDataOntoBlockAndReturnsTemplateOutput(): void
     {
-        $property = new \ReflectionProperty(AppObjectManager::class, '_instance');
-        $property->setValue(null, null);
+        $html = $this->renderElement('GeoLite2-Country.mmdb', false);
+
+        self::assertSame(self::TEMPLATE_OUTPUT, $html);
+        self::assertSame(self::ELEMENT_NAME, $this->block->getInputName());
+        self::assertSame(self::ELEMENT_ID, $this->block->getInputId());
+        self::assertSame('GeoLite2-Country.mmdb', $this->block->getCurrentFile());
+        self::assertFalse($this->block->isDisabled());
     }
 
-    public function testRendersCurrentFileAndDeleteCheckboxWhenValuePresent(): void
+    public function testCurrentFileIsEmptyWhenNoValueStored(): void
     {
-        $html = $this->renderElement('GeoLite2-Country.mmdb');
+        $this->renderElement('', false);
 
-        self::assertStringContainsString('base-input', $html, 'parent file input should be preserved');
-        self::assertStringContainsString('GeoLite2-Country.mmdb', $html);
-        self::assertStringContainsString('type="checkbox"', $html);
-        self::assertStringContainsString('name="' . self::ELEMENT_NAME . '[delete]"', $html);
+        self::assertSame('', $this->block->getCurrentFile());
     }
 
-    public function testRendersNoDeleteCheckboxWhenValueEmpty(): void
+    public function testNonStringValueBecomesEmptyCurrentFile(): void
     {
-        $html = $this->renderElement('');
+        $this->renderElement(['delete' => '1'], false);
 
-        self::assertStringContainsString('base-input', $html);
-        self::assertStringNotContainsString('type="checkbox"', $html);
-        self::assertStringNotContainsString('[delete]', $html);
+        self::assertSame('', $this->block->getCurrentFile());
     }
 
-    private function renderElement(string $value): string
+    public function testDisabledStateIsCopiedFromElement(): void
     {
-        // getElementHtml/getName/getHtmlId are declared on AbstractElement;
-        // getValue is a magic DataObject accessor, so it must be added.
+        $this->renderElement('GeoLite2-Country.mmdb', true);
+
+        self::assertTrue($this->block->isDisabled());
+    }
+
+    public function testMaxmindExtensionLoadedReflectsRuntime(): void
+    {
+        self::assertSame(extension_loaded('maxminddb'), $this->block->isMaxmindExtensionLoaded());
+    }
+
+    /**
+     * @param string|array<string, string> $value
+     * @param bool $disabled
+     * @return string
+     */
+    private function renderElement($value, bool $disabled): string
+    {
+        // getName/getHtmlId are declared on AbstractElement; getValue is a magic
+        // DataObject accessor, so it must be added. `disabled` is read through the
+        // real getData(), so it is seeded via setData().
         $element = $this->getMockBuilder(AbstractElement::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['getElementHtml', 'getHtmlId', 'getName'])
+            ->onlyMethods(['getHtmlId', 'getName'])
             ->addMethods(['getValue'])
             ->getMock();
-        $element->method('getElementHtml')->willReturn('<input class="base-input" type="file" />');
-        $element->method('getValue')->willReturn($value);
-        $element->method('getHtmlId')->willReturn('geolocation_maxmind_db');
         $element->method('getName')->willReturn(self::ELEMENT_NAME);
+        $element->method('getHtmlId')->willReturn(self::ELEMENT_ID);
+        $element->method('getValue')->willReturn($value);
+        $element->setData('disabled', $disabled);
 
         $method = new \ReflectionMethod($this->block, '_getElementHtml');
-
         $result = $method->invoke($this->block, $element);
         self::assertIsString($result);
 

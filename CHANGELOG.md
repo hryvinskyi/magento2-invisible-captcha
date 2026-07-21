@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2026-07-21
+
+### Added
+
+- **PECL `maxminddb` extension status indicator.** The MaxMind Database upload
+  field now shows whether the optional PECL `maxminddb` C extension is loaded —
+  a green notice when the fast mmap reader is in use, or an amber notice
+  recommending `pecl install maxminddb` when the slower pure-PHP fallback is
+  active.
+
+### Changed
+
+- **MaxMind database storage moved from `pub/media` to
+  `var/hryvinskyi_invisible_captcha/geoip`.** The uploaded `.mmdb` file is no
+  longer web-accessible. Existing files are relocated automatically by a data
+  patch (`Setup\Patch\Data\MoveMaxmindDbToVar`); the stored config value (a bare
+  filename) is unchanged. On multi-node deployments the file must be present on
+  every node.
+
+### Fixed
+
+- **Duplicate delete checkbox on the MaxMind upload field.** The field now
+  renders through a custom template that fully replaces the core file element
+  output instead of appending to it, so the "Delete this file" checkbox appears
+  exactly once.
+
 ## [3.3.0] - 2026-07-21
 
 ### Added
