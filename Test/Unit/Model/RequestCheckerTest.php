@@ -12,10 +12,10 @@ use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionEvaluatorInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionParserInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Http\ClientIpResolverInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\ExclusionPolicy;
-use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\ClientIp;
 use Hryvinskyi\InvisibleCaptcha\Model\PathPatternMatcher;
 use Hryvinskyi\InvisibleCaptcha\Model\RequestChecker;
 use Magento\Framework\App\Request\Http as HttpRequest;
@@ -34,8 +34,8 @@ class RequestCheckerTest extends TestCase
     private ExpressionParserInterface $parser;
     /** @var ExpressionEvaluatorInterface&MockObject */
     private ExpressionEvaluatorInterface $evaluator;
-    /** @var ClientIp&MockObject */
-    private ClientIp $clientIp;
+    /** @var ClientIpResolverInterface&MockObject */
+    private ClientIpResolverInterface $clientIpResolver;
     /** @var HttpRequest&MockObject */
     private HttpRequest $request;
     private RequestChecker $checker;
@@ -47,7 +47,7 @@ class RequestCheckerTest extends TestCase
         $this->routeGateProvider = $this->createMock(ProviderInterface::class);
         $this->parser = $this->createMock(ExpressionParserInterface::class);
         $this->evaluator = $this->createMock(ExpressionEvaluatorInterface::class);
-        $this->clientIp = $this->createMock(ClientIp::class);
+        $this->clientIpResolver = $this->createMock(ClientIpResolverInterface::class);
         $this->request = $this->createMock(HttpRequest::class);
 
         // The route-gate provider is resolved through the pool; default it to "configured".
@@ -59,7 +59,7 @@ class RequestCheckerTest extends TestCase
             $this->providerPool,
             $this->parser,
             $this->evaluator,
-            $this->clientIp,
+            $this->clientIpResolver,
             new ExclusionPolicy($this->config, new PathPatternMatcher()),
             $this->request
         );
@@ -87,7 +87,7 @@ class RequestCheckerTest extends TestCase
             $providerPool,
             $this->parser,
             $this->evaluator,
-            $this->clientIp,
+            $this->clientIpResolver,
             new ExclusionPolicy($config, new PathPatternMatcher()),
             $this->request
         );
@@ -122,7 +122,7 @@ class RequestCheckerTest extends TestCase
     {
         $this->config->method('isRouteProtectionEnabled')->willReturn(true);
         $this->config->method('getExcludedIps')->willReturn(['1.2.3.4']);
-        $this->clientIp->method('getValue')->willReturn('1.2.3.4');
+        $this->clientIpResolver->method('resolve')->willReturn('1.2.3.4');
         $this->evaluator->expects($this->never())->method('evaluate');
         $this->assertFalse($this->checker->needsChallenge());
     }
@@ -197,9 +197,9 @@ class RequestCheckerTest extends TestCase
         $this->assertTrue($this->checker->isConfigured());
     }
 
-    public function testGetClientIpDelegatesToField(): void
+    public function testGetClientIpDelegatesToResolver(): void
     {
-        $this->clientIp->method('getValue')->willReturn('203.0.113.1');
+        $this->clientIpResolver->method('resolve')->willReturn('203.0.113.1');
         $this->assertSame('203.0.113.1', $this->checker->getClientIp());
     }
 

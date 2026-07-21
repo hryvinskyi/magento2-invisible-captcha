@@ -455,6 +455,25 @@
                 </group>
             </group>
 
+            <!-- ============================ Geolocation =========================== -->
+            <group id="geolocation" translate="label comment" type="text" sortOrder="45" showInDefault="1" showInWebsite="1" showInStore="0">
+                <label>Geolocation (country detection)</label>
+                <comment>How the visitor's country is determined for the "Country" field in Protection Rules.</comment>
+                <field id="source" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Country Source</label>
+                    <source_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Source\GeoSource</source_model>
+                    <comment>Cloudflare requires the zone's "IP Geolocation" toggle (the CF-IPCountry header). MaxMind uses a database file you upload below.</comment>
+                </field>
+                <field id="maxmind_db" translate="label comment" type="file" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>MaxMind Database File (.mmdb)</label>
+                    <frontend_model>Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\MaxmindDbFile</frontend_model>
+                    <backend_model>Hryvinskyi\InvisibleCaptcha\Model\Config\Backend\MaxmindDb</backend_model>
+                    <upload_dir config="system/filesystem/media" scope_info="0">hryvinskyi_invisible_captcha/geoip</upload_dir>
+                    <comment><![CDATA[GeoLite2 or GeoIP2 Country/City database. Free GeoLite2 downloads require a MaxMind account: <a href="https://www.maxmind.com/en/geolite2/signup" target="_blank">maxmind.com/en/geolite2/signup</a>. Re-upload periodically — the database is a snapshot and ages. Your server's PHP upload limits (upload_max_filesize, post_max_size) must accommodate the file (GeoLite2-City is ~70 MB).]]></comment>
+                    <depends><field id="source">maxmind</field></depends>
+                </field>
+            </group>
+
             <!-- ============================== Advanced ============================ -->
             <group id="advanced" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                 <label>Advanced</label>

@@ -11,6 +11,7 @@ namespace Hryvinskyi\InvisibleCaptcha\Test\Unit\Model\Filter\Field;
 use Hryvinskyi\InvisibleCaptcha\Api\AjaxRequestDetectorInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldValueHintInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Http\ClientIpResolverInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\NoRouteActionInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\RobotsTxt\MatcherInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\ActiveParamCount;
@@ -58,7 +59,10 @@ class FieldValueHintsTest extends TestCase
      */
     public function testClientIpPattern(string $value, bool $expected): void
     {
-        $field = new ClientIp($this->createMock(HttpRequest::class));
+        $field = new ClientIp(
+            $this->createMock(HttpRequest::class),
+            $this->createMock(ClientIpResolverInterface::class)
+        );
         $pattern = '~' . $field->getValueHint()['pattern'] . '~';
 
         $this->assertSame($expected, (bool)preg_match($pattern, $value));
@@ -140,7 +144,7 @@ class FieldValueHintsTest extends TestCase
             new QueryString($request),
             new RequestMethod($request),
             new Hostname($request),
-            new ClientIp($request),
+            new ClientIp($request, $this->createMock(ClientIpResolverInterface::class)),
             new UserAgent($request),
             new Referer($request),
             new ActiveParamCount($request, $this->createMock(ConfigInterface::class)),

@@ -12,9 +12,9 @@ use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExclusionPolicyInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionEvaluatorInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionParserInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Http\ClientIpResolverInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface;
 use Hryvinskyi\InvisibleCaptcha\Controller\Router\VerificationRouter;
-use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\ClientIp;
 use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Framework\App\RequestInterface;
 
@@ -28,7 +28,7 @@ class RequestChecker
      * @param ProviderPoolInterface $providerPool
      * @param ExpressionParserInterface $expressionParser
      * @param ExpressionEvaluatorInterface $expressionEvaluator
-     * @param ClientIp $clientIp
+     * @param ClientIpResolverInterface $clientIpResolver
      * @param ExclusionPolicyInterface $exclusionPolicy
      * @param RequestInterface $request
      */
@@ -37,7 +37,7 @@ class RequestChecker
         private readonly ProviderPoolInterface $providerPool,
         private readonly ExpressionParserInterface $expressionParser,
         private readonly ExpressionEvaluatorInterface $expressionEvaluator,
-        private readonly ClientIp $clientIp,
+        private readonly ClientIpResolverInterface $clientIpResolver,
         private readonly ExclusionPolicyInterface $exclusionPolicy,
         private readonly RequestInterface $request
     ) {
@@ -94,11 +94,11 @@ class RequestChecker
     }
 
     /**
-     * Resolve the client IP via the shared ClientIp filter field.
+     * Resolve the client IP via the shared client-IP resolver.
      */
     public function getClientIp(): string
     {
-        return $this->clientIp->getValue();
+        return $this->clientIpResolver->resolve();
     }
 
     /**

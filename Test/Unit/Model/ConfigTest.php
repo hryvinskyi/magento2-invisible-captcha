@@ -309,4 +309,36 @@ class ConfigTest extends TestCase
 
         $this->assertSame('general@example.com', $this->config->getSupportEmail());
     }
+
+    public function testGetGeoSourceReturnsConfiguredValue(): void
+    {
+        $this->scopeConfig->method('getValue')
+            ->with('hryvinskyi_invisible_captcha/geolocation/source', ScopeInterface::SCOPE_STORE, null)
+            ->willReturn('maxmind');
+
+        $this->assertSame('maxmind', $this->config->getGeoSource());
+    }
+
+    public function testGetGeoSourceReturnsCloudflareDefaultWhenUnset(): void
+    {
+        $this->scopeConfig->method('getValue')->willReturn(null);
+
+        $this->assertSame('cloudflare', $this->config->getGeoSource());
+    }
+
+    public function testGetMaxmindDbFileReturnsConfiguredValue(): void
+    {
+        $this->scopeConfig->method('getValue')
+            ->with('hryvinskyi_invisible_captcha/geolocation/maxmind_db', ScopeInterface::SCOPE_STORE, null)
+            ->willReturn('GeoLite2-Country.mmdb');
+
+        $this->assertSame('GeoLite2-Country.mmdb', $this->config->getMaxmindDbFile());
+    }
+
+    public function testGetMaxmindDbFileReturnsEmptyWhenUnset(): void
+    {
+        $this->scopeConfig->method('getValue')->willReturn(null);
+
+        $this->assertSame('', $this->config->getMaxmindDbFile());
+    }
 }

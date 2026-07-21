@@ -54,6 +54,10 @@ class Config implements ConfigInterface
     private const XML_APPEARANCE_PRIMARY_DEEP = 'hryvinskyi_invisible_captcha/route_protection/appearance/primary_color_deep';
     private const XML_APPEARANCE_PRIMARY_SOFT = 'hryvinskyi_invisible_captcha/route_protection/appearance/primary_color_soft';
 
+    /* Geolocation */
+    private const XML_GEO_SOURCE = 'hryvinskyi_invisible_captcha/geolocation/source';
+    private const XML_GEO_MAXMIND_DB = 'hryvinskyi_invisible_captcha/geolocation/maxmind_db';
+
     /* Advanced */
     private const XML_HTTP_TIMEOUT = 'hryvinskyi_invisible_captcha/advanced/http_timeout';
 
@@ -280,6 +284,20 @@ class Config implements ConfigInterface
     public function getChallengePrimaryColorSoft(?string $scopeCode = null): string
     {
         return $this->value(self::XML_APPEARANCE_PRIMARY_SOFT, $scopeCode);
+    }
+
+    /* ---------------------------------------------------------- Geolocation */
+
+    public function getGeoSource(?string $scopeCode = null): string
+    {
+        $value = $this->value(self::XML_GEO_SOURCE, $scopeCode);
+
+        return $value !== '' ? $value : 'cloudflare';
+    }
+
+    public function getMaxmindDbFile(?string $scopeCode = null): string
+    {
+        return $this->value(self::XML_GEO_MAXMIND_DB, $scopeCode);
     }
 
     /* ------------------------------------------------------------- Advanced */

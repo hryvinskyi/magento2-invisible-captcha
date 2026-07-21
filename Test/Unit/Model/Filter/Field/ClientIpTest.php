@@ -9,21 +9,26 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Test\Unit\Model\Filter\Field;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldValueHintInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Http\ClientIpResolverInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\ClientIp;
-use Magento\Framework\App\Request\Http as HttpRequest;
+use Magento\Framework\App\RequestInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class ClientIpTest extends TestCase
 {
-    /** @var HttpRequest&MockObject */
-    private HttpRequest $request;
+    /** @var RequestInterface&MockObject */
+    private RequestInterface $request;
+    /** @var ClientIpResolverInterface&MockObject */
+    private ClientIpResolverInterface $clientIpResolver;
     private ClientIp $field;
 
     protected function setUp(): void
     {
-        $this->request = $this->createMock(HttpRequest::class);
-        $this->field = new ClientIp($this->request);
+        $this->request = $this->createMock(RequestInterface::class);
+        $this->clientIpResolver = $this->createMock(ClientIpResolverInterface::class);
+        $this->field = new ClientIp($this->request, $this->clientIpResolver);
     }
 
     public function testMetadata(): void
@@ -33,54 +38,25 @@ class ClientIpTest extends TestCase
         $this->assertSame(FieldInterface::TYPE_STRING, $this->field->getType());
     }
 
-    public function testCloudflareHeaderTakesPriority(): void
+    public function testGetValueDelegatesToResolverWithItsOwnRequest(): void
     {
-        $this->request->method('getServer')->willReturnMap([
-            ['HTTP_CF_CONNECTING_IP', null, '1.2.3.4'],
-            ['HTTP_X_REAL_IP', null, '5.6.7.8'],
-            ['HTTP_X_FORWARDED_FOR', null, '9.10.11.12'],
-            ['REMOTE_ADDR', null, '13.14.15.16'],
-        ]);
+        // The field must resolve against the request it was constructed with —
+        // the seam the rule tester's SimulatedFieldPoolFactory substitutes.
+        $this->clientIpResolver->expects($this->once())
+            ->method('resolveFrom')
+            ->with($this->identicalTo($this->request))
+            ->willReturn('1.2.3.4');
 
         $this->assertSame('1.2.3.4', $this->field->getValue());
     }
 
-    public function testFallsThroughHeaderPriority(): void
+    public function testExposesValueHintForTheRulesEditor(): void
     {
-        $this->request->method('getServer')->willReturnMap([
-            ['HTTP_CF_CONNECTING_IP', null, ''],
-            ['HTTP_X_REAL_IP', null, ''],
-            ['HTTP_X_FORWARDED_FOR', null, '9.10.11.12'],
-            ['REMOTE_ADDR', null, '13.14.15.16'],
-        ]);
+        $this->assertInstanceOf(FieldValueHintInterface::class, $this->field);
 
-        $this->assertSame('9.10.11.12', $this->field->getValue());
-    }
-
-    public function testForwardedForChainPicksFirst(): void
-    {
-        $this->request->method('getServer')->willReturnMap([
-            ['HTTP_CF_CONNECTING_IP', null, ''],
-            ['HTTP_X_REAL_IP', null, ''],
-            ['HTTP_X_FORWARDED_FOR', null, '203.0.113.1, 10.0.0.1, 172.16.0.1'],
-        ]);
-
-        $this->assertSame('203.0.113.1', $this->field->getValue());
-    }
-
-    public function testInvalidIpIsSkipped(): void
-    {
-        $this->request->method('getServer')->willReturnMap([
-            ['HTTP_CF_CONNECTING_IP', null, 'not-an-ip'],
-            ['HTTP_X_REAL_IP', null, '5.6.7.8'],
-        ]);
-
-        $this->assertSame('5.6.7.8', $this->field->getValue());
-    }
-
-    public function testEmptyWhenNothingValid(): void
-    {
-        $this->request->method('getServer')->willReturn('');
-        $this->assertSame('', $this->field->getValue());
+        $hint = $this->field->getValueHint();
+        $this->assertSame('^(\\d{1,3}(\\.\\d{1,3}){3}|[0-9A-Fa-f:]*:[0-9A-Fa-f:]*)$', $hint['pattern']);
+        $this->assertSame('203.0.113.10', $hint['placeholder']);
+        $this->assertArrayHasKey('message', $hint);
     }
 }

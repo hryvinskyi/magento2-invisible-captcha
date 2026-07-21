@@ -70,6 +70,12 @@ routes**, using whichever CAPTCHA provider you configure.
   warnings. The simulation runs under full store emulation; the full action
   name is auto-resolved through URL rewrites (SEO URLs, one redirect hop) and
   the front-name → route-id map, and can be overridden manually.
+- **Country-based rules** — route rules can match on the visitor's country via a
+  `country` field (uppercase ISO 3166-1 alpha-2; `T1` = Tor via Cloudflare). The
+  country is resolved from a configurable source — the Cloudflare `CF-IPCountry`
+  header or an admin-uploaded MaxMind GeoLite2 / GeoIP2 `.mmdb` database. An
+  unknown country resolves to an empty value, so negative operators
+  (`does not equal` / `not in list`) match traffic whose country is undetermined.
 
 ## Installation
 
@@ -105,6 +111,51 @@ Dependencies: `hryvinskyi/magento2-base`, `hryvinskyi/magento2-theme-assets`,
   CSP-safe `--primary*` overrides and configurable per store view.
 - **Advanced** — outbound verification HTTP timeout.
 
+### Geolocation / country rules
+
+The `country` rule field needs a geolocation source, selected under *Stores →
+Configuration → … → Invisible Captcha & Bot Protection → Geolocation*. Two
+sources ship:
+
+- **Cloudflare (`CF-IPCountry` header)** — zero setup beyond enabling the zone's
+  **IP Geolocation** toggle in Cloudflare. It only produces a country when
+  traffic actually flows through Cloudflare (the edge injects the header);
+  direct-to-origin requests have no country.
+- **MaxMind database (GeoLite2 / GeoIP2)** — upload a GeoLite2 or GeoIP2
+  **Country** or **City** `.mmdb` file under the *Geolocation* group. The
+  database is a point-in-time snapshot, so re-upload it periodically to keep
+  lookups accurate. The server's PHP upload limits (`upload_max_filesize`,
+  `post_max_size`) must accommodate the file — GeoLite2-City is ≈ 70 MB. Prefer
+  the smaller **GeoLite2-Country** database over City when you only need country
+  rules. Replacing the file, or ticking the **Delete current file** checkbox on
+  the field, removes the previous database from
+  `pub/media/hryvinskyi_invisible_captcha/geoip/` automatically.
+
+Country values are uppercase ISO 3166-1 alpha-2 (`UA`, `DE`); `T1` denotes Tor
+(Cloudflare only). An unknown country resolves to an **empty value**, so negative
+operators (`does not equal` / `not in list`) match traffic whose country could
+not be determined.
+
+**Known limitation:** the MaxMind source reads the `.mmdb` file directly from a
+locally readable `pub/media`; remote-storage (e.g. S3) media backends are not
+supported for the database file.
+
+**Performance (MaxMind).** The `maxmind-db/reader` library automatically detects
+the optional PECL `maxminddb` C extension and, when present, switches to an
+mmap-based reader whose lookups are orders of magnitude faster than the bundled
+pure-PHP fallback. Installing it is recommended on high-traffic stores using the
+MaxMind source:
+
+```bash
+pecl install maxminddb
+# then enable it, e.g. add to php.ini:
+#   extension=maxminddb.so
+```
+
+No code or configuration changes are needed — the module uses the same API either
+way, and the pure-PHP path keeps working unchanged on hosts where the extension
+cannot be installed.
+
 ## Architecture (extension points)
 
 - `Api\Provider\ProviderInterface` + `ProviderPoolInterface` — add a provider by
@@ -120,6 +171,9 @@ Dependencies: `hryvinskyi/magento2-base`, `hryvinskyi/magento2-theme-assets`,
 - `Api\RobotsTxt\{SourceInterface, ParserInterface, MatcherInterface}` — swap
   where robots.txt content comes from, how it is parsed, or how rules are
   matched (all bound via `di.xml` preferences).
+- `Api\Geo\CountrySourceInterface` + `CountrySourcePoolInterface` — add a country
+  detection source (e.g. a different geo provider) by implementing the interface
+  and adding it to the `Model\Geo\SourcePool` DI array.
 - `Model\Strategy\{Token,Failure}\*` — pluggable token extraction & failure handling.
 
 ## WebAPI / checkout note

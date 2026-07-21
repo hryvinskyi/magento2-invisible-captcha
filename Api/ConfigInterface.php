@@ -209,6 +209,20 @@ interface ConfigInterface
      */
     public function getChallengePrimaryColorSoft(?string $scopeCode = null): string;
 
+    /* ---------------------------------------------------------- Geolocation */
+
+    /**
+     * Country source strategy code used to resolve the visitor's country
+     * (see CountrySourceInterface::getCode()); defaults to 'cloudflare'.
+     */
+    public function getGeoSource(?string $scopeCode = null): string;
+
+    /**
+     * Filename of the admin-uploaded MaxMind `.mmdb` database, or empty string
+     * when none has been uploaded.
+     */
+    public function getMaxmindDbFile(?string $scopeCode = null): string;
+
     /* ------------------------------------------------------------- Advanced */
 
     /**

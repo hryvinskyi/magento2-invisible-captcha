@@ -10,23 +10,24 @@ namespace Hryvinskyi\InvisibleCaptcha\Model\Filter\Field;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldValueHintInterface;
-use Hryvinskyi\InvisibleCaptcha\Api\Http\ClientIpResolverInterface;
-use Magento\Framework\App\RequestInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Geo\CountryResolverInterface;
 use Magento\Framework\Phrase;
 
-class ClientIp implements FieldInterface, FieldValueHintInterface
+/**
+ * Country of the current visitor, resolved via the admin-selected geolocation
+ * source. Values are uppercase ISO 3166-1 alpha-2 codes (`UA`, `DE`); `T1`
+ * signals Tor when the source is Cloudflare. An unknown country resolves to the
+ * empty string (mirroring {@see ClientIp}), so negative operators such as
+ * `does not equal` / `not in list` match traffic whose country could not be
+ * determined.
+ */
+class Country implements FieldInterface, FieldValueHintInterface
 {
     /**
-     * The field keeps its own `request` so the rule tester's field pool can
-     * substitute a synthetic request; the trusted-proxy header policy itself
-     * lives only in the shared resolver, which resolves against that request.
-     *
-     * @param RequestInterface $request
-     * @param ClientIpResolverInterface $clientIpResolver
+     * @param CountryResolverInterface $countryResolver
      */
     public function __construct(
-        private readonly RequestInterface $request,
-        private readonly ClientIpResolverInterface $clientIpResolver
+        private readonly CountryResolverInterface $countryResolver
     ) {
     }
 
@@ -35,7 +36,7 @@ class ClientIp implements FieldInterface, FieldValueHintInterface
      */
     public function getCode(): string
     {
-        return 'client_ip';
+        return 'country';
     }
 
     /**
@@ -43,7 +44,7 @@ class ClientIp implements FieldInterface, FieldValueHintInterface
      */
     public function getLabel(): Phrase
     {
-        return __('Client IP');
+        return __('Country (ISO 3166-1 alpha-2)');
     }
 
     /**
@@ -59,7 +60,7 @@ class ClientIp implements FieldInterface, FieldValueHintInterface
      */
     public function getValue(): string
     {
-        return $this->clientIpResolver->resolveFrom($this->request);
+        return $this->countryResolver->getCountryCode() ?? '';
     }
 
     /**
@@ -68,9 +69,9 @@ class ClientIp implements FieldInterface, FieldValueHintInterface
     public function getValueHint(): array
     {
         return [
-            'pattern' => '^(\\d{1,3}(\\.\\d{1,3}){3}|[0-9A-Fa-f:]*:[0-9A-Fa-f:]*)$',
-            'message' => (string)__('Enter a valid IPv4 or IPv6 address.'),
-            'placeholder' => '203.0.113.10',
+            'pattern' => '^[A-Za-z0-9]{2}$',
+            'message' => (string)__('Enter a 2-letter ISO 3166-1 country code, e.g. UA.'),
+            'placeholder' => 'UA',
         ];
     }
 }

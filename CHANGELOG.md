@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2026-07-21
+
+### Added
+
+- **Country filter field for protection rules.** A new `country` field in the
+  route-gate rule engine (`Model\Filter\Field\Country`) lets rules match on the
+  visitor's country (uppercase ISO 3166-1 alpha-2; `T1` = Tor via Cloudflare).
+  The country is resolved through a pluggable source pool
+  (`Api\Geo\CountrySourceInterface` + `CountrySourcePoolInterface`) behind the
+  `Api\Geo\CountryResolverInterface` facade. Two sources ship: **Cloudflare**
+  (the `CF-IPCountry` edge header) and **MaxMind** (an admin-uploaded GeoLite2 /
+  GeoIP2 `.mmdb` database, read via `maxmind-db/reader`). An unknown country
+  resolves to the empty string, so negative operators (`does not equal` /
+  `not in list`) match traffic whose country could not be determined. The field
+  exposes a value hint (placeholder + validation) to the rules editor, matching
+  the other string fields.
+- **Geolocation admin config group.** New *Geolocation (country detection)* group
+  under *Stores → Configuration → … → Invisible Captcha & Bot Protection*: a
+  **Country Source** selector and a **MaxMind Database File (.mmdb)** upload with
+  validation (structural `.mmdb` marker check), an upload-failure guard for the
+  server's PHP upload limits, a *Delete current file* control, and automatic
+  cleanup of the previous file from `pub/media/hryvinskyi_invisible_captcha/geoip/`.
+
+### Changed
+
+- **Client-IP resolution extracted to `Api\Http\ClientIpResolverInterface`.** The
+  proxy-aware client-IP logic is now available behind a reusable contract
+  (`Model\Http\ClientIpResolver`) consumed by the route gate's `RequestChecker`
+  and the geolocation sources.
+
 ## [3.2.0] - 2026-07-11
 
 ### Added

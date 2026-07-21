@@ -16,6 +16,12 @@
                 type="Hryvinskyi\InvisibleCaptcha\Model\Provider\Pool"/>
     <preference for="Hryvinskyi\InvisibleCaptcha\Api\Verification\HttpClientInterface"
                 type="Hryvinskyi\InvisibleCaptcha\Model\Verification\Http\HttpClient"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Http\ClientIpResolverInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Http\ClientIpResolver"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Geo\CountrySourcePoolInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Geo\SourcePool"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Geo\CountryResolverInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Geo\CountryResolver"/>
 
     <!-- Route-gating filter engine -->
     <preference for="Hryvinskyi\InvisibleCaptcha\Api\ConditionInterface"
@@ -187,6 +193,7 @@
                 <item name="request_method" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\RequestMethod</item>
                 <item name="hostname" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\Hostname</item>
                 <item name="client_ip" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\ClientIp</item>
+                <item name="country" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\Country</item>
                 <item name="user_agent" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\UserAgent</item>
                 <item name="referer" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\Referer</item>
                 <item name="active_param_count" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Filter\Field\ActiveParamCount</item>
@@ -224,6 +231,22 @@
         </arguments>
     </type>
     <type name="Hryvinskyi\InvisibleCaptcha\Model\Filter\Operator\NotRegex">
+        <arguments>
+            <argument name="logger" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Logger</argument>
+        </arguments>
+    </type>
+
+    <!-- ===== Geolocation (country sources) ===== -->
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Geo\SourcePool">
+        <arguments>
+            <argument name="sources" xsi:type="array">
+                <item name="cloudflare" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Geo\Source\CloudflareHeader</item>
+                <item name="maxmind" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Geo\Source\MaxmindDatabase</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\Geo\Source\MaxmindDatabase">
         <arguments>
             <argument name="logger" xsi:type="object">Hryvinskyi\InvisibleCaptcha\Model\Logger</argument>
         </arguments>

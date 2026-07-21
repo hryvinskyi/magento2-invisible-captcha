@@ -97,6 +97,9 @@
                     <primary_color_soft>rgba(47,107,216,0.12)</primary_color_soft>
                 </appearance>
             </route_protection>
+            <geolocation>
+                <source>cloudflare</source>
+            </geolocation>
             <advanced>
                 <http_timeout>2.0</http_timeout>
             </advanced>
