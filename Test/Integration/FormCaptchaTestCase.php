@@ -26,14 +26,19 @@ use Magento\TestFramework\TestCase\AbstractController;
  *  - setProviderKeys() stores a plain site key and an EncryptorInterface-encrypted
  *    secret so the active provider reports isConfigured() === true;
  *  - mockVerification() swaps the outbound HTTP transport for a stub so the
- *    server-side siteverify result is deterministic without any real network call.
+ *    server-side siteverify result is deterministic without any real network call;
+ *  - setConfig() is also how a test switches off a neighbouring setting it
+ *    depends on: this framework applies config fixture annotations declared on
+ *    a test method only, so one declared on the class is silently ignored.
  *
  * The active provider is Cloudflare Turnstile (isScoreBased() === false,
  * supportsAction() === false) so the verification verdict depends only on the
  * mocked JSON body.
  */
-abstract class AbstractFormCaptchaTest extends AbstractController
+abstract class FormCaptchaTestCase extends AbstractController
 {
+    use ControllerTestAccess;
+
     /** Neutral hidden field the storefront JS populates for every provider. */
     public const TOKEN_FIELD = RequestParam::DEFAULT_FIELD;
 
@@ -49,6 +54,7 @@ abstract class AbstractFormCaptchaTest extends AbstractController
     private const XML_FORM_FRONTEND_ENABLED = 'hryvinskyi_invisible_captcha/form_protection/frontend/enabled';
     private const XML_FORM_ENABLED_PREFIX = 'hryvinskyi_invisible_captcha/form_protection/frontend/enabled_';
     private const XML_PROVIDER_PREFIX = 'hryvinskyi_invisible_captcha/providers/';
+    private const XML_IMAGE_CAPTCHA_ENABLED = 'customer/captcha/enable';
 
     /**
      * @var MutableScopeConfig
@@ -78,9 +84,9 @@ abstract class AbstractFormCaptchaTest extends AbstractController
     protected function setUp(): void
     {
         parent::setUp();
-        $this->mutableConfig = $this->_objectManager->get(MutableScopeConfig::class);
-        $this->formKey = $this->_objectManager->get(FormKey::class);
-        $this->encryptor = $this->_objectManager->get(EncryptorInterface::class);
+        $this->mutableConfig = $this->service(MutableScopeConfig::class);
+        $this->formKey = $this->service(FormKey::class);
+        $this->encryptor = $this->service(EncryptorInterface::class);
     }
 
     /**
@@ -106,6 +112,20 @@ abstract class AbstractFormCaptchaTest extends AbstractController
     {
         $this->mutableConfig->setValue($path, $value, ScopeInterface::SCOPE_STORE);
         $this->changedPaths[] = $path;
+    }
+
+    /**
+     * Switch off the built-in image captcha of the storefront.
+     *
+     * It guards some of the same forms (forgot password always, registration
+     * always, login after failed attempts) and, left on, rejects the post with
+     * its own error before this module's verdict can be observed.
+     *
+     * @return void
+     */
+    protected function disableImageCaptcha(): void
+    {
+        $this->setConfig(self::XML_IMAGE_CAPTCHA_ENABLED, '0');
     }
 
     /**
@@ -165,6 +185,14 @@ abstract class AbstractFormCaptchaTest extends AbstractController
      * Replace the outbound HTTP transport with a stub returning a fixed
      * siteverify payload (pass or fail) so verification is deterministic.
      *
+     * The container resolves an interface through its preference before it
+     * looks up a shared instance, so the stub is registered under the class the
+     * preference of {@see HttpClientInterface} names; registered under the
+     * interface name it would never be handed out and the verifier would reach
+     * the real provider over the network. The stub expects exactly one call, so
+     * a test whose verdict did not come from it fails instead of passing on
+     * whatever the network answered.
+     *
      * @param bool $pass
      * @return void
      */
@@ -175,8 +203,8 @@ abstract class AbstractFormCaptchaTest extends AbstractController
             : '{"success":false,"error-codes":["invalid-input-response"]}';
 
         $httpClientMock = $this->createMock(HttpClientInterface::class);
-        $httpClientMock->method('post')->willReturn($body);
-        $this->_objectManager->addSharedInstance($httpClientMock, HttpClientInterface::class);
+        $httpClientMock->expects(self::once())->method('post')->willReturn($body);
+        $this->_objectManager->addSharedInstance($httpClientMock, HttpClientInterface::class, true);
     }
 
     /**

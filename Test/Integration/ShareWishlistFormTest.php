@@ -25,7 +25,7 @@ use Magento\TestFramework\Wishlist\Model\GetWishlistByCustomerId;
  * @magentoAppArea frontend
  * @magentoAppIsolation enabled
  */
-class ShareWishlistFormTest extends AbstractFormCaptchaTest
+class ShareWishlistFormTest extends FormCaptchaTestCase
 {
     private const FORM = 'wishlist';
     private const CUSTOMER_ID = 1;
@@ -51,12 +51,14 @@ class ShareWishlistFormTest extends AbstractFormCaptchaTest
     protected function setUp(): void
     {
         parent::setUp();
-        $this->customerSession = $this->_objectManager->get(Session::class);
+        $this->customerSession = $this->service(Session::class);
         $this->customerSession->setCustomerId(self::CUSTOMER_ID);
-        $this->url = $this->_objectManager->get(UrlInterface::class);
-        $this->wishlistId = (int)$this->_objectManager->get(GetWishlistByCustomerId::class)
+        $this->url = $this->service(UrlInterface::class);
+        $wishlistId = $this->service(GetWishlistByCustomerId::class)
             ->execute(self::CUSTOMER_ID)
             ->getId();
+        self::assertIsNumeric($wishlistId);
+        $this->wishlistId = (int)$wishlistId;
     }
 
     /**
@@ -67,7 +69,7 @@ class ShareWishlistFormTest extends AbstractFormCaptchaTest
         $this->disable();
 
         $this->dispatch('wishlist/index/share/wishlist_id/' . $this->wishlistId);
-        $content = $this->getResponse()->getBody();
+        $content = $this->responseBody();
 
         self::assertNotEmpty($content);
         self::assertStringNotContainsString('field-recaptcha', $content);
@@ -91,12 +93,6 @@ class ShareWishlistFormTest extends AbstractFormCaptchaTest
 
     /**
      * (c) Sharing is rejected when verification fails.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_wishlist 1
      */
     public function testPostIsRejectedWhenVerificationFails(): void
     {
@@ -110,12 +106,6 @@ class ShareWishlistFormTest extends AbstractFormCaptchaTest
 
     /**
      * (d) Sharing succeeds when verification passes.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_wishlist 1
      */
     public function testPostSucceedsWhenVerificationPasses(): void
     {
@@ -143,7 +133,7 @@ class ShareWishlistFormTest extends AbstractFormCaptchaTest
             $post[self::TOKEN_FIELD] = 'test-token';
         }
 
-        $this->getRequest()->setMethod(Http::METHOD_POST)->setPostValue($post);
+        $this->httpRequest()->setMethod(Http::METHOD_POST)->setPostValue($post);
         $this->dispatch('wishlist/index/send/wishlist_id/' . $this->wishlistId);
     }
 

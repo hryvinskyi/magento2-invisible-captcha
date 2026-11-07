@@ -20,13 +20,10 @@ use Magento\TestFramework\Mail\Template\TransportBuilderMock;
  * Event:    controller_action_predispatch_sendfriend_product_sendmail
  *
  * @magentoDataFixture Magento/Catalog/_files/product_simple.php
- * @magentoConfigFixture default_store customer/captcha/enable 0
- * @magentoConfigFixture default_store sendfriend/email/enabled 1
- * @magentoConfigFixture default_store sendfriend/email/allow_guest 1
  * @magentoAppArea frontend
  * @magentoAppIsolation enabled
  */
-class SendFriendFormTest extends AbstractFormCaptchaTest
+class SendFriendFormTest extends FormCaptchaTestCase
 {
     private const FORM = 'send_friend';
     private const PRODUCT_ID = 1;
@@ -42,7 +39,10 @@ class SendFriendFormTest extends AbstractFormCaptchaTest
     protected function setUp(): void
     {
         parent::setUp();
-        $this->transportMock = $this->_objectManager->get(TransportBuilderMock::class);
+        $this->disableImageCaptcha();
+        $this->setConfig('sendfriend/email/enabled', '1');
+        $this->setConfig('sendfriend/email/allow_guest', '1');
+        $this->transportMock = $this->service(TransportBuilderMock::class);
     }
 
     /**
@@ -53,7 +53,7 @@ class SendFriendFormTest extends AbstractFormCaptchaTest
         $this->disable();
 
         $this->dispatch('sendfriend/product/send/id/' . self::PRODUCT_ID);
-        $content = $this->getResponse()->getBody();
+        $content = $this->responseBody();
 
         self::assertNotEmpty($content);
         self::assertStringNotContainsString('field-recaptcha', $content);
@@ -79,12 +79,6 @@ class SendFriendFormTest extends AbstractFormCaptchaTest
 
     /**
      * (c) The link is rejected when verification fails; no email is sent.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_send_friend 1
      */
     public function testPostIsRejectedWhenVerificationFails(): void
     {
@@ -99,12 +93,6 @@ class SendFriendFormTest extends AbstractFormCaptchaTest
 
     /**
      * (d) The link is sent when verification passes.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_send_friend 1
      */
     public function testPostSucceedsWhenVerificationPasses(): void
     {
@@ -144,7 +132,7 @@ class SendFriendFormTest extends AbstractFormCaptchaTest
             $post[self::TOKEN_FIELD] = 'test-token';
         }
 
-        $this->getRequest()
+        $this->httpRequest()
             ->setMethod(Http::METHOD_POST)
             ->setParam(RedirectInterface::PARAM_NAME_REFERER_URL, $expectedUrl)
             ->setPostValue($post);

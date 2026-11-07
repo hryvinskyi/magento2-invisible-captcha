@@ -21,11 +21,10 @@ use Magento\Framework\UrlInterface;
  * Observer: Hryvinskyi\InvisibleCaptcha\Observer\Form\CustomerCreate
  * Event:    controller_action_predispatch_customer_account_createpost
  *
- * @magentoConfigFixture default_store customer/captcha/enable 0
  * @magentoAppArea frontend
  * @magentoAppIsolation enabled
  */
-class CustomerCreateFormTest extends AbstractFormCaptchaTest
+class CustomerCreateFormTest extends FormCaptchaTestCase
 {
     private const FORM = 'customer_create';
     private const EMAIL = 'dummy@dummy.com';
@@ -51,9 +50,10 @@ class CustomerCreateFormTest extends AbstractFormCaptchaTest
     protected function setUp(): void
     {
         parent::setUp();
-        $this->customerRepository = $this->_objectManager->get(CustomerRepositoryInterface::class);
-        $this->registry = $this->_objectManager->get(Registry::class);
-        $this->url = $this->_objectManager->get(UrlInterface::class);
+        $this->disableImageCaptcha();
+        $this->customerRepository = $this->service(CustomerRepositoryInterface::class);
+        $this->registry = $this->service(Registry::class);
+        $this->url = $this->service(UrlInterface::class);
     }
 
     /**
@@ -64,7 +64,7 @@ class CustomerCreateFormTest extends AbstractFormCaptchaTest
         $this->disable();
 
         $this->dispatch('customer/account/create');
-        $content = $this->getResponse()->getBody();
+        $content = $this->responseBody();
 
         self::assertNotEmpty($content);
         self::assertStringNotContainsString('field-recaptcha', $content);
@@ -87,12 +87,6 @@ class CustomerCreateFormTest extends AbstractFormCaptchaTest
 
     /**
      * (c) Registration is rejected when verification fails; no customer is created.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_customer_create 1
      */
     public function testPostIsRejectedWhenVerificationFails(): void
     {
@@ -112,12 +106,6 @@ class CustomerCreateFormTest extends AbstractFormCaptchaTest
 
     /**
      * (d) Registration succeeds when verification passes.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_customer_create 1
      */
     public function testPostSucceedsWhenVerificationPasses(): void
     {
@@ -148,7 +136,7 @@ class CustomerCreateFormTest extends AbstractFormCaptchaTest
             $post[self::TOKEN_FIELD] = 'test-token';
         }
 
-        $this->getRequest()->setMethod(Http::METHOD_POST)->setPostValue($post);
+        $this->httpRequest()->setMethod(Http::METHOD_POST)->setPostValue($post);
         $this->dispatch('customer/account/createpost');
     }
 

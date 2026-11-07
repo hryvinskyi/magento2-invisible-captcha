@@ -22,7 +22,7 @@ use Magento\Newsletter\Model\SubscriberFactory;
  * @magentoAppArea frontend
  * @magentoAppIsolation enabled
  */
-class NewsletterFormTest extends AbstractFormCaptchaTest
+class NewsletterFormTest extends FormCaptchaTestCase
 {
     private const FORM = 'newsletter';
     private const EMAIL = 'user@example.com';
@@ -43,8 +43,8 @@ class NewsletterFormTest extends AbstractFormCaptchaTest
     protected function setUp(): void
     {
         parent::setUp();
-        $this->url = $this->_objectManager->get(UrlInterface::class);
-        $this->subscriberFactory = $this->_objectManager->get(SubscriberFactory::class);
+        $this->url = $this->service(UrlInterface::class);
+        $this->subscriberFactory = $this->service(SubscriberFactory::class);
     }
 
     /**
@@ -55,7 +55,7 @@ class NewsletterFormTest extends AbstractFormCaptchaTest
         $this->disable();
 
         $this->dispatch($this->url->getRouteUrl());
-        $content = $this->getResponse()->getBody();
+        $content = $this->responseBody();
 
         self::assertNotEmpty($content);
         self::assertStringNotContainsString('field-recaptcha', $content);
@@ -81,12 +81,6 @@ class NewsletterFormTest extends AbstractFormCaptchaTest
 
     /**
      * (c) Subscription is rejected when verification fails; no subscriber is stored.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_newsletter 1
      */
     public function testPostIsRejectedWhenVerificationFails(): void
     {
@@ -101,12 +95,6 @@ class NewsletterFormTest extends AbstractFormCaptchaTest
 
     /**
      * (d) Subscription succeeds when verification passes.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_newsletter 1
      */
     public function testPostSucceedsWhenVerificationPasses(): void
     {
@@ -146,7 +134,7 @@ class NewsletterFormTest extends AbstractFormCaptchaTest
             $post[self::TOKEN_FIELD] = 'test-token';
         }
 
-        $this->getRequest()->setMethod(Http::METHOD_POST)->setPostValue($post);
+        $this->httpRequest()->setMethod(Http::METHOD_POST)->setPostValue($post);
         $this->dispatch('newsletter/subscriber/new');
     }
 

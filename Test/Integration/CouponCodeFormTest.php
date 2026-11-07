@@ -23,7 +23,7 @@ use Magento\Framework\Message\MessageInterface;
  * @magentoAppArea frontend
  * @magentoAppIsolation enabled
  */
-class CouponCodeFormTest extends AbstractFormCaptchaTest
+class CouponCodeFormTest extends FormCaptchaTestCase
 {
     private const FORM = 'coupon_code';
     private const CUSTOMER_ID = 1;
@@ -39,7 +39,7 @@ class CouponCodeFormTest extends AbstractFormCaptchaTest
     protected function setUp(): void
     {
         parent::setUp();
-        $this->customerSession = $this->_objectManager->get(Session::class);
+        $this->customerSession = $this->service(Session::class);
         $this->customerSession->setCustomerId(self::CUSTOMER_ID);
     }
 
@@ -50,9 +50,9 @@ class CouponCodeFormTest extends AbstractFormCaptchaTest
     {
         $this->disable();
 
-        $this->getRequest()->setMethod(Http::METHOD_GET);
+        $this->httpRequest()->setMethod(Http::METHOD_GET);
         $this->dispatch('checkout/cart/');
-        $content = $this->getResponse()->getContent();
+        $content = $this->responseBody();
 
         self::assertNotEmpty($content);
         self::assertStringNotContainsString('field-recaptcha', $content);
@@ -74,12 +74,6 @@ class CouponCodeFormTest extends AbstractFormCaptchaTest
 
     /**
      * (c) The request is rejected by the captcha gate when verification fails.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_coupon_code 1
      */
     public function testPostIsRejectedWhenVerificationFails(): void
     {
@@ -93,12 +87,6 @@ class CouponCodeFormTest extends AbstractFormCaptchaTest
 
     /**
      * (d) The captcha gate passes through to the coupon controller when verification passes.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_coupon_code 1
      */
     public function testPostSucceedsWhenVerificationPasses(): void
     {
@@ -124,7 +112,7 @@ class CouponCodeFormTest extends AbstractFormCaptchaTest
             $post[self::TOKEN_FIELD] = 'test-token';
         }
 
-        $this->getRequest()->setMethod(Http::METHOD_POST)->setPostValue($post);
+        $this->httpRequest()->setMethod(Http::METHOD_POST)->setPostValue($post);
         $this->dispatch('checkout/cart/couponPost/');
     }
 

@@ -20,11 +20,10 @@ use Magento\Framework\UrlInterface;
  * Event:    controller_action_predispatch_customer_account_loginPost
  *
  * @magentoDataFixture Magento/Customer/_files/customer.php
- * @magentoConfigFixture default_store customer/captcha/enable 0
  * @magentoAppArea frontend
  * @magentoAppIsolation enabled
  */
-class CustomerLoginFormTest extends AbstractFormCaptchaTest
+class CustomerLoginFormTest extends FormCaptchaTestCase
 {
     private const FORM = 'customer_login';
 
@@ -44,8 +43,9 @@ class CustomerLoginFormTest extends AbstractFormCaptchaTest
     protected function setUp(): void
     {
         parent::setUp();
-        $this->session = $this->_objectManager->get(Session::class);
-        $this->url = $this->_objectManager->get(UrlInterface::class);
+        $this->disableImageCaptcha();
+        $this->session = $this->service(Session::class);
+        $this->url = $this->service(UrlInterface::class);
     }
 
     /**
@@ -56,7 +56,7 @@ class CustomerLoginFormTest extends AbstractFormCaptchaTest
         $this->disable();
 
         $this->dispatch('customer/account/login');
-        $content = $this->getResponse()->getBody();
+        $content = $this->responseBody();
 
         self::assertNotEmpty($content);
         self::assertStringNotContainsString('field-recaptcha', $content);
@@ -79,33 +79,23 @@ class CustomerLoginFormTest extends AbstractFormCaptchaTest
 
     /**
      * (c) Login is rejected (redirect + error, dispatch stopped) when verification fails.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_customer_login 1
      */
     public function testPostIsRejectedWhenVerificationFails(): void
     {
         $this->enableCaptcha(self::FORM, false);
-        $this->session->setBeforeAuthUrl($this->url->getRouteUrl('customer/account/login'));
+        $loginUrl = $this->url->getRouteUrl('customer/account/login');
+        self::assertNotEmpty($loginUrl);
+        $this->session->setBeforeAuthUrl($loginUrl);
 
         $this->makePostRequest(true);
 
-        $this->assertRedirect(self::stringStartsWith($this->url->getRouteUrl('customer/account/login')));
+        $this->assertRedirect(self::stringStartsWith($loginUrl));
         $this->assertCaptchaError();
         self::assertNull($this->session->getCustomerId());
     }
 
     /**
      * (d) Login succeeds when verification passes.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_customer_login 1
      */
     public function testPostSucceedsWhenVerificationPasses(): void
     {
@@ -135,7 +125,7 @@ class CustomerLoginFormTest extends AbstractFormCaptchaTest
             $post[self::TOKEN_FIELD] = 'test-token';
         }
 
-        $this->getRequest()->setMethod(Http::METHOD_POST)->setPostValue($post);
+        $this->httpRequest()->setMethod(Http::METHOD_POST)->setPostValue($post);
         $this->dispatch('customer/account/loginpost');
     }
 }

@@ -8,13 +8,7 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Test\Integration\RouteProtection;
 
-use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\CookieManager;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Encryption\EncryptorInterface;
-use Magento\Framework\Serialize\Serializer\Json;
-use Magento\TestFramework\App\MutableScopeConfig;
-use Magento\TestFramework\TestCase\AbstractController;
 
 /**
  * Integration coverage for the `country` route-gate field
@@ -36,38 +30,8 @@ use Magento\TestFramework\TestCase\AbstractController;
  * @magentoAppIsolation enabled
  * @magentoDbIsolation enabled
  */
-class CountryFilterTest extends AbstractController
+class CountryFilterTest extends RouteGateTestCase
 {
-    private const SECRET = 'test_secret_key';
-    private const TARGET_ROUTE = 'cms/index/index';
-
-    /**
-     * @var MutableScopeConfig
-     */
-    private $mutableConfig;
-
-    /**
-     * @var EncryptorInterface
-     */
-    private $encryptor;
-
-    /**
-     * @var Json
-     */
-    private $json;
-
-    /**
-     * @inheritDoc
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->mutableConfig = $this->_objectManager->get(MutableScopeConfig::class);
-        $this->encryptor = $this->_objectManager->get(EncryptorInterface::class);
-        $this->json = $this->_objectManager->get(Json::class);
-    }
-
     /**
      * @inheritDoc
      */
@@ -82,9 +46,8 @@ class CountryFilterTest extends AbstractController
      */
     public function testMatchingCountryServesChallenge(): void
     {
-        $this->enableRouteProtection();
-        $this->setCountryRule('eq', 'UA');
-        $this->getRequest()->getServer()->set('HTTP_CF_IPCOUNTRY', 'UA');
+        $this->enableCountryRule('eq', 'UA');
+        $this->serverParameters()->set('HTTP_CF_IPCOUNTRY', 'UA');
 
         $this->dispatch(self::TARGET_ROUTE);
 
@@ -96,9 +59,8 @@ class CountryFilterTest extends AbstractController
      */
     public function testDifferentCountryRendersPage(): void
     {
-        $this->enableRouteProtection();
-        $this->setCountryRule('eq', 'UA');
-        $this->getRequest()->getServer()->set('HTTP_CF_IPCOUNTRY', 'DE');
+        $this->enableCountryRule('eq', 'UA');
+        $this->serverParameters()->set('HTTP_CF_IPCOUNTRY', 'DE');
 
         $this->dispatch(self::TARGET_ROUTE);
 
@@ -111,8 +73,7 @@ class CountryFilterTest extends AbstractController
      */
     public function testUnknownCountryDoesNotMatchPositiveRule(): void
     {
-        $this->enableRouteProtection();
-        $this->setCountryRule('eq', 'UA');
+        $this->enableCountryRule('eq', 'UA');
 
         $this->dispatch(self::TARGET_ROUTE);
 
@@ -125,8 +86,7 @@ class CountryFilterTest extends AbstractController
      */
     public function testUnknownCountryMatchesNegativeRule(): void
     {
-        $this->enableRouteProtection();
-        $this->setCountryRule('not_in', 'UA US');
+        $this->enableCountryRule('not_in', 'UA US');
 
         $this->dispatch(self::TARGET_ROUTE);
 
@@ -134,75 +94,15 @@ class CountryFilterTest extends AbstractController
     }
 
     /**
-     * Enable the module, configure Turnstile as the route-gate provider, turn on
-     * route protection and select the Cloudflare geolocation source.
-     */
-    private function enableRouteProtection(): void
-    {
-        $this->setConfig('hryvinskyi_invisible_captcha/general/enabled', '1');
-        $this->setConfig('hryvinskyi_invisible_captcha/general/active_provider', ProviderInterface::CODE_TURNSTILE);
-        $this->setConfig('hryvinskyi_invisible_captcha/providers/turnstile/site_key', 'test_site_key');
-        $this->setConfig(
-            'hryvinskyi_invisible_captcha/providers/turnstile/secret_key',
-            $this->encryptor->encrypt(self::SECRET)
-        );
-        $this->setConfig('hryvinskyi_invisible_captcha/route_protection/enabled', '1');
-        $this->setConfig('hryvinskyi_invisible_captcha/geolocation/source', 'cloudflare');
-    }
-
-    /**
-     * Store a single-condition country rule for the route gate.
+     * Enable route protection with a single country condition and select the
+     * Cloudflare geolocation source.
      *
      * @param string $operator
      * @param string $value
      */
-    private function setCountryRule(string $operator, string $value): void
+    private function enableCountryRule(string $operator, string $value): void
     {
-        $this->setConfig(
-            'hryvinskyi_invisible_captcha/route_protection/rules',
-            $this->json->serialize([
-                [
-                    'combinator' => 'and',
-                    'field' => 'country',
-                    'operator' => $operator,
-                    'value' => $value,
-                ],
-            ])
-        );
-    }
-
-    /**
-     * Assert the inline challenge replaced the page (mirrors ChallengeTest).
-     */
-    private function assertChallengeServed(): void
-    {
-        $response = $this->getResponse();
-        self::assertSame(403, $response->getHttpResponseCode());
-        self::assertEquals(
-            'noindex, nofollow',
-            $response->getHeader('X-Robots-Tag')->getFieldValue()
-        );
-        self::assertStringContainsString('class="band"', (string)$response->getBody());
-    }
-
-    /**
-     * Assert the page rendered normally with no challenge body.
-     */
-    private function assertNoChallenge(): void
-    {
-        $response = $this->getResponse();
-        self::assertSame(200, $response->getHttpResponseCode());
-        self::assertStringNotContainsString('class="band"', (string)$response->getBody());
-    }
-
-    /**
-     * Persist a default-scope config value via the mutable test config.
-     *
-     * @param string $path
-     * @param string $value
-     */
-    private function setConfig(string $path, string $value): void
-    {
-        $this->mutableConfig->setValue($path, $value, ScopeConfigInterface::SCOPE_TYPE_DEFAULT);
+        $this->enableRouteGate('country', $operator, $value);
+        $this->setConfig('hryvinskyi_invisible_captcha/geolocation/source', 'cloudflare');
     }
 }

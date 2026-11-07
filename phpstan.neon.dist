@@ -1,0 +1,24 @@
+parameters:
+    level: 10
+    paths:
+        - Test/Integration/ControllerTestAccess.php
+        - Test/Integration/FormCaptchaTestCase.php
+        - Test/Integration/ContactFormTest.php
+        - Test/Integration/CouponCodeFormTest.php
+        - Test/Integration/CustomerCreateFormTest.php
+        - Test/Integration/CustomerEditFormTest.php
+        - Test/Integration/CustomerForgotPasswordFormTest.php
+        - Test/Integration/CustomerLoginFormTest.php
+        - Test/Integration/NewsletterFormTest.php
+        - Test/Integration/ProductReviewFormTest.php
+        - Test/Integration/SendFriendFormTest.php
+        - Test/Integration/ShareWishlistFormTest.php
+        - Test/Integration/Adminhtml
+        - Test/Integration/RouteProtection
+    excludePaths:
+        - vendor (?)
+    bootstrapFiles:
+        - ../../../../vendor/autoload.php
+    scanDirectories:
+        - ../../../../generated/code
+        - ../../../../dev/tests/integration/framework

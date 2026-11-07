@@ -20,11 +20,10 @@ use Magento\TestFramework\Mail\Template\TransportBuilderMock;
  * Event:    controller_action_predispatch_customer_account_forgotpasswordpost
  *
  * @magentoDataFixture Magento/Customer/_files/customer.php
- * @magentoConfigFixture default_store customer/captcha/enable 0
  * @magentoAppArea frontend
  * @magentoAppIsolation enabled
  */
-class CustomerForgotPasswordFormTest extends AbstractFormCaptchaTest
+class CustomerForgotPasswordFormTest extends FormCaptchaTestCase
 {
     private const FORM = 'customer_forgot';
 
@@ -44,8 +43,9 @@ class CustomerForgotPasswordFormTest extends AbstractFormCaptchaTest
     protected function setUp(): void
     {
         parent::setUp();
-        $this->url = $this->_objectManager->get(UrlInterface::class);
-        $this->transportMock = $this->_objectManager->get(TransportBuilderMock::class);
+        $this->disableImageCaptcha();
+        $this->url = $this->service(UrlInterface::class);
+        $this->transportMock = $this->service(TransportBuilderMock::class);
     }
 
     /**
@@ -56,7 +56,7 @@ class CustomerForgotPasswordFormTest extends AbstractFormCaptchaTest
         $this->disable();
 
         $this->dispatch('customer/account/forgotpassword');
-        $content = $this->getResponse()->getBody();
+        $content = $this->responseBody();
 
         self::assertNotEmpty($content);
         self::assertStringNotContainsString('field-recaptcha', $content);
@@ -79,12 +79,6 @@ class CustomerForgotPasswordFormTest extends AbstractFormCaptchaTest
 
     /**
      * (c) The request is rejected when verification fails; no email is sent.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_customer_forgot 1
      */
     public function testPostIsRejectedWhenVerificationFails(): void
     {
@@ -99,12 +93,6 @@ class CustomerForgotPasswordFormTest extends AbstractFormCaptchaTest
 
     /**
      * (d) The reset email is sent when verification passes.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_customer_forgot 1
      */
     public function testPostSucceedsWhenVerificationPasses(): void
     {
@@ -131,7 +119,7 @@ class CustomerForgotPasswordFormTest extends AbstractFormCaptchaTest
             $post[self::TOKEN_FIELD] = 'test-token';
         }
 
-        $this->getRequest()->setMethod(Http::METHOD_POST)->setPostValue($post);
+        $this->httpRequest()->setMethod(Http::METHOD_POST)->setPostValue($post);
         $this->dispatch('customer/account/forgotpasswordpost');
     }
 }

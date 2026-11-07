@@ -23,7 +23,7 @@ use Magento\Review\Model\ResourceModel\Review as ReviewResourceModel;
  * @magentoAppArea frontend
  * @magentoAppIsolation enabled
  */
-class ProductReviewFormTest extends AbstractFormCaptchaTest
+class ProductReviewFormTest extends FormCaptchaTestCase
 {
     private const FORM = 'product_review';
     private const PRODUCT_ID = 1;
@@ -39,7 +39,7 @@ class ProductReviewFormTest extends AbstractFormCaptchaTest
     protected function setUp(): void
     {
         parent::setUp();
-        $this->reviewResourceModel = $this->_objectManager->get(ReviewResourceModel::class);
+        $this->reviewResourceModel = $this->service(ReviewResourceModel::class);
     }
 
     /**
@@ -50,7 +50,7 @@ class ProductReviewFormTest extends AbstractFormCaptchaTest
         $this->disable();
 
         $this->dispatch('/simple-product.html');
-        $content = $this->getResponse()->getBody();
+        $content = $this->responseBody();
 
         self::assertNotEmpty($content);
         self::assertStringNotContainsString('field-recaptcha', $content);
@@ -64,6 +64,7 @@ class ProductReviewFormTest extends AbstractFormCaptchaTest
     {
         $this->disable();
 
+        $reviewsBefore = $this->productReviewCount();
         $this->makePostRequest(false);
 
         $this->assertSessionMessages(
@@ -71,42 +72,32 @@ class ProductReviewFormTest extends AbstractFormCaptchaTest
             MessageInterface::TYPE_SUCCESS
         );
         $this->assertNoCaptchaError();
-        self::assertEquals(1, $this->reviewResourceModel->getTotalReviews(self::PRODUCT_ID));
+        self::assertSame($reviewsBefore + 1, $this->productReviewCount());
     }
 
     /**
      * (c) The review is rejected when verification fails; nothing is stored.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_product_review 1
      */
     public function testPostIsRejectedWhenVerificationFails(): void
     {
         $this->enableCaptcha(self::FORM, false);
 
+        $reviewsBefore = $this->productReviewCount();
         $this->makePostRequest(true);
 
         $this->assertRedirect();
         $this->assertCaptchaError();
-        self::assertEquals(0, $this->reviewResourceModel->getTotalReviews(self::PRODUCT_ID));
+        self::assertSame($reviewsBefore, $this->productReviewCount());
     }
 
     /**
      * (d) The review is accepted when verification passes.
-     *
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/general/active_provider turnstile
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled 1
-     * @magentoConfigFixture default_store hryvinskyi_invisible_captcha/form_protection/frontend/enabled_product_review 1
      */
     public function testPostSucceedsWhenVerificationPasses(): void
     {
         $this->enableCaptcha(self::FORM, true);
 
+        $reviewsBefore = $this->productReviewCount();
         $this->makePostRequest(true);
 
         $this->assertSessionMessages(
@@ -114,7 +105,22 @@ class ProductReviewFormTest extends AbstractFormCaptchaTest
             MessageInterface::TYPE_SUCCESS
         );
         $this->assertNoCaptchaError();
-        self::assertEquals(1, $this->reviewResourceModel->getTotalReviews(self::PRODUCT_ID));
+        self::assertSame($reviewsBefore + 1, $this->productReviewCount());
+    }
+
+    /**
+     * Reviews stored for the fixture product.
+     *
+     * Assertions compare against the count taken before the post, so a review
+     * left behind by an earlier run that never reached tearDown() cannot make a
+     * correct outcome look wrong.
+     *
+     * @return int
+     */
+    private function productReviewCount(): int
+    {
+        // The resource model answers with the database's numeric string.
+        return (int)$this->reviewResourceModel->getTotalReviews(self::PRODUCT_ID);
     }
 
     /**
@@ -135,7 +141,7 @@ class ProductReviewFormTest extends AbstractFormCaptchaTest
             $post[self::TOKEN_FIELD] = 'test-token';
         }
 
-        $this->getRequest()
+        $this->httpRequest()
             ->setMethod(Http::METHOD_POST)
             ->setParam(RedirectInterface::PARAM_NAME_REFERER_URL, $expectedRedirectUrl)
             ->setPostValue($post);

@@ -8,14 +8,9 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Test\Integration\RouteProtection;
 
-use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderInterface;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\Filesystem;
-use Magento\Framework\Serialize\Serializer\Json;
-use Magento\TestFramework\App\MutableScopeConfig;
-use Magento\TestFramework\TestCase\AbstractController;
+use Magento\Store\Model\ScopeInterface;
 
 /**
  * Integration coverage for the `robots_txt_blocked` route-protection rule
@@ -30,26 +25,9 @@ use Magento\TestFramework\TestCase\AbstractController;
  * @magentoAppIsolation enabled
  * @magentoDbIsolation enabled
  */
-class RobotsTxtRuleTest extends AbstractController
+class RobotsTxtRuleTest extends RouteGateTestCase
 {
-    private const SECRET = 'test_secret_key';
-    private const TARGET_ROUTE = 'cms/index/index';
     private const XML_CUSTOM_INSTRUCTIONS = 'design/search_engine_robots/custom_instructions';
-
-    /**
-     * @var MutableScopeConfig
-     */
-    private $mutableConfig;
-
-    /**
-     * @var EncryptorInterface
-     */
-    private $encryptor;
-
-    /**
-     * @var Json
-     */
-    private $json;
 
     /**
      * @inheritDoc
@@ -58,12 +36,8 @@ class RobotsTxtRuleTest extends AbstractController
     {
         parent::setUp();
 
-        $this->mutableConfig = $this->_objectManager->get(MutableScopeConfig::class);
-        $this->encryptor = $this->_objectManager->get(EncryptorInterface::class);
-        $this->json = $this->_objectManager->get(Json::class);
-
         // A physical pub/robots.txt outranks the config this test drives.
-        $pubDirectory = $this->_objectManager->get(Filesystem::class)->getDirectoryRead(DirectoryList::PUB);
+        $pubDirectory = $this->service(Filesystem::class)->getDirectoryRead(DirectoryList::PUB);
         if ($pubDirectory->isFile('robots.txt')) {
             $this->markTestSkipped('A physical pub/robots.txt overrides the config-driven robots.txt.');
         }
@@ -74,14 +48,14 @@ class RobotsTxtRuleTest extends AbstractController
      */
     public function testDisallowedUrlIsChallenged(): void
     {
-        $this->enableRouteProtectionWithRobotsRule();
-        $this->setConfig(self::XML_CUSTOM_INSTRUCTIONS, "User-agent: *\nDisallow: /cms/");
+        $this->enableRouteGate('robots_txt_blocked', 'eq', '1');
+        $this->setRobotsInstructions("User-agent: *\nDisallow: /cms/");
 
         $this->dispatch(self::TARGET_ROUTE);
 
-        $response = $this->getResponse();
+        $response = $this->httpResponse();
         self::assertSame(403, $response->getHttpResponseCode());
-        self::assertStringContainsString('class="band"', (string)$response->getBody());
+        self::assertStringContainsString('class="band"', $this->responseBody());
     }
 
     /**
@@ -89,12 +63,12 @@ class RobotsTxtRuleTest extends AbstractController
      */
     public function testAllowedUrlRendersNormally(): void
     {
-        $this->enableRouteProtectionWithRobotsRule();
-        $this->setConfig(self::XML_CUSTOM_INSTRUCTIONS, "User-agent: *\nDisallow: /checkout/");
+        $this->enableRouteGate('robots_txt_blocked', 'eq', '1');
+        $this->setRobotsInstructions("User-agent: *\nDisallow: /checkout/");
 
         $this->dispatch(self::TARGET_ROUTE);
 
-        self::assertSame(200, $this->getResponse()->getHttpResponseCode());
+        self::assertSame(200, $this->httpResponse()->getHttpResponseCode());
     }
 
     /**
@@ -102,15 +76,12 @@ class RobotsTxtRuleTest extends AbstractController
      */
     public function testMoreSpecificAllowRuleBypassesTheChallenge(): void
     {
-        $this->enableRouteProtectionWithRobotsRule();
-        $this->setConfig(
-            self::XML_CUSTOM_INSTRUCTIONS,
-            "User-agent: *\nDisallow: /cms/\nAllow: /cms/index"
-        );
+        $this->enableRouteGate('robots_txt_blocked', 'eq', '1');
+        $this->setRobotsInstructions("User-agent: *\nDisallow: /cms/\nAllow: /cms/index");
 
         $this->dispatch(self::TARGET_ROUTE);
 
-        self::assertSame(200, $this->getResponse()->getHttpResponseCode());
+        self::assertSame(200, $this->httpResponse()->getHttpResponseCode());
     }
 
     /**
@@ -118,49 +89,22 @@ class RobotsTxtRuleTest extends AbstractController
      */
     public function testEmptyRobotsTxtNeverChallenges(): void
     {
-        $this->enableRouteProtectionWithRobotsRule();
-        $this->setConfig(self::XML_CUSTOM_INSTRUCTIONS, '');
+        $this->enableRouteGate('robots_txt_blocked', 'eq', '1');
+        $this->setRobotsInstructions('');
 
         $this->dispatch(self::TARGET_ROUTE);
 
-        self::assertSame(200, $this->getResponse()->getHttpResponseCode());
+        self::assertSame(200, $this->httpResponse()->getHttpResponseCode());
     }
 
     /**
-     * Enable the module, configure Turnstile as the route-gate provider and add
-     * the single rule `robots_txt_blocked eq 1`.
-     */
-    private function enableRouteProtectionWithRobotsRule(): void
-    {
-        $this->setConfig('hryvinskyi_invisible_captcha/general/enabled', '1');
-        $this->setConfig('hryvinskyi_invisible_captcha/general/active_provider', ProviderInterface::CODE_TURNSTILE);
-        $this->setConfig('hryvinskyi_invisible_captcha/providers/turnstile/site_key', 'test_site_key');
-        $this->setConfig(
-            'hryvinskyi_invisible_captcha/providers/turnstile/secret_key',
-            $this->encryptor->encrypt(self::SECRET)
-        );
-        $this->setConfig('hryvinskyi_invisible_captcha/route_protection/enabled', '1');
-        $this->setConfig(
-            'hryvinskyi_invisible_captcha/route_protection/rules',
-            $this->json->serialize([
-                [
-                    'combinator' => 'and',
-                    'field' => 'robots_txt_blocked',
-                    'operator' => 'eq',
-                    'value' => '1',
-                ],
-            ])
-        );
-    }
-
-    /**
-     * Persist a default-scope config value via the mutable test config.
+     * Store the Search Engine Robots custom instructions, which the module reads
+     * at website scope.
      *
-     * @param string $path
-     * @param string $value
+     * @param string $instructions
      */
-    private function setConfig(string $path, string $value): void
+    private function setRobotsInstructions(string $instructions): void
     {
-        $this->mutableConfig->setValue($path, $value, ScopeConfigInterface::SCOPE_TYPE_DEFAULT);
+        $this->setConfig(self::XML_CUSTOM_INSTRUCTIONS, $instructions, ScopeInterface::SCOPE_WEBSITE);
     }
 }
