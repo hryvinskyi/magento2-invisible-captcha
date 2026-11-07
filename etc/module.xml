@@ -8,7 +8,6 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
     <module name="Hryvinskyi_InvisibleCaptcha">
         <sequence>
-            <module name="Hryvinskyi_Base"/>
             <module name="Hryvinskyi_ThemeAssets"/>
             <module name="Hryvinskyi_ConfigurationFields"/>
             <module name="Magento_Store"/>

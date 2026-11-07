@@ -49,7 +49,7 @@ bin/magento setup:di:compile
 bin/magento setup:static-content:deploy
 ```
 
-**Dependencies:** `hryvinskyi/magento2-base`, `hryvinskyi/magento2-theme-assets`, `hryvinskyi/magento2-configuration-fields`, `symfony/http-client` + PSR-7/17/18.
+**Dependencies:** `hryvinskyi/magento2-theme-assets`, `hryvinskyi/magento2-configuration-fields`, `symfony/http-client` + PSR-7/17/18.
 
 Then configure under *Stores → Configuration → Hryvinskyi → Invisible Captcha & Bot Protection*: pick the active provider, enter its credentials, and enable the forms you want protected.
 
