@@ -15,21 +15,16 @@ use Magento\Framework\Logger\Handler\Base;
 use Monolog\LogRecord;
 
 /**
- * Class Debug
+ * Log handler for the captcha's debug log; writes only while debug logging is on.
  */
 class Debug extends Base
 {
-    /**
-     * @var General
-     */
-    private $config;
+    private General $config;
 
     /**
-     * Debug constructor.
-     *
      * @param DriverInterface $filesystem
      * @param General $config
-     * @param null $filePath
+     * @param string|null $filePath
      * @param string $fileName
      *
      * @throws \Exception
@@ -46,10 +41,16 @@ class Debug extends Base
     }
 
     /**
-     * @inheritDoc
+     * Writes the record only while debug logging is on, creating the log directory first.
+     *
+     * The parent takes an array on Monolog 2 (Magento 2.4.6 and older) and a LogRecord on Monolog 3
+     * (Magento 2.4.7 and newer). The union is a supertype of both, so this override fits either parent.
+     *
+     * @param array<string, mixed>|LogRecord $record
+     * @return void
      * @throws \Magento\Framework\Exception\FileSystemException
      */
-    public function write(LogRecord $record): void
+    public function write(array|LogRecord $record): void
     {
         if ($this->config->isDebug() === false) {
             return;

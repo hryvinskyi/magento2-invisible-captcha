@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.6] - 2026-11-10
+
+### Fixed
+
+- `Model\Debug::write()` takes `array|\Monolog\LogRecord`, so the debug log handler fits Magento's
+  `Logger\Handler\Base` on Monolog 2 (Magento 2.4.6 and older, `write(array $record)`) and on Monolog 3
+  (2.4.7 and newer, `write(LogRecord $record)`). 2.5.5 typed it `LogRecord` only, and `setup:di:compile` stopped
+  with a fatal error on Magento 2.4.6.
+
 ## [2.5.5] - 2026-06-01
 
 ### Fixed
