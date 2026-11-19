@@ -8,31 +8,32 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Model\Http;
 
-use Hryvinskyi\InvisibleCaptcha\Model\CookieManager;
+use Hryvinskyi\InvisibleCaptcha\Api\Http\CaptchaContextInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\VerificationCookieInterface;
 use Magento\Framework\App\Http\Context;
 
 /**
  * Adds the route-gate verification state to Magento's HTTP context so Varnish
  * keeps verified and unverified visitors in separate cache buckets.
  */
-class CaptchaContext
+class CaptchaContext implements CaptchaContextInterface
 {
     public const CONTEXT_KEY = 'CAPTCHA_VERIFIED';
     public const VALUE_VERIFIED = '1';
     public const VALUE_UNVERIFIED = '0';
 
     /**
-     * @param CookieManager $cookieManager
+     * @param VerificationCookieInterface $cookieManager
      * @param Context $httpContext
      */
     public function __construct(
-        private readonly CookieManager $cookieManager,
+        private readonly VerificationCookieInterface $cookieManager,
         private readonly Context $httpContext
     ) {
     }
 
     /**
-     * Populate the HTTP context value from the incoming request's cookie state.
+     * @inheritDoc
      */
     public function setFromCookie(): void
     {
@@ -43,6 +44,8 @@ class CaptchaContext
     /**
      * Force the HTTP context to the verified state so X-Magento-Vary on the
      * current response already reflects post-verification cache keying.
+     *
+     * @inheritDoc
      */
     public function markVerified(): void
     {

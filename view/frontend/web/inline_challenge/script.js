@@ -1,22 +1,44 @@
 (function () {
     'use strict';
 
-    // Provider-agnostic interstitial bootstrap. The server emits the active
-    // route-gate provider (and an optional fallback) in window.hryvinskyiCaptcha:
+    // Provider-agnostic interstitial bootstrap. The server prints the active
+    // route-gate provider (and an optional fallback) as a JSON data block,
+    // <script type="application/json" id="hryvinskyi-captcha-config">:
     //   { verifyUrl, refId, provider, siteKey, responseParam, scriptUrl,
     //     render:{...}, fallbackEnabled, fallbackDelay,
     //     fallback?:{ provider, siteKey, responseParam, scriptUrl, render } }
     // This script dynamically loads the provider API script, renders the
-    // primary widget, and — after fallbackDelay ms — reveals and renders the
-    // fallback widget so a visitor can still pass if the primary never
-    // resolves silently. The verify endpoint accepts either token; whichever
-    // the visitor completes first wins.
-    var cfg = window.hryvinskyiCaptcha || {};
+    // primary widget, and reveals and renders the fallback widget after
+    // fallbackDelay ms, or at once when the primary reports an error, so a
+    // visitor can still pass when the primary does not resolve. The verify
+    // endpoint accepts either token; whichever the visitor completes first wins.
+    var CONFIG_ELEMENT_ID = 'hryvinskyi-captcha-config';
+
+    // Unparsable or missing config leaves every field empty: no provider script
+    // to load, so the bootstrap shows the failure state.
+    function readConfig() {
+        var el = document.getElementById(CONFIG_ELEMENT_ID);
+        if (!el) {
+            return {};
+        }
+        try {
+            var parsed = JSON.parse(el.textContent || '');
+            return (parsed && typeof parsed === 'object') ? parsed : {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    var cfg = readConfig();
 
     var VERIFY_URL = cfg.verifyUrl || '';
     var REF_ID = cfg.refId || '';
     var FALLBACK_ENABLED = !!cfg.fallbackEnabled && cfg.fallback && typeof cfg.fallback === 'object';
     var FALLBACK_DELAY = typeof cfg.fallbackDelay === 'number' ? cfg.fallbackDelay : 10000;
+    // The verify endpoint's own siteverify call is capped by the server's
+    // HTTP client; the rest is headroom for a busy PHP-FPM queue. A request
+    // still unanswered by then shows the retry state instead of spinning forever.
+    var VERIFY_TIMEOUT = 10000;
 
     // DOM hosts (kept stable so the bundled styles.css can target them).
     var PRIMARY_HOST_ID = 'turnstile-widget';
@@ -61,26 +83,37 @@
         document.body.classList.add('state-fail');
     }
 
+    // A challenge answered to an AJAX request was swapped into the open page;
+    // the page's AJAX fallback put the URL the visitor was heading to on the
+    // swapped-in <html>. Go there instead of reloading the AJAX endpoint.
+    var RETURN_URL_ATTRIBUTE = 'data-hryvinskyi-captcha-return-url';
+
     function reloadPage() {
-        var returnUrl = window.__hryvinskyiCaptchaReturnUrl;
+        var root = document.documentElement;
+        var returnUrl = root ? root.getAttribute(RETURN_URL_ATTRIBUTE) : null;
         if (typeof returnUrl === 'string' && returnUrl !== '') {
-            window.__hryvinskyiCaptchaReturnUrl = null;
+            root.removeAttribute(RETURN_URL_ATTRIBUTE);
             window.location.href = returnUrl;
             return;
         }
         window.location.reload();
     }
 
-    // When the primary errors but a fallback is still pending, the delayed
-    // reveal handles recovery; otherwise surface the failure state.
+    // A primary that reports an error (e.g. Turnstile 600010) has already
+    // failed, so the visitor gets the fallback now instead of after the delay;
+    // the primary may keep retrying beside it and whichever passes first wins.
+    // Without a fallback, or when the fallback itself errors, show the
+    // failure state.
     function onProviderError(spec) {
         if (spec && spec.isFallback) {
             showFail();
             return;
         }
-        if (!fallbackAvailable()) {
-            showFail();
+        if (fallbackAvailable()) {
+            revealFallback();
+            return;
         }
+        showFail();
     }
 
     // ── Token submission ─────────────────────────────────────────────────
@@ -113,6 +146,8 @@
             }
         };
         xhr.onerror = showFail;
+        xhr.timeout = VERIFY_TIMEOUT;
+        xhr.ontimeout = showFail;
         var body = encodeURIComponent(paramName) + '=' + encodeURIComponent(token);
         if (REF_ID) {
             body += '&ref=' + encodeURIComponent(REF_ID);
@@ -381,8 +416,11 @@
         }
     }
 
+    // A challenge answered to an AJAX request is swapped into the open page
+    // long after DOMContentLoaded has fired, so a listener alone would never
+    // run there.
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', init, { once: true });
     } else {
         init();
     }

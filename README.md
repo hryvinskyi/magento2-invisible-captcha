@@ -81,7 +81,7 @@ A `hryvinskyiInvisibleCaptchaConfig(formType:)` GraphQL query exposes the active
 Requests matching a Cloudflare-style rule expression (field / operator / value rows joined by AND/OR) get a full-page interstitial challenge instead of the requested page:
 
 1. A visitor (or bot) hits a URL matching your rules.
-2. They see a self-contained, system-font challenge page (no external font/CDN requests; accent color themeable from the admin). An optional **fallback provider** is revealed after a delay.
+2. They see a self-contained, system-font challenge page (no external font/CDN requests; accent color themeable from the admin). An optional **fallback provider** is revealed after a delay, or at once when the primary provider reports an error (e.g. Turnstile 600010). A verify request still unanswered after 10 s shows the retry state.
 3. On success, the visitor receives an HMAC-signed cookie and is keyed into a separate Varnish cache bucket via the HTTP context.
 
 #### Rule fields
@@ -99,6 +99,15 @@ Requests matching a Cloudflare-style rule expression (field / operator / value r
 
 > [!TIP]
 > Recommended robots rule: `robots_txt_blocked eq 1 and is_ajax eq 0` — add `or is_404 eq 1` to also challenge URL-probing bots.
+
+**Silent verification** (*Silent Verification on Unprotected Pages*, off by default) — a real visitor should not meet the challenge page just for clicking a filter. With it on, every page the rules do not protect verifies an unverified visitor in the background once the page has loaded and the browser is idle: the route-gate provider issues a token without any interaction and the token is posted to the verify endpoint, which issues the verification cookie. A visitor who then browses on to a protected page is let through; the challenge page is shown only to visitors who open a protected page directly (a deep link, a bot) without having been verified.
+
+- Works with Turnstile (an off-screen widget with `appearance: interaction-only` that gives up instead of asking for interaction), reCAPTCHA v3 and reCAPTCHA Enterprise (score `execute`). With reCAPTCHA v2 as the route-gate provider it does nothing. Another provider takes part by adding its code to the `silentModes` argument of `Model\SilentVerification` in `di.xml`.
+- Nothing is shown. A visitor the provider cannot verify invisibly is left alone, and the outcome is kept in `sessionStorage` so the attempt is not repeated on every page of the session.
+- Verified visitors get pages without the script: the full page cache already keeps them apart through the `CAPTCHA_VERIFIED` HTTP-context key.
+- The provider's script is loaded on every page an unverified visitor opens; account for it in your cookie-consent setup if the provider's script needs consent there.
+
+**Excluded IPs / Excluded User Agents** — out of the box both are taken at the client's word: anyone can write `Googlebot` into a User-Agent, and the client IP is read from `CF-Connecting-IP`, `X-Real-IP`, the left-most `X-Forwarded-For` entry, then `REMOTE_ADDR`. The exemption and the address are contracts (`Api\CrawlerExemptionInterface`, `Api\Http\ClientIpResolverInterface`), so a module that can verify crawler claims and knows the shop's proxies replaces them — [`hryvinskyi/magento2-invisible-captcha-bot-verification`](https://github.com/hryvinskyi/magento2-invisible-captcha-bot-verification) does this with `hryvinskyi/magento2-bot-verification`: a request claiming Googlebot from outside Google's published addresses is challenged, and the IP is read past your trusted proxies.
 
 **Excluded Paths** — a hard bypass list of robots.txt-style path patterns that are never challenged whatever the rules say. It is pre-filled with Magento's background endpoints (customer sections, minicart, add-to-cart, compare, review/newsletter posts, search suggest, private-content rendering), so a broad rule can't break the storefront.
 
@@ -207,3 +216,7 @@ bin/magento hryvinskyi:invisible-captcha:migrate-recaptcha [--dry-run] [--force]
 | `Api\Geo\CountrySourceInterface` + `CountrySourcePoolInterface` | Add a country detection source — register it in the `Model\Geo\SourcePool` DI array |
 | `Api\Webapi\WebapiConfigProviderInterface` | Protect additional REST/GraphQL endpoints |
 | `Model\Strategy\{Token,Failure}\*` | Pluggable token extraction & failure handling |
+| `Api\SilentVerificationInterface` + `silentModes` (di.xml) | Background verification on unprotected pages — add a provider code with its mode (`widget` / `score`) |
+| `Api\Tester\CrawlerExemptionSimulatorInterface` | The rule tester's counterpart of the crawler exemption — decides a simulated User-Agent + IP and adds notes under the result |
+| `Api\CrawlerExemptionInterface` | Decide which requests skip the route challenge as trusted crawlers (default: the *Excluded User Agents* substrings) — replace or decorate it via a `di.xml` preference |
+| `Api\Http\ClientIpResolverInterface` | The client IP every consumer sees: *Excluded IPs*, the `client_ip` rule field, the country lookup, the token verification and the debug log (default: forwarding headers) |

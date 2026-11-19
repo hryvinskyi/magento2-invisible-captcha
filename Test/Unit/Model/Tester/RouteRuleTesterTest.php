@@ -20,10 +20,12 @@ use Hryvinskyi\InvisibleCaptcha\Api\NoRouteActionInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Tester\ActionNameResolverInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Tester\CrawlerExemptionSimulatorInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\Tester\RouteRuleTester;
 use Hryvinskyi\InvisibleCaptcha\Model\Tester\Simulation;
 use Hryvinskyi\InvisibleCaptcha\Model\Tester\SimulatedFieldPoolFactory;
 use Hryvinskyi\InvisibleCaptcha\Model\Tester\SyntheticRequestFactory;
+use Hryvinskyi\InvisibleCaptcha\Model\Tester\UserAgentCrawlerExemptionSimulator;
 use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\App\Emulation;
@@ -60,9 +62,9 @@ class RouteRuleTesterTest extends TestCase
     private ExpressionInterface $expression;
     private RouteRuleTester $tester;
 
-    /** @var array<int, mixed> Arguments of the last SyntheticRequestFactory::create() call. */
+    /** @var array<int|string, mixed> Arguments of the last SyntheticRequestFactory::create() call. */
     private array $syntheticCreateArgs = [];
-    /** @var array<int, mixed>|null Rows passed into ExpressionParser::parse(). */
+    /** @var array<mixed>|null Rows passed into ExpressionParser::parse(). */
     private ?array $parsedRows = null;
     /** @var string|null IP the exclusion policy was asked about. */
     private ?string $checkedIp = null;
@@ -71,7 +73,7 @@ class RouteRuleTesterTest extends TestCase
     /** @var array{route: string, controller: string, action: string, params: array<string, string>, source: string}|null */
     private ?array $resolvedRouteParts = null;
     private bool $routeProtectionEnabled = true;
-    /** @var array<string, string> Condition field codes exposed by the parsed expression. */
+    /** @var list<string> Condition field codes exposed by the parsed expression. */
     private array $expressionFieldCodes = ['uri_path'];
 
     protected function setUp(): void
@@ -183,7 +185,8 @@ class RouteRuleTesterTest extends TestCase
             $this->actionNameResolver,
             $this->noRouteAction,
             $this->syntheticRequestFactory,
-            $this->simulatedFieldPoolFactory
+            $this->simulatedFieldPoolFactory,
+            new UserAgentCrawlerExemptionSimulator($this->exclusionPolicy)
         );
     }
 
@@ -255,6 +258,35 @@ class RouteRuleTesterTest extends TestCase
         $this->assertTrue($result['bypass']['excludedUserAgent']);
     }
 
+    public function testCrawlerSimulatorDecidesTheUserAgentBypassAndExplainsIt(): void
+    {
+        $this->userAgentExcluded = true;
+        $simulator = $this->createMock(CrawlerExemptionSimulatorInterface::class);
+        $simulator->expects($this->once())->method('simulate')
+            ->with('Googlebot/2.1', '9.9.9.9')
+            ->willReturn(['exempt' => false, 'notes' => ['claimed crawler, address outside its lists']]);
+        $tester = new RouteRuleTester(
+            $this->storeManager,
+            $this->emulation,
+            $this->config,
+            $this->providerPool,
+            $this->exclusionPolicy,
+            $this->expressionParser,
+            $this->expressionTracer,
+            $this->actionNameResolver,
+            $this->noRouteAction,
+            $this->syntheticRequestFactory,
+            $this->simulatedFieldPoolFactory,
+            $simulator
+        );
+
+        $result = $tester->test(new Simulation('/x', 'GET', 'Googlebot/2.1'));
+
+        $this->assertTrue($result['wouldChallenge']);
+        $this->assertFalse($result['bypass']['excludedUserAgent']);
+        $this->assertContains('claimed crawler, address outside its lists', $result['warnings']);
+    }
+
     public function testExcludedIpUsesTheResolvedClientIp(): void
     {
         $this->ipExcluded = true;
@@ -320,7 +352,8 @@ class RouteRuleTesterTest extends TestCase
             $this->actionNameResolver,
             $this->noRouteAction,
             $this->syntheticRequestFactory,
-            $this->simulatedFieldPoolFactory
+            $this->simulatedFieldPoolFactory,
+            new UserAgentCrawlerExemptionSimulator($exclusionPolicy)
         );
 
         $result = $tester->test(new Simulation('/customer/section/load?sections=cart'));

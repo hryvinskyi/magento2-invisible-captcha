@@ -18,6 +18,37 @@
                 type="Hryvinskyi\InvisibleCaptcha\Model\Verification\Http\HttpClient"/>
     <preference for="Hryvinskyi\InvisibleCaptcha\Api\Http\ClientIpResolverInterface"
                 type="Hryvinskyi\InvisibleCaptcha\Model\Http\ClientIpResolver"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\CrawlerExemptionInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\UserAgentCrawlerExemption"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\RequestCheckerInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\RequestChecker"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\VerificationCookieInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\CookieManager"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Http\CaptchaContextInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Http\CaptchaContext"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\RefIdGeneratorInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\RefIdGenerator"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\ChallengeRendererInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\ChallengeRenderer"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\Tester\CrawlerExemptionSimulatorInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\Tester\UserAgentCrawlerExemptionSimulator"/>
+    <preference for="Hryvinskyi\InvisibleCaptcha\Api\SilentVerificationInterface"
+                type="Hryvinskyi\InvisibleCaptcha\Model\SilentVerification"/>
+
+    <!--
+        Providers that can issue a token without any interaction, and how the browser asks for it: `widget` renders
+        an invisible widget that gives up when it would need interaction, `score` runs a score-based execute call.
+        A provider module adds its own item to take part in background verification.
+    -->
+    <type name="Hryvinskyi\InvisibleCaptcha\Model\SilentVerification">
+        <arguments>
+            <argument name="silentModes" xsi:type="array">
+                <item name="turnstile" xsi:type="string">widget</item>
+                <item name="recaptcha_v3" xsi:type="string">score</item>
+                <item name="recaptcha_enterprise" xsi:type="string">score</item>
+            </argument>
+        </arguments>
+    </type>
     <preference for="Hryvinskyi\InvisibleCaptcha\Api\Geo\CountrySourcePoolInterface"
                 type="Hryvinskyi\InvisibleCaptcha\Model\Geo\SourcePool"/>
     <preference for="Hryvinskyi\InvisibleCaptcha\Api\Geo\CountryResolverInterface"

@@ -8,25 +8,34 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Model;
 
+use Hryvinskyi\InvisibleCaptcha\Api\ChallengeRendererInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\RefIdGeneratorInterface;
 use Hryvinskyi\InvisibleCaptcha\Controller\Router\VerificationRouter;
 use Hryvinskyi\ThemeAssets\Api\AssetRendererInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Escaper;
-use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\HTTP\PhpEnvironment\Request as HttpRequest;
 use Magento\Framework\Locale\ResolverInterface as LocaleResolver;
+use Magento\Framework\Serialize\Serializer\JsonHexTag;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Helper\SecureHtmlRenderer;
 
 /**
  * Assembles the inline interstitial challenge HTML, provider-agnostically.
  * The active route-gate provider (and optional fallback) drive the client-side
- * widget configuration emitted in window.hryvinskyiCaptcha.
+ * widget configuration, printed as a JSON data block the bootstrap script reads.
  */
-class ChallengeRenderer
+class ChallengeRenderer implements ChallengeRendererInterface
 {
+    /**
+     * Id of the JSON block holding the bootstrap script's configuration; the
+     * script looks the block up by this id.
+     */
+    public const CONFIG_ELEMENT_ID = 'hryvinskyi-captcha-config';
+
     private const ASSET_TEMPLATE = 'Hryvinskyi_InvisibleCaptcha::inline_challenge/template.html';
     private const ASSET_STYLES = 'Hryvinskyi_InvisibleCaptcha::inline_challenge/styles.css';
     private const ASSET_SCRIPT = 'Hryvinskyi_InvisibleCaptcha::inline_challenge/script.js';
@@ -55,8 +64,9 @@ class ChallengeRenderer
      * @param LocaleResolver $localeResolver
      * @param RequestInterface $request
      * @param AssetRendererInterface $assetRenderer
-     * @param RefIdGenerator $refIdGenerator
+     * @param RefIdGeneratorInterface $refIdGenerator
      * @param SecureHtmlRenderer $secureRenderer
+     * @param JsonHexTag $jsonSerializer
      */
     public function __construct(
         private readonly ConfigInterface $config,
@@ -66,16 +76,14 @@ class ChallengeRenderer
         private readonly LocaleResolver $localeResolver,
         private readonly RequestInterface $request,
         private readonly AssetRendererInterface $assetRenderer,
-        private readonly RefIdGenerator $refIdGenerator,
-        private readonly SecureHtmlRenderer $secureRenderer
+        private readonly RefIdGeneratorInterface $refIdGenerator,
+        private readonly SecureHtmlRenderer $secureRenderer,
+        private readonly JsonHexTag $jsonSerializer
     ) {
     }
 
     /**
-     * Render the full inline-challenge HTML document.
-     *
-     * @param string $refId Correlation token echoed back by the verify POST.
-     * @throws LocalizedException
+     * @inheritDoc
      */
     public function render(string $refId): string
     {
@@ -84,10 +92,8 @@ class ChallengeRenderer
         // Bundled stylesheet first, then the admin-configured accent override so
         // its :root wins over the defaults baked into styles.css.
         $styles = $this->assetRenderer->renderStyle(self::ASSET_STYLES) . $this->renderColorOverride();
-        $script = $this->assetRenderer->renderScript(
-            self::ASSET_SCRIPT,
-            options: ['content_before' => $this->buildScriptConfig($refId, $primary)]
-        );
+        $script = $this->renderScriptConfig($refId, $primary)
+            . $this->assetRenderer->renderScript(self::ASSET_SCRIPT);
 
         return strtr($template, [
             '{{lang}}' => $this->escaper->escapeHtmlAttr($this->resolveLang()),
@@ -196,9 +202,23 @@ class ChallengeRenderer
     }
 
     /**
-     * Build the provider-tagged JS config blob injected before the bootstrap script.
+     * The bootstrap script's configuration as a JSON data block. A data block
+     * is never executed, so it needs no CSP nonce; JsonHexTag escapes `<` and
+     * `>` so no value can close the block early.
      */
-    private function buildScriptConfig(string $refId, ProviderInterface $primary): string
+    private function renderScriptConfig(string $refId, ProviderInterface $primary): string
+    {
+        return '<script type="application/json" id="' . self::CONFIG_ELEMENT_ID . '">'
+            . $this->jsonSerializer->serialize($this->buildScriptConfig($refId, $primary))
+            . '</script>';
+    }
+
+    /**
+     * The provider-tagged configuration of the bootstrap script.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildScriptConfig(string $refId, ProviderInterface $primary): array
     {
         $config = [
             'verifyUrl' => rtrim($this->url->getBaseUrl(), '/') . '/' . VerificationRouter::VERIFY_PATH,
@@ -224,10 +244,7 @@ class ChallengeRenderer
             ];
         }
 
-        return 'window.hryvinskyiCaptcha=' . json_encode(
-            $config,
-            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
-        ) . ';';
+        return $config;
     }
 
     /**
@@ -249,6 +266,12 @@ class ChallengeRenderer
      */
     private function resolveHost(): string
     {
-        return (string)$this->request->getServer('HTTP_HOST', '');
+        if (!$this->request instanceof HttpRequest) {
+            return '';
+        }
+
+        $host = $this->request->getServer('HTTP_HOST', '');
+
+        return is_string($host) ? $host : '';
     }
 }

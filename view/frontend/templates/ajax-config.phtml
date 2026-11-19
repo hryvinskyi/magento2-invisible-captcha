@@ -5,14 +5,25 @@
  * GitHub: https://github.com/hryvinskyi
  */
 
-/** @var \Hryvinskyi\InvisibleCaptcha\Block\Frontend\AjaxConfig $block */
-/** @var \Magento\Framework\Escaper $escaper */
+use Hryvinskyi\InvisibleCaptcha\ViewModel\AjaxFallback;
+use Hryvinskyi\ThemeAssets\Api\AssetRendererInterface;
+use Magento\Framework\View\Element\Template;
 
-// The inline config blob MUST execute before ajax-fallback.js, because the JS
-// reads window.hryvinskyiCaptchaAjaxConfig at the very top of its IIFE.
-// Browsers run inline + classic <script src> tags in source order, so we emit
-// the config first and the script tag immediately after.
-$scriptUrl = $block->getViewFileUrl('Hryvinskyi_InvisibleCaptcha::js/ajax-fallback.js');
+/** @var Template $block */
+
+$viewModel = $block->getData('view_model');
+$assetRenderer = $block->getData('asset_renderer');
+if (!$viewModel instanceof AjaxFallback || !$assetRenderer instanceof AssetRendererInterface) {
+    return;
+}
+
+// The script wraps XMLHttpRequest and fetch, so it loads synchronously in the
+// head: requests the page's own scripts send before it ran would not be seen.
+// It reads the configuration block printed right before it.
 ?>
-<script>window.hryvinskyiCaptchaAjaxConfig = <?= /* @noEscape */ $block->getConfigJson() ?>;</script>
-<script src="<?= $escaper->escapeUrl($scriptUrl) ?>"></script>
+<script type="application/json" id="<?= /* @noEscape */ AjaxFallback::CONFIG_ELEMENT_ID ?>"><?= /* @noEscape */ $viewModel->getConfigJson() ?></script>
+<?= /* @noEscape */ $assetRenderer->renderScript(
+    AjaxFallback::SCRIPT_FILE_ID,
+    AssetRendererInterface::RENDER_EXTERNAL,
+    AssetRendererInterface::LOAD_SYNC
+) ?>

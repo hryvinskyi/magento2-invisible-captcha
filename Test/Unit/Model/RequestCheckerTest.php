@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Test\Unit\Model;
 
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\CrawlerExemptionInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionEvaluatorInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionParserInterface;
@@ -36,6 +37,8 @@ class RequestCheckerTest extends TestCase
     private ExpressionEvaluatorInterface $evaluator;
     /** @var ClientIpResolverInterface&MockObject */
     private ClientIpResolverInterface $clientIpResolver;
+    /** @var CrawlerExemptionInterface&MockObject */
+    private CrawlerExemptionInterface $crawlerExemption;
     /** @var HttpRequest&MockObject */
     private HttpRequest $request;
     private RequestChecker $checker;
@@ -48,6 +51,7 @@ class RequestCheckerTest extends TestCase
         $this->parser = $this->createMock(ExpressionParserInterface::class);
         $this->evaluator = $this->createMock(ExpressionEvaluatorInterface::class);
         $this->clientIpResolver = $this->createMock(ClientIpResolverInterface::class);
+        $this->crawlerExemption = $this->createMock(CrawlerExemptionInterface::class);
         $this->request = $this->createMock(HttpRequest::class);
 
         // The route-gate provider is resolved through the pool; default it to "configured".
@@ -61,6 +65,7 @@ class RequestCheckerTest extends TestCase
             $this->evaluator,
             $this->clientIpResolver,
             new ExclusionPolicy($this->config, new PathPatternMatcher()),
+            $this->crawlerExemption,
             $this->request
         );
     }
@@ -89,6 +94,7 @@ class RequestCheckerTest extends TestCase
             $this->evaluator,
             $this->clientIpResolver,
             new ExclusionPolicy($config, new PathPatternMatcher()),
+            $this->crawlerExemption,
             $this->request
         );
 
@@ -127,14 +133,26 @@ class RequestCheckerTest extends TestCase
         $this->assertFalse($this->checker->needsChallenge());
     }
 
-    public function testReturnsFalseForExcludedUserAgentSubstring(): void
+    public function testExemptCrawlerIsNeverChallenged(): void
     {
         $this->config->method('isRouteProtectionEnabled')->willReturn(true);
         $this->config->method('getExcludedIps')->willReturn([]);
-        $this->config->method('getExcludedUserAgents')->willReturn(['Googlebot']);
-        $this->request->method('getHeader')->with('User-Agent')->willReturn('Mozilla/5.0 (compatible; Googlebot/2.1)');
+        $this->crawlerExemption->method('isExempt')->willReturn(true);
         $this->evaluator->expects($this->never())->method('evaluate');
         $this->assertFalse($this->checker->needsChallenge());
+    }
+
+    public function testExcludedIpIsReadThroughTheClientIpResolver(): void
+    {
+        $this->config->method('isRouteProtectionEnabled')->willReturn(true);
+        $this->config->method('getExcludedIps')->willReturn(['198.51.100.7']);
+        $this->request->method('getServer')->willReturn('198.51.100.7');
+        $this->clientIpResolver->method('resolve')->willReturn('203.0.113.9');
+        $this->config->method('getProtectionRulesConfig')->willReturn([]);
+        $this->parser->method('parse')->willReturn($this->createMock(ExpressionInterface::class));
+        $this->evaluator->method('evaluate')->willReturn(true);
+
+        $this->assertTrue($this->checker->needsChallenge());
     }
 
     public function testReturnsFalseForExcludedPath(): void
@@ -147,20 +165,6 @@ class RequestCheckerTest extends TestCase
         $this->evaluator->expects($this->never())->method('evaluate');
 
         $this->assertFalse($this->checker->needsChallenge());
-    }
-
-    public function testEmptyUserAgentDoesNotMatchExclusionList(): void
-    {
-        $this->config->method('isRouteProtectionEnabled')->willReturn(true);
-        $this->config->method('getExcludedIps')->willReturn([]);
-        $this->config->method('getExcludedUserAgents')->willReturn(['Googlebot']);
-        $this->request->method('getHeader')->willReturn('');
-        $this->config->method('getProtectionRulesConfig')->willReturn([]);
-        $expression = $this->createMock(ExpressionInterface::class);
-        $this->parser->method('parse')->willReturn($expression);
-        $this->evaluator->method('evaluate')->willReturn(true);
-
-        $this->assertTrue($this->checker->needsChallenge());
     }
 
     public function testEvaluatesExpressionWhenNotExcluded(): void
@@ -195,21 +199,5 @@ class RequestCheckerTest extends TestCase
     {
         $this->config->method('isRouteProtectionEnabled')->willReturn(true);
         $this->assertTrue($this->checker->isConfigured());
-    }
-
-    public function testGetClientIpDelegatesToResolver(): void
-    {
-        $this->clientIpResolver->method('resolve')->willReturn('203.0.113.1');
-        $this->assertSame('203.0.113.1', $this->checker->getClientIp());
-    }
-
-    public function testUserAgentExclusionCaseInsensitive(): void
-    {
-        $this->config->method('isRouteProtectionEnabled')->willReturn(true);
-        $this->config->method('getExcludedIps')->willReturn([]);
-        $this->config->method('getExcludedUserAgents')->willReturn(['googlebot']);
-        $this->request->method('getHeader')->willReturn('Mozilla/5.0 (compatible; GoogleBot/2.1)');
-        $this->evaluator->expects($this->never())->method('evaluate');
-        $this->assertFalse($this->checker->needsChallenge());
     }
 }

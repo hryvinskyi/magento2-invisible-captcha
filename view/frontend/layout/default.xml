@@ -9,10 +9,25 @@
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceBlock name="head.additional">
-            <block class="Hryvinskyi\InvisibleCaptcha\Block\Frontend\AjaxConfig"
+            <block class="Magento\Framework\View\Element\Template"
                    name="hryvinskyi.invisible_captcha.ajax.config"
-                   template="Hryvinskyi_InvisibleCaptcha::ajax-config.phtml"/>
+                   template="Hryvinskyi_InvisibleCaptcha::ajax-config.phtml">
+                <arguments>
+                    <argument name="view_model" xsi:type="object">Hryvinskyi\InvisibleCaptcha\ViewModel\AjaxFallback</argument>
+                    <argument name="asset_renderer" xsi:type="object">Hryvinskyi\ThemeAssets\Api\AssetRendererInterface</argument>
+                </arguments>
+            </block>
         </referenceBlock>
+        <referenceContainer name="before.body.end">
+            <block class="Magento\Framework\View\Element\Template"
+                   name="hryvinskyi.invisible_captcha.silent_verification"
+                   template="Hryvinskyi_InvisibleCaptcha::silent-verification.phtml">
+                <arguments>
+                    <argument name="view_model" xsi:type="object">Hryvinskyi\InvisibleCaptcha\ViewModel\SilentVerification</argument>
+                    <argument name="asset_renderer" xsi:type="object">Hryvinskyi\ThemeAssets\Api\AssetRendererInterface</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
         <referenceContainer name="footer">
             <block class="Hryvinskyi\InvisibleCaptcha\Block\CaptchaNewsletter" name="invisible.recaptcha.newsletter"
                    after="-" template="Hryvinskyi_InvisibleCaptcha::captcha_newsletter.phtml"

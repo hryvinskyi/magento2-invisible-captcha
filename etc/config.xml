@@ -82,6 +82,7 @@
                 <fallback_provider>recaptcha_v2_checkbox</fallback_provider>
                 <fallback_delay>15</fallback_delay>
                 <cookie_lifetime>14400</cookie_lifetime>
+                <silent_verification>0</silent_verification>
                 <rules></rules>
                 <layered_nav_ignored_params>id&#10;stock&#10;store&#10;is_scroll&#10;form_key&#10;__store&#10;p&#10;product_list_limit&#10;product_list_order&#10;product_list_dir&#10;product_list_mode</layered_nav_ignored_params>
                 <excluded_ips></excluded_ips>

@@ -9,16 +9,17 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Test\Unit\Controller\Router;
 
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Http\CaptchaContextInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Http\ClientIpResolverInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\RefIdGeneratorInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\RequestCheckerInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\VerificationCookieInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Verification\VerificationRequestInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Verification\VerificationResultInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Verification\VerifierInterface;
 use Hryvinskyi\InvisibleCaptcha\Controller\Router\Verify;
-use Hryvinskyi\InvisibleCaptcha\Model\CookieManager;
-use Hryvinskyi\InvisibleCaptcha\Model\Http\CaptchaContext;
-use Hryvinskyi\InvisibleCaptcha\Model\RefIdGenerator;
-use Hryvinskyi\InvisibleCaptcha\Model\RequestChecker;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
@@ -32,14 +33,16 @@ class VerifyTest extends TestCase
     private ConfigInterface $config;
     /** @var ProviderPoolInterface&MockObject */
     private ProviderPoolInterface $providerPool;
-    /** @var CookieManager&MockObject */
-    private CookieManager $cookieManager;
-    /** @var RequestChecker&MockObject */
-    private RequestChecker $requestChecker;
-    /** @var CaptchaContext&MockObject */
-    private CaptchaContext $captchaContext;
-    /** @var RefIdGenerator&MockObject */
-    private RefIdGenerator $refIdGenerator;
+    /** @var VerificationCookieInterface&MockObject */
+    private VerificationCookieInterface $cookieManager;
+    /** @var RequestCheckerInterface&MockObject */
+    private RequestCheckerInterface $requestChecker;
+    /** @var ClientIpResolverInterface&MockObject */
+    private ClientIpResolverInterface $clientIpResolver;
+    /** @var CaptchaContextInterface&MockObject */
+    private CaptchaContextInterface $captchaContext;
+    /** @var RefIdGeneratorInterface&MockObject */
+    private RefIdGeneratorInterface $refIdGenerator;
     /** @var RequestInterface&MockObject */
     private RequestInterface $request;
     /** @var JsonFactory&MockObject */
@@ -54,10 +57,11 @@ class VerifyTest extends TestCase
     {
         $this->config = $this->createMock(ConfigInterface::class);
         $this->providerPool = $this->createMock(ProviderPoolInterface::class);
-        $this->cookieManager = $this->createMock(CookieManager::class);
-        $this->requestChecker = $this->createMock(RequestChecker::class);
-        $this->captchaContext = $this->createMock(CaptchaContext::class);
-        $this->refIdGenerator = $this->createMock(RefIdGenerator::class);
+        $this->cookieManager = $this->createMock(VerificationCookieInterface::class);
+        $this->requestChecker = $this->createMock(RequestCheckerInterface::class);
+        $this->clientIpResolver = $this->createMock(ClientIpResolverInterface::class);
+        $this->captchaContext = $this->createMock(CaptchaContextInterface::class);
+        $this->refIdGenerator = $this->createMock(RefIdGeneratorInterface::class);
         $this->request = $this->createMock(RequestInterface::class);
         $this->jsonFactory = $this->createMock(JsonFactory::class);
         $this->json = $this->createMock(Json::class);
@@ -76,6 +80,7 @@ class VerifyTest extends TestCase
             $this->providerPool,
             $this->cookieManager,
             $this->requestChecker,
+            $this->clientIpResolver,
             $this->captchaContext,
             $this->refIdGenerator,
             $this->request,
@@ -87,7 +92,7 @@ class VerifyTest extends TestCase
     public function testReturns503WhenNotConfigured(): void
     {
         $this->requestChecker->method('isConfigured')->willReturn(false);
-        $this->requestChecker->method('getClientIp')->willReturn('');
+        $this->clientIpResolver->method('resolve')->willReturn('');
         $this->stubParams([]);
 
         // The provider chain is never touched when keys are missing.
@@ -104,7 +109,7 @@ class VerifyTest extends TestCase
     public function testSuccessIssuesCookieAndMarksContext(): void
     {
         $this->requestChecker->method('isConfigured')->willReturn(true);
-        $this->requestChecker->method('getClientIp')->willReturn('203.0.113.9');
+        $this->clientIpResolver->method('resolve')->willReturn('203.0.113.9');
         $this->refIdGenerator->method('isValid')->willReturn(true);
 
         $primary = $this->verifyingProvider('recaptcha_v3', 'g-recaptcha-response', true);
@@ -129,7 +134,7 @@ class VerifyTest extends TestCase
     public function testFailsWhenNoTokenSubmitted(): void
     {
         $this->requestChecker->method('isConfigured')->willReturn(true);
-        $this->requestChecker->method('getClientIp')->willReturn('');
+        $this->clientIpResolver->method('resolve')->willReturn('');
 
         $primary = $this->createMock(ProviderInterface::class);
         $primary->method('getCode')->willReturn('recaptcha_v3');
@@ -154,7 +159,7 @@ class VerifyTest extends TestCase
     public function testFailsWhenTokenInvalid(): void
     {
         $this->requestChecker->method('isConfigured')->willReturn(true);
-        $this->requestChecker->method('getClientIp')->willReturn('203.0.113.9');
+        $this->clientIpResolver->method('resolve')->willReturn('203.0.113.9');
 
         $primary = $this->verifyingProvider('turnstile', 'cf-turnstile-response', false);
         $this->providerPool->method('getRouteGateProvider')->willReturn($primary);
@@ -176,7 +181,7 @@ class VerifyTest extends TestCase
     public function testFallbackProviderRetriedWhenPrimaryHasNoToken(): void
     {
         $this->requestChecker->method('isConfigured')->willReturn(true);
-        $this->requestChecker->method('getClientIp')->willReturn('203.0.113.9');
+        $this->clientIpResolver->method('resolve')->willReturn('203.0.113.9');
 
         $primary = $this->createMock(ProviderInterface::class);
         $primary->method('getCode')->willReturn('recaptcha_v3');

@@ -8,8 +8,8 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Test\Unit\Observer;
 
-use Hryvinskyi\InvisibleCaptcha\Model\Http\CaptchaContext;
-use Hryvinskyi\InvisibleCaptcha\Model\RequestChecker;
+use Hryvinskyi\InvisibleCaptcha\Api\Http\CaptchaContextInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\RequestCheckerInterface;
 use Hryvinskyi\InvisibleCaptcha\Observer\SetCaptchaHttpContext;
 use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Framework\Event\Observer;
@@ -18,18 +18,18 @@ use PHPUnit\Framework\TestCase;
 
 class SetCaptchaHttpContextTest extends TestCase
 {
-    /** @var RequestChecker&MockObject */
-    private RequestChecker $requestChecker;
-    /** @var CaptchaContext&MockObject */
-    private CaptchaContext $captchaContext;
+    /** @var RequestCheckerInterface&MockObject */
+    private RequestCheckerInterface $requestChecker;
+    /** @var CaptchaContextInterface&MockObject */
+    private CaptchaContextInterface $captchaContext;
     /** @var HttpRequest&MockObject */
     private HttpRequest $request;
     private SetCaptchaHttpContext $observer;
 
     protected function setUp(): void
     {
-        $this->requestChecker = $this->createMock(RequestChecker::class);
-        $this->captchaContext = $this->createMock(CaptchaContext::class);
+        $this->requestChecker = $this->createMock(RequestCheckerInterface::class);
+        $this->captchaContext = $this->createMock(CaptchaContextInterface::class);
         $this->request = $this->createMock(HttpRequest::class);
 
         $this->observer = new SetCaptchaHttpContext(

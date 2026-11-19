@@ -9,17 +9,17 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Controller\Router;
 
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Http\CaptchaContextInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Http\ClientIpResolverInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface;
-use Hryvinskyi\InvisibleCaptcha\Model\CookieManager;
-use Hryvinskyi\InvisibleCaptcha\Model\Http\CaptchaContext;
-use Hryvinskyi\InvisibleCaptcha\Model\RefIdGenerator;
-use Hryvinskyi\InvisibleCaptcha\Model\RequestChecker;
+use Hryvinskyi\InvisibleCaptcha\Api\RefIdGeneratorInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\RequestCheckerInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\VerificationCookieInterface;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
-use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Psr\Log\LoggerInterface;
@@ -34,10 +34,11 @@ class Verify implements ActionInterface, CsrfAwareActionInterface
     /**
      * @param ConfigInterface $config
      * @param ProviderPoolInterface $providerPool
-     * @param CookieManager $cookieManager
-     * @param RequestChecker $requestChecker
-     * @param CaptchaContext $captchaContext
-     * @param RefIdGenerator $refIdGenerator
+     * @param VerificationCookieInterface $cookieManager
+     * @param RequestCheckerInterface $requestChecker
+     * @param ClientIpResolverInterface $clientIpResolver
+     * @param CaptchaContextInterface $captchaContext
+     * @param RefIdGeneratorInterface $refIdGenerator
      * @param RequestInterface $request
      * @param JsonFactory $jsonFactory
      * @param LoggerInterface $logger
@@ -45,10 +46,11 @@ class Verify implements ActionInterface, CsrfAwareActionInterface
     public function __construct(
         private readonly ConfigInterface $config,
         private readonly ProviderPoolInterface $providerPool,
-        private readonly CookieManager $cookieManager,
-        private readonly RequestChecker $requestChecker,
-        private readonly CaptchaContext $captchaContext,
-        private readonly RefIdGenerator $refIdGenerator,
+        private readonly VerificationCookieInterface $cookieManager,
+        private readonly RequestCheckerInterface $requestChecker,
+        private readonly ClientIpResolverInterface $clientIpResolver,
+        private readonly CaptchaContextInterface $captchaContext,
+        private readonly RefIdGeneratorInterface $refIdGenerator,
         private readonly RequestInterface $request,
         private readonly JsonFactory $jsonFactory,
         private readonly LoggerInterface $logger
@@ -56,9 +58,11 @@ class Verify implements ActionInterface, CsrfAwareActionInterface
     }
 
     /**
-     * @inheritDoc
+     * Verify the submitted token and answer with the outcome as JSON.
+     *
+     * @return Json
      */
-    public function execute(): ResponseInterface|Json
+    public function execute(): Json
     {
         /** @var Json $result */
         $result = $this->jsonFactory->create();
@@ -66,7 +70,7 @@ class Verify implements ActionInterface, CsrfAwareActionInterface
         $result->setHeader('Pragma', 'no-cache', true);
 
         $refId = $this->extractRefId();
-        $clientIp = $this->requestChecker->getClientIp();
+        $clientIp = $this->clientIpResolver->resolve();
 
         if (!$this->requestChecker->isConfigured()) {
             $this->logResult($refId, 'not_configured', $clientIp);
@@ -116,7 +120,7 @@ class Verify implements ActionInterface, CsrfAwareActionInterface
      */
     private function attempt(ProviderInterface $provider, string $clientIp): array
     {
-        $token = (string)$this->request->getParam($provider->getResponseParamName(), '');
+        $token = $this->stringParam($provider->getResponseParamName());
         if ($token === '') {
             return [false, ''];
         }
@@ -135,12 +139,22 @@ class Verify implements ActionInterface, CsrfAwareActionInterface
      */
     private function extractRefId(): string
     {
-        $raw = trim((string)$this->request->getParam('ref', ''));
+        $raw = trim($this->stringParam('ref'));
         if ($raw === '' || !$this->refIdGenerator->isValid($raw)) {
             return '-';
         }
 
         return $raw;
+    }
+
+    /**
+     * A request parameter as text; empty when it is missing or not a string.
+     */
+    private function stringParam(string $name): string
+    {
+        $value = $this->request->getParam($name, '');
+
+        return is_string($value) ? $value : '';
     }
 
     /**

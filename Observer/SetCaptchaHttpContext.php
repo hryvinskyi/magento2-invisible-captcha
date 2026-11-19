@@ -8,9 +8,10 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Observer;
 
+use Hryvinskyi\InvisibleCaptcha\Api\Http\CaptchaContextInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\RequestCheckerInterface;
 use Hryvinskyi\InvisibleCaptcha\Controller\Router\VerificationRouter;
-use Hryvinskyi\InvisibleCaptcha\Model\Http\CaptchaContext;
-use Hryvinskyi\InvisibleCaptcha\Model\RequestChecker;
+use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
@@ -23,13 +24,13 @@ use Magento\Framework\Event\ObserverInterface;
 class SetCaptchaHttpContext implements ObserverInterface
 {
     /**
-     * @param RequestChecker $requestChecker
-     * @param CaptchaContext $captchaContext
+     * @param RequestCheckerInterface $requestChecker
+     * @param CaptchaContextInterface $captchaContext
      * @param RequestInterface $request
      */
     public function __construct(
-        private readonly RequestChecker $requestChecker,
-        private readonly CaptchaContext $captchaContext,
+        private readonly RequestCheckerInterface $requestChecker,
+        private readonly CaptchaContextInterface $captchaContext,
         private readonly RequestInterface $request
     ) {
     }
@@ -43,11 +44,22 @@ class SetCaptchaHttpContext implements ObserverInterface
             return;
         }
 
-        $path = trim((string)$this->request->getPathInfo(), '/');
-        if ($path === VerificationRouter::VERIFY_PATH) {
+        if ($this->isVerifyEndpoint()) {
             return;
         }
 
         $this->captchaContext->setFromCookie();
+    }
+
+    /**
+     * Whether the current request targets the captcha verify endpoint.
+     */
+    private function isVerifyEndpoint(): bool
+    {
+        if (!$this->request instanceof HttpRequest) {
+            return false;
+        }
+
+        return trim($this->request->getPathInfo(), '/') === VerificationRouter::VERIFY_PATH;
     }
 }

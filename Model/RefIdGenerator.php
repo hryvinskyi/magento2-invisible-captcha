@@ -8,24 +8,26 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Model;
 
+use Hryvinskyi\InvisibleCaptcha\Api\RefIdGeneratorInterface;
+
 /**
  * Issues short opaque correlation tokens that follow a challenge through the
  * inline render, the verify POST, and both ends of the log trail.
  */
-class RefIdGenerator
+class RefIdGenerator implements RefIdGeneratorInterface
 {
     private const TOKEN_BYTES = 4;
     private const TOKEN_PATTERN = '/^[A-Z0-9]{8}$/';
 
     /**
-     * Generate a fresh 8-character hex token, e.g. "A7F23K9M".
+     * Generate a fresh 8-character hex token, e.g. "A7F23B9C".
      */
     public function generate(): string
     {
         try {
             return strtoupper(bin2hex(random_bytes(self::TOKEN_BYTES)));
         } catch (\Throwable) {
-            return strtoupper(substr(md5((string)microtime(true)), 0, self::TOKEN_BYTES * 2));
+            return strtoupper(substr(hash('sha256', uniqid('', true)), 0, self::TOKEN_BYTES * 2));
         }
     }
 

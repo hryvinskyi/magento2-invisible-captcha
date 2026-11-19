@@ -11,12 +11,13 @@ namespace Hryvinskyi\InvisibleCaptcha\Test\Unit\Model;
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\RefIdGeneratorInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\ChallengeRenderer;
-use Hryvinskyi\InvisibleCaptcha\Model\RefIdGenerator;
 use Hryvinskyi\ThemeAssets\Api\AssetRendererInterface;
 use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Framework\Escaper;
 use Magento\Framework\Locale\ResolverInterface as LocaleResolver;
+use Magento\Framework\Serialize\Serializer\JsonHexTag;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Helper\SecureHtmlRenderer;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -24,29 +25,35 @@ use PHPUnit\Framework\TestCase;
 
 class ChallengeRendererTest extends TestCase
 {
-    /** @var ConfigInterface|MockObject */
-    private $config;
-    /** @var ProviderPoolInterface|MockObject */
-    private $providerPool;
-    /** @var AssetRendererInterface|MockObject */
-    private $assetRenderer;
+    /** @var ConfigInterface&MockObject */
+    private ConfigInterface $config;
+    /** @var ProviderPoolInterface&MockObject */
+    private ProviderPoolInterface $providerPool;
+    /** @var AssetRendererInterface&MockObject */
+    private AssetRendererInterface $assetRenderer;
     private ChallengeRenderer $renderer;
 
     /**
-     * Extract the `content_before` blob from a renderScript() call's arguments,
-     * whether the options array arrives positionally or as the named `options` arg.
+     * Decode the JSON config data block the renderer prints into the page.
      *
-     * @param array<int, mixed> $args
+     * @return array<string, mixed>
      */
-    private static function contentBefore(array $args): string
+    private static function scriptConfig(string $html): array
     {
-        foreach ($args as $arg) {
-            if (is_array($arg) && isset($arg['content_before'])) {
-                return (string)$arg['content_before'];
-            }
+        $pattern = '#<script type="application/json" id="' . ChallengeRenderer::CONFIG_ELEMENT_ID
+            . '">(.*?)</script>#s';
+        if (preg_match($pattern, $html, $match) !== 1) {
+            self::fail('the config data block is printed');
+        }
+        $decoded = json_decode($match[1], true);
+        self::assertIsArray($decoded);
+
+        $config = [];
+        foreach ($decoded as $key => $value) {
+            $config[(string)$key] = $value;
         }
 
-        return '';
+        return $config;
     }
 
     protected function setUp(): void
@@ -59,9 +66,9 @@ class ChallengeRendererTest extends TestCase
         $url->method('getBaseUrl')->willReturn('https://example.com/');
 
         $escaper = $this->createMock(Escaper::class);
-        $escaper->method('escapeHtml')->willReturnCallback(static fn ($v) => (string)$v);
-        $escaper->method('escapeHtmlAttr')->willReturnCallback(static fn ($v) => (string)$v);
-        $escaper->method('escapeUrl')->willReturnCallback(static fn ($v) => (string)$v);
+        $escaper->method('escapeHtml')->willReturnCallback(static fn (string $v): string => $v);
+        $escaper->method('escapeHtmlAttr')->willReturnCallback(static fn (string $v): string => $v);
+        $escaper->method('escapeUrl')->willReturnCallback(static fn (string $v): string => $v);
 
         $locale = $this->createMock(LocaleResolver::class);
         $locale->method('getLocale')->willReturn('en_US');
@@ -69,7 +76,7 @@ class ChallengeRendererTest extends TestCase
         $request = $this->createMock(HttpRequest::class);
         $request->method('getServer')->willReturn('example.com');
 
-        $refId = $this->createMock(RefIdGenerator::class);
+        $refId = $this->createMock(RefIdGeneratorInterface::class);
         $refId->method('format')->willReturn('A7F2 · 3K9M');
 
         $secureRenderer = $this->createMock(SecureHtmlRenderer::class);
@@ -87,7 +94,8 @@ class ChallengeRendererTest extends TestCase
             $request,
             $this->assetRenderer,
             $refId,
-            $secureRenderer
+            $secureRenderer,
+            new JsonHexTag()
         );
     }
 
@@ -108,17 +116,26 @@ class ChallengeRendererTest extends TestCase
         $this->assetRenderer->method('getContent')
             ->willReturn('<html lang="{{lang}}"><title>{{title}}</title>{{ref_id}}{{host}}{{styles}}{{script}}</html>');
         $this->assetRenderer->method('renderStyle')->willReturn('/* css */');
-        $this->assetRenderer->method('renderScript')->willReturnCallback(
-            static fn (...$args) => '<script>' . self::contentBefore($args) . '</script>'
-        );
+        $this->assetRenderer->expects($this->once())->method('renderScript')
+            ->with('Hryvinskyi_InvisibleCaptcha::inline_challenge/script.js')
+            ->willReturn('<script src="bootstrap.js"></script>');
 
         $html = $this->renderer->render('A7F23K9M');
 
         self::assertStringContainsString('Security Check', $html);
         self::assertStringContainsString('A7F2 · 3K9M', $html);
-        self::assertStringContainsString('window.hryvinskyiCaptcha=', $html);
-        self::assertStringContainsString('cf-turnstile-response', $html);
-        self::assertStringContainsString('"verifyUrl":"https://example.com/invisiblecaptcha/verify"', $html);
+        self::assertStringNotContainsString('window.hryvinskyiCaptcha', $html);
+        // The data block comes before the bootstrap script that reads it.
+        self::assertLessThan(
+            strpos($html, '<script src="bootstrap.js">'),
+            strpos($html, 'id="' . ChallengeRenderer::CONFIG_ELEMENT_ID . '"')
+        );
+        $config = self::scriptConfig($html);
+        self::assertSame('https://example.com/invisiblecaptcha/verify', $config['verifyUrl']);
+        self::assertSame('A7F23K9M', $config['refId']);
+        self::assertSame('cf-turnstile-response', $config['responseParam']);
+        self::assertSame(15000, $config['fallbackDelay']);
+        self::assertFalse($config['fallbackEnabled']);
         self::assertStringNotContainsString('{{lang}}', $html);
         self::assertStringNotContainsString('{{script}}', $html);
         // Unset appearance config falls back to the bundled default palette.
@@ -173,13 +190,33 @@ class ChallengeRendererTest extends TestCase
 
         $this->assetRenderer->method('getContent')->willReturn('{{script}}');
         $this->assetRenderer->method('renderStyle')->willReturn('');
-        $this->assetRenderer->method('renderScript')->willReturnCallback(
-            static fn (...$args) => self::contentBefore($args)
-        );
+        $this->assetRenderer->method('renderScript')->willReturn('');
+
+        $config = self::scriptConfig($this->renderer->render('A7F23K9M'));
+
+        self::assertTrue($config['fallbackEnabled']);
+        self::assertIsArray($config['fallback']);
+        self::assertSame('g-recaptcha-response', $config['fallback']['responseParam']);
+        self::assertSame('fallback-key', $config['fallback']['siteKey']);
+    }
+
+    public function testConfigValueCannotCloseTheDataBlock(): void
+    {
+        $provider = $this->createMock(ProviderInterface::class);
+        $provider->method('getCode')->willReturn(ProviderInterface::CODE_TURNSTILE);
+        $provider->method('getSiteKey')->willReturn('</script><script>alert(1)</script>');
+        $provider->method('getRenderConfig')->willReturn([]);
+        $this->providerPool->method('getRouteGateProvider')->willReturn($provider);
+        $this->providerPool->method('getFallbackProvider')->willReturn(null);
+        $this->config->method('getSupportEmail')->willReturn('');
+
+        $this->assetRenderer->method('getContent')->willReturn('{{script}}');
+        $this->assetRenderer->method('renderStyle')->willReturn('');
+        $this->assetRenderer->method('renderScript')->willReturn('');
 
         $html = $this->renderer->render('A7F23K9M');
 
-        self::assertStringContainsString('"fallbackEnabled":true', $html);
-        self::assertStringContainsString('g-recaptcha-response', $html);
+        self::assertSame(1, substr_count($html, '</script>'));
+        self::assertSame('</script><script>alert(1)</script>', self::scriptConfig($html)['siteKey']);
     }
 }

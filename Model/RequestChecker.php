@@ -9,11 +9,13 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Model;
 
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\CrawlerExemptionInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExclusionPolicyInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionEvaluatorInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ExpressionParserInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Http\ClientIpResolverInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\RequestCheckerInterface;
 use Hryvinskyi\InvisibleCaptcha\Controller\Router\VerificationRouter;
 use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Framework\App\RequestInterface;
@@ -21,7 +23,7 @@ use Magento\Framework\App\RequestInterface;
 /**
  * Decides whether the current request must pass the route-level challenge.
  */
-class RequestChecker
+class RequestChecker implements RequestCheckerInterface
 {
     /**
      * @param ConfigInterface $config
@@ -30,6 +32,7 @@ class RequestChecker
      * @param ExpressionEvaluatorInterface $expressionEvaluator
      * @param ClientIpResolverInterface $clientIpResolver
      * @param ExclusionPolicyInterface $exclusionPolicy
+     * @param CrawlerExemptionInterface $crawlerExemption
      * @param RequestInterface $request
      */
     public function __construct(
@@ -39,12 +42,13 @@ class RequestChecker
         private readonly ExpressionEvaluatorInterface $expressionEvaluator,
         private readonly ClientIpResolverInterface $clientIpResolver,
         private readonly ExclusionPolicyInterface $exclusionPolicy,
+        private readonly CrawlerExemptionInterface $crawlerExemption,
         private readonly RequestInterface $request
     ) {
     }
 
     /**
-     * Whether route-level protection is active and configured for this scope.
+     * @inheritDoc
      */
     public function isConfigured(): bool
     {
@@ -56,7 +60,7 @@ class RequestChecker
     }
 
     /**
-     * Decide whether the current request must pass the challenge.
+     * @inheritDoc
      */
     public function needsChallenge(): bool
     {
@@ -71,7 +75,7 @@ class RequestChecker
             return false;
         }
 
-        if ($this->isExcludedIp() || $this->isExcludedUserAgent() || $this->isExcludedPath()) {
+        if ($this->isExcludedIp() || $this->crawlerExemption->isExempt() || $this->isExcludedPath()) {
             return false;
         }
 
@@ -94,27 +98,11 @@ class RequestChecker
     }
 
     /**
-     * Resolve the client IP via the shared client-IP resolver.
-     */
-    public function getClientIp(): string
-    {
-        return $this->clientIpResolver->resolve();
-    }
-
-    /**
      * Whether the client IP is on the bypass list.
      */
     private function isExcludedIp(): bool
     {
-        return $this->exclusionPolicy->isIpExcluded($this->getClientIp());
-    }
-
-    /**
-     * Whether the request user agent matches any configured bypass substring.
-     */
-    private function isExcludedUserAgent(): bool
-    {
-        return $this->exclusionPolicy->isUserAgentExcluded((string)$this->request->getHeader('User-Agent'));
+        return $this->exclusionPolicy->isIpExcluded($this->clientIpResolver->resolve());
     }
 
     /**

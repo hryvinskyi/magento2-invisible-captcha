@@ -9,7 +9,10 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Test\Integration\RouteProtection;
 
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderInterface;
+use Hryvinskyi\InvisibleCaptcha\Model\CookieManager;
 use Hryvinskyi\InvisibleCaptcha\Test\Integration\ControllerTestAccess;
+use Magento\Framework\App\DeploymentConfig;
+use Magento\Framework\Config\ConfigOptionsListConstants;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Store\Model\ScopeInterface;
@@ -58,6 +61,30 @@ abstract class RouteGateTestCase extends AbstractController
         $this->mutableConfig = $this->service(MutableScopeConfig::class);
         $this->encryptor = $this->service(EncryptorInterface::class);
         $this->json = $this->service(Json::class);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function tearDown(): void
+    {
+        unset($_COOKIE[CookieManager::COOKIE_NAME]);
+        parent::tearDown();
+    }
+
+    /**
+     * Craft and inject a valid verification cookie using the same HMAC scheme as
+     * {@see CookieManager} (keyed on the deployment crypt key).
+     */
+    protected function issueVerifiedCookie(): void
+    {
+        $cryptKey = $this->service(DeploymentConfig::class)->get(ConfigOptionsListConstants::CONFIG_PATH_CRYPT_KEY);
+        self::assertIsString($cryptKey);
+        $keys = array_filter(explode("\n", $cryptKey));
+        $hmacKey = $keys !== [] ? (string)end($keys) : 'hryvinskyi-invisible-captcha';
+
+        $expiry = time() + 3600;
+        $_COOKIE[CookieManager::COOKIE_NAME] = $expiry . ':' . hash_hmac('sha256', (string)$expiry, $hmacKey);
     }
 
     /**

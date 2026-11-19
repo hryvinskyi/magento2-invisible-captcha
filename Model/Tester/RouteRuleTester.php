@@ -17,6 +17,7 @@ use Hryvinskyi\InvisibleCaptcha\Api\NoRouteActionInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Filter\FieldProviderInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Provider\ProviderPoolInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Tester\ActionNameResolverInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Tester\CrawlerExemptionSimulatorInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Tester\RouteRuleTesterInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\Tester\SimulationInterface;
 use Hryvinskyi\InvisibleCaptcha\Controller\Router\VerificationRouter;
@@ -40,6 +41,7 @@ class RouteRuleTester implements RouteRuleTesterInterface
      * @param NoRouteActionInterface $noRouteAction
      * @param SyntheticRequestFactory $syntheticRequestFactory
      * @param SimulatedFieldPoolFactory $simulatedFieldPoolFactory
+     * @param CrawlerExemptionSimulatorInterface $crawlerExemptionSimulator
      */
     public function __construct(
         private readonly StoreManagerInterface $storeManager,
@@ -52,7 +54,8 @@ class RouteRuleTester implements RouteRuleTesterInterface
         private readonly ActionNameResolverInterface $actionNameResolver,
         private readonly NoRouteActionInterface $noRouteAction,
         private readonly SyntheticRequestFactory $syntheticRequestFactory,
-        private readonly SimulatedFieldPoolFactory $simulatedFieldPoolFactory
+        private readonly SimulatedFieldPoolFactory $simulatedFieldPoolFactory,
+        private readonly CrawlerExemptionSimulatorInterface $crawlerExemptionSimulator
     ) {
     }
 
@@ -81,7 +84,15 @@ class RouteRuleTester implements RouteRuleTesterInterface
      *
      * @param SimulationInterface $simulation
      * @param int $storeId
-     * @return array<string, mixed>
+     * @return array{
+     *     matched: bool,
+     *     wouldChallenge: bool,
+     *     bypass: array{excludedIp: bool, excludedUserAgent: bool, excludedPath: bool, verifyEndpoint: bool},
+     *     context: array<string, mixed>,
+     *     fields: array<string, string|int|float|null>,
+     *     groups: array<int, array<string, mixed>>,
+     *     warnings: array<int, string>
+     * }
      */
     private function run(SimulationInterface $simulation, int $storeId): array
     {
@@ -110,9 +121,11 @@ class RouteRuleTester implements RouteRuleTesterInterface
         $fields = $this->snapshotFieldValues($fieldPool);
 
         $clientIp = (string)($fields['client_ip'] ?? $simulation->getClientIp());
+        $crawler = $this->crawlerExemptionSimulator->simulate($simulation->getUserAgent(), $clientIp);
+        array_push($warnings, ...$crawler['notes']);
         $bypass = [
             'excludedIp' => $this->exclusionPolicy->isIpExcluded($clientIp),
-            'excludedUserAgent' => $this->exclusionPolicy->isUserAgentExcluded($simulation->getUserAgent()),
+            'excludedUserAgent' => $crawler['exempt'],
             'excludedPath' => $this->exclusionPolicy->isPathExcluded($path),
             'verifyEndpoint' => trim($path, '/') === VerificationRouter::VERIFY_PATH,
         ];
@@ -140,7 +153,7 @@ class RouteRuleTester implements RouteRuleTesterInterface
                 'providerConfigured' => $providerConfigured,
                 'provider' => $this->config->getRouteProviderOverride() ?: $this->config->getActiveProvider(),
                 'requestUri' => $path . ($query !== '' ? '?' . $query : ''),
-                'actionNameSource' => $routeParts['source'] ?? null,
+                'actionNameSource' => $routeParts['source'],
                 'usingDraftRules' => $simulation->getDraftRules() !== null,
             ],
             'fields' => $fields,
@@ -276,9 +289,9 @@ class RouteRuleTester implements RouteRuleTesterInterface
         $values = [];
         foreach ($fieldPool->getAll() as $code => $field) {
             try {
-                $values[$code] = $field->getValue();
+                $values[(string)$code] = $field->getValue();
             } catch (\Throwable $e) {
-                $values[$code] = null;
+                $values[(string)$code] = null;
             }
         }
 

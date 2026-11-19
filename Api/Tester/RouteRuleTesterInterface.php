@@ -22,14 +22,16 @@ interface RouteRuleTesterInterface
      * @return array{
      *     matched: bool,
      *     wouldChallenge: bool,
-     *     bypass: array{excludedIp: bool, excludedUserAgent: bool, verifyEndpoint: bool},
+     *     bypass: array{excludedIp: bool, excludedUserAgent: bool, excludedPath: bool, verifyEndpoint: bool},
      *     context: array<string, mixed>,
      *     fields: array<string, string|int|float|null>,
      *     groups: array<int, array<string, mixed>>,
      *     warnings: array<int, string>
      * } `matched` = the rule expression is true for the simulated request;
      *     `wouldChallenge` also requires route protection enabled, a
-     *     configured provider and no bypass; `groups` is the trace from
+     *     configured provider and no bypass; `excludedUserAgent` is the
+     *     {@see CrawlerExemptionSimulatorInterface} decision, whose notes are
+     *     added to `warnings`; `groups` is the trace from
      *     {@see \Hryvinskyi\InvisibleCaptcha\Api\ExpressionTracerInterface}
      */
     public function test(SimulationInterface $simulation): array;

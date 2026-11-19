@@ -11,7 +11,7 @@ namespace Hryvinskyi\InvisibleCaptcha\Api;
 /**
  * Route-protection bypass lists: decides whether a client IP or user agent
  * is excluded from the challenge. Shared by the live gate
- * ({@see \Hryvinskyi\InvisibleCaptcha\Model\RequestChecker}) and the admin
+ * ({@see \Hryvinskyi\InvisibleCaptcha\Api\RequestCheckerInterface}) and the admin
  * rule tester so both apply identical semantics.
  */
 interface ExclusionPolicyInterface

@@ -8,12 +8,13 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Test\Unit\Observer;
 
+use Hryvinskyi\InvisibleCaptcha\Api\ChallengeRendererInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\Http\ClientIpResolverInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\RefIdGeneratorInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\RequestCheckerInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\VerificationCookieInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\AjaxRequestDetector;
-use Hryvinskyi\InvisibleCaptcha\Model\ChallengeRenderer;
-use Hryvinskyi\InvisibleCaptcha\Model\CookieManager;
-use Hryvinskyi\InvisibleCaptcha\Model\RefIdGenerator;
-use Hryvinskyi\InvisibleCaptcha\Model\RequestChecker;
 use Hryvinskyi\InvisibleCaptcha\Observer\RouteGate;
 use Magento\Framework\App\ActionFlag;
 use Magento\Framework\App\ActionInterface;
@@ -30,14 +31,16 @@ class RouteGateTest extends TestCase
 
     /** @var ConfigInterface&MockObject */
     private ConfigInterface $config;
-    /** @var CookieManager&MockObject */
-    private CookieManager $cookieManager;
-    /** @var RequestChecker&MockObject */
-    private RequestChecker $requestChecker;
-    /** @var ChallengeRenderer&MockObject */
-    private ChallengeRenderer $challengeRenderer;
-    /** @var RefIdGenerator&MockObject */
-    private RefIdGenerator $refIdGenerator;
+    /** @var VerificationCookieInterface&MockObject */
+    private VerificationCookieInterface $cookieManager;
+    /** @var RequestCheckerInterface&MockObject */
+    private RequestCheckerInterface $requestChecker;
+    /** @var ClientIpResolverInterface&MockObject */
+    private ClientIpResolverInterface $clientIpResolver;
+    /** @var ChallengeRendererInterface&MockObject */
+    private ChallengeRendererInterface $challengeRenderer;
+    /** @var RefIdGeneratorInterface&MockObject */
+    private RefIdGeneratorInterface $refIdGenerator;
     /** @var ActionFlag&MockObject */
     private ActionFlag $actionFlag;
     /** @var HttpResponse&MockObject */
@@ -47,14 +50,17 @@ class RouteGateTest extends TestCase
     /** @var LoggerInterface&MockObject */
     private LoggerInterface $logger;
     private RouteGate $observer;
+    /** @var array<string, string> Every header written to the response, by name */
+    private array $sentHeaders = [];
 
     protected function setUp(): void
     {
         $this->config = $this->createMock(ConfigInterface::class);
-        $this->cookieManager = $this->createMock(CookieManager::class);
-        $this->requestChecker = $this->createMock(RequestChecker::class);
-        $this->challengeRenderer = $this->createMock(ChallengeRenderer::class);
-        $this->refIdGenerator = $this->createMock(RefIdGenerator::class);
+        $this->cookieManager = $this->createMock(VerificationCookieInterface::class);
+        $this->requestChecker = $this->createMock(RequestCheckerInterface::class);
+        $this->clientIpResolver = $this->createMock(ClientIpResolverInterface::class);
+        $this->challengeRenderer = $this->createMock(ChallengeRendererInterface::class);
+        $this->refIdGenerator = $this->createMock(RefIdGeneratorInterface::class);
         $this->actionFlag = $this->createMock(ActionFlag::class);
         $this->response = $this->createMock(HttpResponse::class);
         $this->request = $this->createMock(HttpRequest::class);
@@ -66,6 +72,7 @@ class RouteGateTest extends TestCase
             $this->config,
             $this->cookieManager,
             $this->requestChecker,
+            $this->clientIpResolver,
             $this->challengeRenderer,
             $this->refIdGenerator,
             $this->actionFlag,
@@ -115,15 +122,16 @@ class RouteGateTest extends TestCase
         $this->request->method('getHeader')->willReturn('');
 
         $this->actionFlag->expects($this->once())
-            ->method('set')->with('', ActionInterface::FLAG_NO_DISPATCH, true);
+            ->method('set')->with('', ActionInterface::FLAG_NO_DISPATCH, '1');
 
         $this->response->expects($this->once())->method('setHttpResponseCode')->with(403);
         $this->response->expects($this->once())->method('setBody')->with('<html>challenge</html>');
 
-        $headers = $this->captureHeaders();
+        $this->captureHeaders();
 
         $this->observer->execute($this->createMock(Observer::class));
 
+        $headers = $this->sentHeaders;
         $this->assertSame('text/html; charset=UTF-8', $headers['Content-Type'] ?? null);
         $this->assertSame('noindex, nofollow', $headers['X-Robots-Tag'] ?? null);
         $this->assertArrayHasKey('Cache-Control', $headers);
@@ -143,11 +151,11 @@ class RouteGateTest extends TestCase
         $this->request->method('isXmlHttpRequest')->willReturn(true);
         $this->request->method('getHeader')->willReturn('');
 
-        $headers = $this->captureHeaders();
+        $this->captureHeaders();
 
         $this->observer->execute($this->createMock(Observer::class));
 
-        $this->assertSame('1', $headers[self::CHALLENGE_HEADER] ?? null);
+        $this->assertSame('1', $this->sentHeaders[self::CHALLENGE_HEADER] ?? null);
     }
 
     public function testLogsWhenDebugEnabled(): void
@@ -161,11 +169,14 @@ class RouteGateTest extends TestCase
         $this->request->method('isAjax')->willReturn(false);
         $this->request->method('getHeader')->willReturn('');
         $this->request->method('getRequestUri')->willReturn('/protected/page');
-        $this->requestChecker->method('getClientIp')->willReturn('203.0.113.5');
+        $this->clientIpResolver->method('resolve')->willReturn('203.0.113.5');
         $this->response->method('setHeader')->willReturnSelf();
 
         $this->logger->expects($this->once())->method('info')
-            ->with($this->stringContains('ref=A7F23K9M'));
+            ->with($this->logicalAnd(
+                $this->stringContains('ref=A7F23K9M'),
+                $this->stringContains('ip=203.0.113.5')
+            ));
 
         $this->observer->execute($this->createMock(Observer::class));
     }
@@ -188,25 +199,18 @@ class RouteGateTest extends TestCase
     }
 
     /**
-     * Record every header written to the response into a name => value map.
+     * Record every header written to the response into the sent-headers map, by name
      *
-     * Returns an ArrayObject (shared handle) rather than an array: a plain
-     * array would be returned by value while the closure mutates the local,
-     * so the caller's copy would never see the captured headers.
-     *
-     * @return \ArrayObject<string, string>
+     * @return void
      */
-    private function captureHeaders(): \ArrayObject
+    private function captureHeaders(): void
     {
-        $headers = new \ArrayObject();
         $this->response->method('setHeader')->willReturnCallback(
-            function (string $name, $value) use ($headers): HttpResponse {
-                $headers[$name] = $value;
+            function (string $name, string $value): HttpResponse {
+                $this->sentHeaders[$name] = $value;
 
                 return $this->response;
             }
         );
-
-        return $headers;
     }
 }

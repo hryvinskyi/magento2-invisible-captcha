@@ -47,6 +47,10 @@ class ConfigTest extends TestCase
             'isFormProtectionEnabled' => ['isFormProtectionEnabled', 'hryvinskyi_invisible_captcha/form_protection/enabled'],
             'isRouteProtectionEnabled' => ['isRouteProtectionEnabled', 'hryvinskyi_invisible_captcha/route_protection/enabled'],
             'isRouteFallbackEnabled' => ['isRouteFallbackEnabled', 'hryvinskyi_invisible_captcha/route_protection/fallback_enabled'],
+            'isSilentVerificationEnabled' => [
+                'isSilentVerificationEnabled',
+                'hryvinskyi_invisible_captcha/route_protection/silent_verification',
+            ],
         ];
     }
 

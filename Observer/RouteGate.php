@@ -9,14 +9,16 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Observer;
 
 use Hryvinskyi\InvisibleCaptcha\Api\AjaxRequestDetectorInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\ChallengeRendererInterface;
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
-use Hryvinskyi\InvisibleCaptcha\Model\ChallengeRenderer;
-use Hryvinskyi\InvisibleCaptcha\Model\CookieManager;
-use Hryvinskyi\InvisibleCaptcha\Model\RefIdGenerator;
-use Hryvinskyi\InvisibleCaptcha\Model\RequestChecker;
+use Hryvinskyi\InvisibleCaptcha\Api\Http\ClientIpResolverInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\RefIdGeneratorInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\RequestCheckerInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\VerificationCookieInterface;
 use Magento\Framework\App\ActionFlag;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\HTTP\PhpEnvironment\Request as HttpRequest;
 use Magento\Framework\App\Response\Http as HttpResponse;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
@@ -34,10 +36,11 @@ class RouteGate implements ObserverInterface
 
     /**
      * @param ConfigInterface $config
-     * @param CookieManager $cookieManager
-     * @param RequestChecker $requestChecker
-     * @param ChallengeRenderer $challengeRenderer
-     * @param RefIdGenerator $refIdGenerator
+     * @param VerificationCookieInterface $cookieManager
+     * @param RequestCheckerInterface $requestChecker
+     * @param ClientIpResolverInterface $clientIpResolver
+     * @param ChallengeRendererInterface $challengeRenderer
+     * @param RefIdGeneratorInterface $refIdGenerator
      * @param ActionFlag $actionFlag
      * @param HttpResponse $response
      * @param RequestInterface $request
@@ -46,10 +49,11 @@ class RouteGate implements ObserverInterface
      */
     public function __construct(
         private readonly ConfigInterface $config,
-        private readonly CookieManager $cookieManager,
-        private readonly RequestChecker $requestChecker,
-        private readonly ChallengeRenderer $challengeRenderer,
-        private readonly RefIdGenerator $refIdGenerator,
+        private readonly VerificationCookieInterface $cookieManager,
+        private readonly RequestCheckerInterface $requestChecker,
+        private readonly ClientIpResolverInterface $clientIpResolver,
+        private readonly ChallengeRendererInterface $challengeRenderer,
+        private readonly RefIdGeneratorInterface $refIdGenerator,
         private readonly ActionFlag $actionFlag,
         private readonly HttpResponse $response,
         private readonly RequestInterface $request,
@@ -72,7 +76,8 @@ class RouteGate implements ObserverInterface
             return;
         }
 
-        $this->actionFlag->set('', ActionInterface::FLAG_NO_DISPATCH, true);
+        // ActionFlag declares a string value and the front controller reads it as a boolean.
+        $this->actionFlag->set('', ActionInterface::FLAG_NO_DISPATCH, '1');
 
         $refId = $this->refIdGenerator->generate();
         $mode = $this->ajaxRequestDetector->isAjax($this->request) ? 'ajax' : 'inline';
@@ -121,9 +126,23 @@ class RouteGate implements ObserverInterface
             '[InvisibleCaptcha] challenge issued | ref=%s | mode=%s | url=%s | ip=%s | ua=%s',
             $refId,
             $mode,
-            (string)$this->request->getRequestUri(),
-            $this->requestChecker->getClientIp(),
-            substr((string)$this->request->getHeader('User-Agent'), 0, self::USER_AGENT_LOG_LIMIT)
+            $this->request instanceof HttpRequest ? $this->request->getRequestUri() : '',
+            $this->clientIpResolver->resolve(),
+            substr($this->userAgent(), 0, self::USER_AGENT_LOG_LIMIT)
         ));
+    }
+
+    /**
+     * The request's User-Agent; empty when it has none.
+     */
+    private function userAgent(): string
+    {
+        if (!$this->request instanceof HttpRequest) {
+            return '';
+        }
+
+        $userAgent = $this->request->getHeader('User-Agent');
+
+        return is_string($userAgent) ? $userAgent : '';
     }
 }

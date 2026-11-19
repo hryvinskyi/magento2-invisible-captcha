@@ -121,6 +121,12 @@ interface ConfigInterface
     public function getRouteFallbackDelay(?string $scopeCode = null): int;
 
     /**
+     * Whether storefront pages verify an unverified visitor in the background,
+     * so a visitor who browses to a protected route is already verified.
+     */
+    public function isSilentVerificationEnabled(?string $scopeCode = null): bool;
+
+    /**
      * Verified-cookie lifetime in seconds.
      */
     public function getCookieLifetime(?string $scopeCode = null): int;

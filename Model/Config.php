@@ -39,6 +39,7 @@ class Config implements ConfigInterface
     private const XML_ROUTE_FALLBACK_PROVIDER = 'hryvinskyi_invisible_captcha/route_protection/fallback_provider';
     private const XML_ROUTE_FALLBACK_DELAY = 'hryvinskyi_invisible_captcha/route_protection/fallback_delay';
     private const XML_ROUTE_COOKIE_LIFETIME = 'hryvinskyi_invisible_captcha/route_protection/cookie_lifetime';
+    private const XML_ROUTE_SILENT_VERIFICATION = 'hryvinskyi_invisible_captcha/route_protection/silent_verification';
     private const XML_ROUTE_RULES = 'hryvinskyi_invisible_captcha/route_protection/rules';
     private const XML_ROUTE_LAYERED_IGNORED = 'hryvinskyi_invisible_captcha/route_protection/layered_nav_ignored_params';
     private const XML_ROUTE_EXCLUDED_IPS = 'hryvinskyi_invisible_captcha/route_protection/excluded_ips';
@@ -187,6 +188,11 @@ class Config implements ConfigInterface
     public function getRouteFallbackProvider(?string $scopeCode = null): string
     {
         return $this->value(self::XML_ROUTE_FALLBACK_PROVIDER, $scopeCode);
+    }
+
+    public function isSilentVerificationEnabled(?string $scopeCode = null): bool
+    {
+        return $this->flag(self::XML_ROUTE_SILENT_VERIFICATION, $scopeCode);
     }
 
     public function getRouteFallbackDelay(?string $scopeCode = null): int

@@ -5,6 +5,67 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0] - 2026-11-19
+
+### Added
+
+- **Silent verification on unprotected pages** (*Route Protection → Silent
+  Verification on Unprotected Pages*, off by default). Pages the rules do not
+  protect verify an unverified visitor in the background — Turnstile through an
+  off-screen widget that never asks for interaction, reCAPTCHA v3 / Enterprise
+  through a score `execute` — and post the token to the verify endpoint, which
+  issues the verification cookie. A visitor who browses on to a protected page
+  is let through; the challenge page is left for visitors who open a protected
+  page directly without having been verified. `Api\SilentVerificationInterface`;
+  providers take part through the `silentModes` argument in `di.xml`.
+
+- **Crawler exemption contract.** `Api\CrawlerExemptionInterface` decides which
+  requests skip the route challenge as trusted crawlers. The default
+  (`Model\UserAgentCrawlerExemption`) is the *Excluded User Agents* list, as
+  before; a module that can verify crawler claims replaces or decorates it
+  through a `di.xml` preference.
+- **`Api\Http\ClientIpResolverInterface` is `@api`.** The verify action and the
+  route gate read the client IP from it directly, so a module that knows the
+  shop's proxies changes the address *Excluded IPs*, the `client_ip` rule field,
+  the country lookup, the token verification and the debug log all see.
+- `Api\Tester\CrawlerExemptionSimulatorInterface`: the rule tester's
+  crawler exemption (default: *Excluded User Agents*), so a module that
+  replaces the live exemption shows its verdict in the tester too; its notes
+  appear under the test result.
+- `composer.json` suggests `hryvinskyi/magento2-invisible-captcha-bot-verification`,
+  the bridge that fills both contracts from bot verification.
+- Interfaces for the route gate's collaborators: `Api\RequestCheckerInterface`,
+  `Api\VerificationCookieInterface`, `Api\RefIdGeneratorInterface`,
+  `Api\ChallengeRendererInterface`, `Api\Http\CaptchaContextInterface`.
+
+### Changed
+
+- The challenge page's bootstrap reads its configuration from a JSON data block
+  (`<script type="application/json" id="hryvinskyi-captcha-config">`) instead
+  of the `window.hryvinskyiCaptcha` global.
+- The AJAX fallback reads its configuration from a JSON data block
+  (`#hryvinskyi-captcha-ajax-config`, printed with `JsonHexTag`) instead of
+  `window.hryvinskyiCaptchaAjaxConfig`, and is rendered through theme-assets;
+  `Block\Frontend\AjaxConfig` is replaced by `ViewModel\AjaxFallback`. The URL
+  a visitor was heading to reaches the swapped-in challenge page as the
+  `data-hryvinskyi-captcha-return-url` attribute on `<html>` instead of
+  `window.__hryvinskyiCaptchaReturnUrl`.
+- `Model\RequestChecker::getClientIp()` is removed; ask
+  `Api\Http\ClientIpResolverInterface::resolve()`.
+
+### Fixed
+
+- **A visitor the primary provider rejects is offered the fallback at once.**
+  When the primary widget reports an error (e.g. Turnstile 600010), the
+  fallback provider is revealed immediately instead of after the configured
+  delay.
+- **The stale `form_key` is stripped from a clicked filter link again** before
+  the visitor is sent on after an AJAX challenge: `URLSearchParams.delete()`
+  returns nothing, so the strip never took effect and the destination could
+  answer "Invalid Form Key".
+- **The verify request gives up after 10 s** and shows the retry state instead
+  of spinning on "Checking" forever.
+
 ## [3.4.1] - 2026-11-07
 
 ### Changed

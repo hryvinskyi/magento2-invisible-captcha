@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Model;
 
 use Hryvinskyi\InvisibleCaptcha\Api\ConfigInterface;
+use Hryvinskyi\InvisibleCaptcha\Api\VerificationCookieInterface;
 use Magento\Framework\App\DeploymentConfig;
 use Magento\Framework\Config\ConfigOptionsListConstants;
 use Magento\Framework\Exception\InputException;
@@ -24,7 +25,7 @@ use Magento\Framework\Stdlib\CookieManagerInterface;
  * The HMAC is keyed on the Magento crypt key (provider-independent) so switching
  * captcha providers does not invalidate already-verified sessions.
  */
-class CookieManager
+class CookieManager implements VerificationCookieInterface
 {
     public const COOKIE_NAME = 'hryvinskyi_captcha_verified';
 
@@ -45,7 +46,7 @@ class CookieManager
     }
 
     /**
-     * Check whether the request carries a valid, unexpired verification cookie.
+     * @inheritDoc
      */
     public function isVerified(): bool
     {
@@ -70,9 +71,7 @@ class CookieManager
     /**
      * Issue a fresh HMAC-signed verification cookie.
      *
-     * @throws CookieSizeLimitReachedException
-     * @throws FailureToSendException
-     * @throws InputException
+     * @inheritDoc
      */
     public function setVerified(): void
     {
@@ -92,10 +91,7 @@ class CookieManager
     }
 
     /**
-     * Remove the verification cookie from the client.
-     *
-     * @throws FailureToSendException
-     * @throws InputException
+     * @inheritDoc
      */
     public function deleteCookie(): void
     {
@@ -119,7 +115,8 @@ class CookieManager
     private function getHmacKey(): string
     {
         if ($this->hmacKey === null) {
-            $cryptKey = (string)$this->deploymentConfig->get(ConfigOptionsListConstants::CONFIG_PATH_CRYPT_KEY);
+            $cryptKey = $this->deploymentConfig->get(ConfigOptionsListConstants::CONFIG_PATH_CRYPT_KEY);
+            $cryptKey = is_string($cryptKey) ? $cryptKey : '';
             // crypt/key may contain multiple newline-separated keys; the latest is canonical.
             $keys = array_filter(explode("\n", $cryptKey));
             $this->hmacKey = $keys !== [] ? (string)end($keys) : 'hryvinskyi-invisible-captcha';

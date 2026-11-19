@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace Hryvinskyi\InvisibleCaptcha\Test\Unit\Model\Http;
 
-use Hryvinskyi\InvisibleCaptcha\Model\CookieManager;
+use Hryvinskyi\InvisibleCaptcha\Api\VerificationCookieInterface;
 use Hryvinskyi\InvisibleCaptcha\Model\Http\CaptchaContext;
 use Magento\Framework\App\Http\Context;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -20,15 +20,15 @@ class CaptchaContextTest extends TestCase
     private const VALUE_VERIFIED = '1';
     private const VALUE_UNVERIFIED = '0';
 
-    /** @var CookieManager&MockObject */
-    private CookieManager $cookieManager;
+    /** @var VerificationCookieInterface&MockObject */
+    private VerificationCookieInterface $cookieManager;
     /** @var Context&MockObject */
     private Context $httpContext;
     private CaptchaContext $model;
 
     protected function setUp(): void
     {
-        $this->cookieManager = $this->createMock(CookieManager::class);
+        $this->cookieManager = $this->createMock(VerificationCookieInterface::class);
         $this->httpContext = $this->createMock(Context::class);
 
         $this->model = new CaptchaContext($this->cookieManager, $this->httpContext);

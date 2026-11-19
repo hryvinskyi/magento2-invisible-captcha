@@ -6,12 +6,25 @@
 (() => {
     'use strict';
 
-    if (window.__hryvinskyiCaptchaAjaxFallback) {
+    // ─── Constants ──────────────────────────────────────────────────────────
+
+    // The admin configuration, printed by ajax-config.phtml as a JSON data
+    // block right before this script.
+    const CONFIG_ELEMENT_ID = 'hryvinskyi-captcha-ajax-config';
+
+    // Marks the page whose XMLHttpRequest / fetch this script has wrapped, so
+    // a second copy of the script on the same page does nothing.
+    const MOUNTED_ATTRIBUTE = 'data-hryvinskyi-captcha-ajax-fallback';
+
+    // Carries the URL the visitor was heading to onto the swapped-in
+    // challenge document; the challenge page's script reads it after a
+    // successful verification instead of reloading the AJAX endpoint.
+    const RETURN_URL_ATTRIBUTE = 'data-hryvinskyi-captcha-return-url';
+
+    if (document.documentElement.hasAttribute(MOUNTED_ATTRIBUTE)) {
         return;
     }
-    window.__hryvinskyiCaptchaAjaxFallback = true;
-
-    // ─── Constants ──────────────────────────────────────────────────────────
+    document.documentElement.setAttribute(MOUNTED_ATTRIBUTE, '');
 
     const CHALLENGE_HEADER = 'X-InvisibleCaptcha-Challenge';
     const CHALLENGE_STATUS = 403;
@@ -27,7 +40,7 @@
     // Built-in defaults are kept here so the integration stays safe even if
     // the admin config blob fails to render. Admin-supplied lists, when
     // present and non-empty, replace these wholesale (the admin owns the
-    // full list, not just additions). See Block/Frontend/AjaxConfig.php.
+    // full list, not just additions). See ViewModel/AjaxFallback.php.
     const DEFAULT_AJAX_MARKERS = Object.freeze(
         ['isAjax', 'ajax', '_', 'form_key', 'uenc']
     );
@@ -49,13 +62,20 @@
         catch { return null; }
     };
 
-    // Published by ajax-config.phtml as an inline `window.X = {...}` blob
-    // immediately before this script loads. Coerce to {} when missing so
-    // the property accesses below never throw — JS defaults will apply.
-    const injectedConfig = (window.hryvinskyiCaptchaAjaxConfig
-        && typeof window.hryvinskyiCaptchaAjaxConfig === 'object')
-        ? window.hryvinskyiCaptchaAjaxConfig
-        : {};
+    // Missing or unparsable config → {} so the property accesses below never
+    // throw and the JS defaults apply.
+    const readConfig = () => {
+        const el = document.getElementById(CONFIG_ELEMENT_ID);
+        if (!el) return {};
+        try {
+            const parsed = JSON.parse(el.textContent || '');
+            return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+        } catch {
+            return {};
+        }
+    };
+
+    const injectedConfig = readConfig();
 
     // Stripped from any URL the post-verify JS is about to navigate to as a
     // top-level GET — keeps cache-buster / session-scoped tokens (e.g.
@@ -131,7 +151,11 @@
         if (!parsed) return url;
         let dirty = false;
         for (const marker of ajaxMarkers) {
-            if (parsed.searchParams.delete(marker)) dirty = true;
+            // URLSearchParams.delete() returns nothing, so ask has() first.
+            if (parsed.searchParams.has(marker)) {
+                parsed.searchParams.delete(marker);
+                dirty = true;
+            }
         }
         return dirty ? parsed.href : url;
     };
@@ -210,7 +234,7 @@
         response?.status === CHALLENGE_STATUS
         && response.headers?.get(CHALLENGE_HEADER) === '1';
 
-    const swapDocument = (html) => {
+    const swapDocument = (html, returnUrl) => {
         if (documentSwapped || typeof html !== 'string' || html === '') return;
         documentSwapped = true;
 
@@ -226,6 +250,9 @@
             const newRoot = new DOMParser()
                 .parseFromString(html, 'text/html')
                 .documentElement;
+            if (returnUrl) {
+                newRoot.setAttribute(RETURN_URL_ATTRIBUTE, returnUrl);
+            }
             document.replaceChild(newRoot, document.documentElement);
 
             // <script> nodes that arrive via DOMParser / replaceChild do NOT
@@ -243,11 +270,7 @@
     };
 
     const activateChallenge = (html, ajaxUrl) => {
-        const returnUrl = takeReturnUrl(ajaxUrl);
-        if (returnUrl) {
-            window.__hryvinskyiCaptchaReturnUrl = returnUrl;
-        }
-        swapDocument(html);
+        swapDocument(html, takeReturnUrl(ajaxUrl));
     };
 
     /**

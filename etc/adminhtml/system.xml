@@ -376,6 +376,12 @@
                     <comment>How long a verified visitor stays unchallenged. Default: 14400 (4 hours)</comment>
                     <depends><field id="enabled">1</field></depends>
                 </field>
+                <field id="silent_verification" translate="label comment" type="select" sortOrder="65" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Silent Verification on Unprotected Pages</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Verify an unverified visitor in the background on pages the rules do not protect, so a visitor who browses on to a protected page is already verified and never sees the challenge page. The challenge page is then shown only to visitors who open a protected page directly without having been verified. Works with Turnstile, reCAPTCHA v3 and reCAPTCHA Enterprise as the route gate provider; it loads the provider's script on every page an unverified visitor opens. A visitor the provider cannot verify without interaction sees nothing and is challenged on the protected page as before.</comment>
+                    <depends><field id="enabled">1</field></depends>
+                </field>
                 <field id="rules" translate="label comment" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Protection Rules</label>
                     <frontend_model>Hryvinskyi\InvisibleCaptcha\Block\Adminhtml\System\Config\Form\Field\ProtectionRules</frontend_model>
