@@ -197,6 +197,20 @@ Run `setup:upgrade`. The data patch `MigrateLegacyCaptchaConfig` copies your old
 > [!IMPORTANT]
 > After deploying v3, run a **full page cache flush** — the vary key, cookie and `X-InvisibleCaptcha-Challenge` header were renamed from the old Turnstile names. (The route-gate challenge POSTs to `invisiblecaptcha/verify`; on success it sets the `hryvinskyi_captcha_verified` cookie and the `CAPTCHA_VERIFIED` HTTP-context vary key.)
 
+### Keeping the AJAX fallback in the head
+
+The AJAX fallback wraps `XMLHttpRequest` and `fetch`, so its script loads synchronously in the head and reads the JSON configuration block printed right before it. A module that rewrites the response after rendering — moving scripts to the footer, delaying them until interaction, merging them — must leave both tags where they are. Give the block the attributes your optimizer honours; they are printed on both tags:
+
+```xml
+<referenceBlock name="hryvinskyi.invisible_captcha.ajax.config">
+    <arguments>
+        <argument name="script_attributes" xsi:type="array">
+            <item name="data-example-skip" xsi:type="string">true</item>
+        </argument>
+    </arguments>
+</referenceBlock>
+```
+
 ## CLI reference
 
 ```bash
@@ -220,3 +234,4 @@ bin/magento hryvinskyi:invisible-captcha:migrate-recaptcha [--dry-run] [--force]
 | `Api\Tester\CrawlerExemptionSimulatorInterface` | The rule tester's counterpart of the crawler exemption — decides a simulated User-Agent + IP and adds notes under the result |
 | `Api\CrawlerExemptionInterface` | Decide which requests skip the route challenge as trusted crawlers (default: the *Excluded User Agents* substrings) — replace or decorate it via a `di.xml` preference |
 | `Api\Http\ClientIpResolverInterface` | The client IP every consumer sees: *Excluded IPs*, the `client_ip` rule field, the country lookup, the token verification and the debug log (default: forwarding headers) |
+| `script_attributes` on the `hryvinskyi.invisible_captcha.ajax.config` block (layout XML) | Extra attributes on the AJAX fallback's configuration block and script tag — for a store whose response is rewritten after rendering (scripts moved to the footer, delayed or merged), the attributes that keep both tags in the head and in order |

@@ -40,7 +40,7 @@
         "hryvinskyi/magento2-invisible-captcha-bot-verification": "Route protection challenges crawler impostors (a Googlebot User-Agent from outside Google's published addresses) and reads the client IP past trusted proxies"
     },
     "type": "magento2-module",
-    "version": "3.5.0",
+    "version": "3.6.0",
     "license": "MIT",
     "authors": [
         {

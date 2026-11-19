@@ -9,11 +9,16 @@ declare(strict_types=1);
 namespace Hryvinskyi\InvisibleCaptcha\Test\Integration\RouteProtection;
 
 use Hryvinskyi\InvisibleCaptcha\ViewModel\AjaxFallback;
+use Hryvinskyi\ThemeAssets\Api\AssetRendererInterface;
+use Magento\Framework\View\Element\Template;
+use Magento\Framework\View\LayoutInterface;
+use Magento\TestFramework\Helper\Bootstrap;
 
 /**
  * The AJAX fallback as a storefront page renders it through the real layout,
  * view model and asset renderer: the admin configuration as a JSON data block,
- * then the script that reads it, with no configuration left on `window`.
+ * then the script that reads it, with no configuration left on `window`; and
+ * the block as a layout that sets `script_attributes` builds it.
  *
  * @magentoAppArea frontend
  * @magentoAppIsolation enabled
@@ -44,5 +49,31 @@ class AjaxFallbackRenderTest extends RouteGateTestCase
         self::assertNotFalse($scriptAt, 'the AJAX fallback script is rendered');
         self::assertGreaterThan($match[0][1], $scriptAt, 'the script comes after its configuration block');
         self::assertStringNotContainsString('hryvinskyiCaptchaAjaxConfig', $body);
+    }
+
+    public function testConfiguredScriptAttributesGoOnBothTags(): void
+    {
+        $objectManager = Bootstrap::getObjectManager();
+        $layout = $objectManager->get(LayoutInterface::class);
+        self::assertInstanceOf(LayoutInterface::class, $layout);
+        $block = $layout->createBlock(Template::class, 'ajax_fallback_with_attributes', ['data' => [
+            'template' => 'Hryvinskyi_InvisibleCaptcha::ajax-config.phtml',
+            'view_model' => $objectManager->get(AjaxFallback::class),
+            'asset_renderer' => $objectManager->get(AssetRendererInterface::class),
+            'script_attributes' => ['data-keep-in-place' => 'false', 'data-quote' => 'a"b'],
+        ]]);
+        self::assertInstanceOf(Template::class, $block);
+
+        $html = $block->toHtml();
+
+        $configTag = '<script type="application/json" id="' . AjaxFallback::CONFIG_ELEMENT_ID . '"'
+            . ' data-keep-in-place="false" data-quote="a&quot;b">';
+        self::assertStringContainsString($configTag, $html);
+        if (preg_match('#<script[^>]*' . preg_quote(self::SCRIPT_PATH, '#') . '[^>]*>#', $html, $script) !== 1) {
+            self::fail('The block renders the AJAX fallback script tag.');
+        }
+        self::assertStringContainsString('data-keep-in-place="false"', $script[0]);
+        self::assertStringNotContainsString(' defer', $script[0]);
+        self::assertStringNotContainsString(' async', $script[0]);
     }
 }

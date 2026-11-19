@@ -69,4 +69,48 @@ class AjaxFallbackTest extends TestCase
         $this->assertStringNotContainsString('<', $json);
         $this->assertStringNotContainsString('>', $json);
     }
+
+    public function testConfiguredScriptAttributesAreKeptAsText(): void
+    {
+        $this->assertSame(
+            ['data-keep' => 'false', 'data-flag' => '1', 'data-ratio' => '0.5'],
+            $this->viewModel->getScriptAttributes(['data-keep' => 'false', 'data-flag' => 1, 'data-ratio' => 0.5])
+        );
+    }
+
+    public function testAttributesTheTemplateSetsItselfCannotBeConfigured(): void
+    {
+        $this->assertSame(
+            ['data-keep' => 'false'],
+            $this->viewModel->getScriptAttributes([
+                'type' => 'text/javascript',
+                'ID' => 'other',
+                'src' => 'https://example.com/x.js',
+                'async' => '1',
+                'defer' => '1',
+                'data-keep' => 'false',
+            ])
+        );
+    }
+
+    public function testEntriesThatAreNoPlainAttributeAreLeftOut(): void
+    {
+        $this->assertSame(
+            [],
+            $this->viewModel->getScriptAttributes([
+                0 => 'positional',
+                'onload="alert(1)" x' => '1',
+                '1data' => '1',
+                'data-list' => ['a'],
+                'data-flag' => true,
+                'data-none' => null,
+            ])
+        );
+    }
+
+    public function testNoAttributesUnlessAListIsConfigured(): void
+    {
+        $this->assertSame([], $this->viewModel->getScriptAttributes(null));
+        $this->assertSame([], $this->viewModel->getScriptAttributes('data-keep="false"'));
+    }
 }
